@@ -3,17 +3,17 @@ use std::ffi::CString;
 static mut HELLOWORLD_CLASS: Option<*mut puredata_sys::_class> = None;
 
 #[repr(C)]
-pub struct t_helloworld {
+pub struct HelloWorld {
     x_obj: puredata_sys::t_object,
 }
 
-pub unsafe extern "C" fn helloworld_bang(_x: t_helloworld) {
+pub unsafe extern "C" fn helloworld_bang(_x: HelloWorld) {
     let m = CString::new("HELLO WORLD!!").expect("CString::new failed");
     puredata_sys::post(m.as_ptr());
 }
 
 pub unsafe extern "C" fn helloworld_new() -> *mut ::std::os::raw::c_void {
-    let obj = std::mem::transmute::<*mut puredata_sys::t_pd, *mut t_helloworld>(
+    let obj = std::mem::transmute::<*mut puredata_sys::t_pd, *mut HelloWorld>(
         puredata_sys::pd_new(HELLOWORLD_CLASS.unwrap()),
     );
     obj as *mut ::std::os::raw::c_void
@@ -26,7 +26,7 @@ pub unsafe extern "C" fn helloworld_setup() {
         puredata_sys::gensym(name.as_ptr()),
         Some(helloworld_new),
         None,
-        std::mem::size_of::<t_helloworld>(),
+        std::mem::size_of::<HelloWorld>(),
         0,
         0,
     );
@@ -34,7 +34,7 @@ pub unsafe extern "C" fn helloworld_setup() {
     puredata_sys::class_addbang(
         c,
         Some(std::mem::transmute::<
-            unsafe extern "C" fn(t_helloworld),
+            unsafe extern "C" fn(HelloWorld),
             unsafe extern "C" fn(),
         >(helloworld_bang)),
     );
