@@ -1,0 +1,12 @@
+[package]
+name = "helloworld"
+version = "0.1.0"
+authors = ["Alex Norman <alex@x37v.info>"]
+edition = "2018"
+
+[lib]
+name = "helloworld"
+crate-type = ["cdylib"]
+
+[dependencies]
+puredata-sys = { path = "../../puredata-sys" }
