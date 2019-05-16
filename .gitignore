@@ -1,2 +1,3 @@
 target/
 *.pd_linux
+*.pd_darwin
