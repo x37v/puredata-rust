@@ -10,3 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 puredata-sys = { path = "../../puredata-sys" }
+
+[profile.release]
+lto = true
+panic = "abort"
