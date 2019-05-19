@@ -70,3 +70,12 @@ impl Drop for Outlet {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    impl OutletSend for () {
+        fn send_bang(&self) {}
+        fn send_float(&self, _f: f32) {}
+    }
+}
