@@ -1,11 +1,47 @@
-use crate::outlet::{OutletSend, OutletType};
-use std::ops::DerefMut;
+use crate::inlet::passive::FloatInlet;
+use crate::obj::AsObject;
+use crate::outlet::{Outlet, OutletSend, OutletType};
+use std::ops::Deref;
 use std::rc::Rc;
 
 pub trait ExternalBuilder<T> {
-    fn new_passive_float_inlet(&mut self) -> Rc<dyn DerefMut<Target = puredata_sys::t_float>>;
+    fn new_passive_float_inlet(
+        &mut self,
+        initial_value: puredata_sys::t_float,
+    ) -> Rc<dyn Deref<Target = puredata_sys::t_float>>;
     fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>);
     fn new_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend>;
+}
+
+pub struct Builder<'a, T> {
+    obj: &'a mut dyn AsObject,
+    float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
+}
+
+impl<'a, T> Builder<'a, T> {
+    pub fn new(obj: &'a mut dyn AsObject) -> Self {
+        Self {
+            obj,
+            float_inlets: Vec::new(),
+        }
+    }
+}
+
+impl<'a, T> ExternalBuilder<T> for Builder<'a, T> {
+    fn new_passive_float_inlet(
+        &mut self,
+        initial_value: puredata_sys::t_float,
+    ) -> Rc<dyn Deref<Target = puredata_sys::t_float>> {
+        Rc::new(FloatInlet::new(self.obj, initial_value))
+    }
+
+    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>) {
+        self.float_inlets.push(func);
+    }
+
+    fn new_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend> {
+        Rc::new(Outlet::new(t, self.obj))
+    }
 }
 
 #[cfg(test)]
@@ -45,8 +81,11 @@ mod tests {
     }
 
     impl<T> ExternalBuilder<T> for TestBuilder<T> {
-        fn new_passive_float_inlet(&mut self) -> Rc<dyn DerefMut<Target = puredata_sys::t_float>> {
-            Rc::new(Box::new(0 as puredata_sys::t_float))
+        fn new_passive_float_inlet(
+            &mut self,
+            initial_value: puredata_sys::t_float,
+        ) -> Rc<dyn Deref<Target = puredata_sys::t_float>> {
+            Rc::new(Box::new(initial_value))
         }
 
         fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>) {
