@@ -9,8 +9,8 @@ pub mod passive {
     }
 
     impl FloatInlet {
-        pub fn new(owner: &mut dyn AsObject) -> Self {
-            let value = Box::new(0 as puredata_sys::t_float);
+        pub fn new(owner: &mut dyn AsObject, initial_value: puredata_sys::t_float) -> Self {
+            let value = Box::new(initial_value);
             unsafe {
                 let value = Box::into_raw(value);
                 let inlet = puredata_sys::floatinlet_new(owner.as_obj(), value);
