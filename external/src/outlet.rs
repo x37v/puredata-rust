@@ -49,14 +49,16 @@ impl Outlet {
             }
         }
     }
+}
 
-    pub fn send_bang(&self) {
+impl OutletSend for Outlet {
+    fn send_bang(&self) {
         unsafe {
             puredata_sys::outlet_bang(self.ptr);
         }
     }
 
-    pub fn send_float(&self, f: f32) {
+    fn send_float(&self, f: f32) {
         unsafe {
             puredata_sys::outlet_float(self.ptr, f as puredata_sys::t_float);
         }
