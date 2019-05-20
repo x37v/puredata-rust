@@ -6,3 +6,7 @@ edition = "2018"
 
 [dependencies]
 puredata-sys = { path = "../puredata-sys" }
+
+[lib]
+name = "helloworld"
+crate-type = ["cdylib"]
