@@ -10,7 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 puredata-sys = { path = "../../puredata-sys" }
-puredata-external = { path = "../../external" }
 
 [profile.release]
 lto = true

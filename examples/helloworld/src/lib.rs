@@ -1,22 +1,54 @@
+use puredata_external::builder::{Builder, ExternalBuilder};
+use puredata_external::external::External;
+use puredata_external::obj::AsObject;
+use puredata_external::outlet::{Outlet, OutletSend, OutletType};
+use puredata_external::wrapper::ExternalWrapper;
+
 use std::ffi::CString;
+use std::ops::Deref;
+use std::rc::Rc;
+
+pub type Wrapped = ExternalWrapper<HelloWorldExternal>;
 
 static mut HELLOWORLD_CLASS: Option<*mut puredata_sys::_class> = None;
 
-#[repr(C)]
-pub struct HelloWorld {
-    x_obj: puredata_sys::t_object,
+pub struct HelloWorldExternal {
+    inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
+    outlet: Rc<dyn OutletSend>,
 }
 
-pub unsafe extern "C" fn helloworld_bang(_x: HelloWorld) {
-    let m = CString::new("HELLO WORLD!!").expect("CString::new failed");
-    puredata_sys::post(m.as_ptr());
+impl External for HelloWorldExternal {
+    fn new(builder: &mut dyn ExternalBuilder<Self>) -> Self {
+        Self {
+            inlet: builder.new_passive_float_inlet(4f32),
+            outlet: builder.new_outlet(OutletType::Float),
+        }
+    }
+}
+
+impl HelloWorldExternal {
+    pub fn bang(&mut self) {
+        unsafe {
+            let m =
+                CString::new(format!("{}", **self.inlet).to_string()).expect("CString::new failed");
+            puredata_sys::post(m.as_ptr());
+        }
+    }
 }
 
 pub unsafe extern "C" fn helloworld_new() -> *mut ::std::os::raw::c_void {
-    let obj = std::mem::transmute::<*mut puredata_sys::t_pd, *mut HelloWorld>(
-        puredata_sys::pd_new(HELLOWORLD_CLASS.unwrap()),
-    );
-    obj as *mut ::std::os::raw::c_void
+    let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Wrapped>(puredata_sys::pd_new(
+        HELLOWORLD_CLASS.unwrap(),
+    ));
+    obj.init();
+    obj as *mut Wrapped as *mut ::std::os::raw::c_void
+}
+
+pub unsafe extern "C" fn helloworld_bang(x: &mut Wrapped) {
+    //XXX sketchy, but works
+    if let Some(e) = &mut x.external {
+        e.bang();
+    }
 }
 
 #[no_mangle]
@@ -26,7 +58,7 @@ pub unsafe extern "C" fn helloworld_setup() {
         puredata_sys::gensym(name.as_ptr()),
         Some(helloworld_new),
         None,
-        std::mem::size_of::<HelloWorld>(),
+        std::mem::size_of::<Wrapped>(),
         0,
         0,
     );
@@ -34,7 +66,7 @@ pub unsafe extern "C" fn helloworld_setup() {
     puredata_sys::class_addbang(
         c,
         Some(std::mem::transmute::<
-            unsafe extern "C" fn(HelloWorld),
+            unsafe extern "C" fn(&mut Wrapped),
             unsafe extern "C" fn(),
         >(helloworld_bang)),
     );
