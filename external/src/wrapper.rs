@@ -16,14 +16,12 @@ impl<T> ExternalWrapper<T>
 where
     T: External,
 {
-    pub fn new(pd_class: *mut puredata_sys::_class) -> *mut ::std::os::raw::c_void {
-        unsafe {
-            let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(
-                puredata_sys::pd_new(pd_class),
-            );
-            obj.init();
-            obj as *mut Self as *mut ::std::os::raw::c_void
-        }
+    pub unsafe fn new(pd_class: *mut puredata_sys::_class) -> *mut ::std::os::raw::c_void {
+        let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
+            pd_class,
+        ));
+        obj.init();
+        obj as *mut Self as *mut ::std::os::raw::c_void
     }
 
     pub fn init(&mut self) {
@@ -32,21 +30,19 @@ where
         self.external = Some(e);
     }
 
-    pub fn register(
+    pub unsafe fn register(
         name: CString,
         creator: unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
         destroyer: Option<unsafe extern "C" fn()>,
     ) -> *mut puredata_sys::_class {
-        unsafe {
-            puredata_sys::class_new(
-                puredata_sys::gensym(name.as_ptr()),
-                Some(creator),
-                destroyer,
-                std::mem::size_of::<ExternalWrapper<T>>(),
-                0,
-                0,
-            )
-        }
+        puredata_sys::class_new(
+            puredata_sys::gensym(name.as_ptr()),
+            Some(creator),
+            destroyer,
+            std::mem::size_of::<ExternalWrapper<T>>(),
+            0,
+            0,
+        )
     }
 }
 
