@@ -13,14 +13,14 @@ static mut HELLOWORLD_CLASS: Option<*mut puredata_sys::_class> = None;
 
 pub struct HelloWorldExternal {
     inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
-    outlet: Rc<dyn OutletSend>,
+    //outlet: Rc<dyn OutletSend>,
 }
 
 impl External for HelloWorldExternal {
     fn new(builder: &mut dyn ExternalBuilder<Self>) -> Self {
         Self {
             inlet: builder.new_passive_float_inlet(4f32),
-            outlet: builder.new_outlet(OutletType::Float),
+            //outlet: builder.new_outlet(OutletType::Float),
         }
     }
 }
@@ -28,8 +28,8 @@ impl External for HelloWorldExternal {
 impl HelloWorldExternal {
     pub fn bang(&mut self) {
         unsafe {
-            let m =
-                CString::new(format!("{}", **self.inlet).to_string()).expect("CString::new failed");
+            let m = CString::new(format!("hello {}", **self.inlet).to_string())
+                .expect("CString::new failed");
             puredata_sys::post(m.as_ptr());
         }
     }
