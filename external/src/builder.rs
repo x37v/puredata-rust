@@ -13,6 +13,10 @@ pub trait ExternalBuilder<T> {
     fn new_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend>;
 }
 
+pub trait SignalExternalBuilder<T>: ExternalBuilder<T> {
+    fn as_external_builder(&self) -> ExternalBuilder<T>;
+}
+
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
     float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
