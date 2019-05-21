@@ -1,7 +1,6 @@
-use puredata_external::builder::{Builder, ExternalBuilder};
+use puredata_external::builder::ExternalBuilder;
 use puredata_external::external::External;
-use puredata_external::obj::AsObject;
-use puredata_external::outlet::{Outlet, OutletSend, OutletType};
+use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::wrapper::ExternalWrapper;
 
 use std::ffi::CString;
@@ -37,11 +36,7 @@ impl HelloWorldExternal {
 }
 
 pub unsafe extern "C" fn helloworld_new() -> *mut ::std::os::raw::c_void {
-    let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Wrapped>(puredata_sys::pd_new(
-        HELLOWORLD_CLASS.unwrap(),
-    ));
-    obj.init();
-    obj as *mut Wrapped as *mut ::std::os::raw::c_void
+    Wrapped::new(HELLOWORLD_CLASS.unwrap())
 }
 
 pub unsafe extern "C" fn helloworld_bang(x: &mut Wrapped) {
@@ -54,14 +49,7 @@ pub unsafe extern "C" fn helloworld_bang(x: &mut Wrapped) {
 #[no_mangle]
 pub unsafe extern "C" fn helloworld_setup() {
     let name = CString::new("helloworld").expect("CString::new failed");
-    let c = puredata_sys::class_new(
-        puredata_sys::gensym(name.as_ptr()),
-        Some(helloworld_new),
-        None,
-        std::mem::size_of::<Wrapped>(),
-        0,
-        0,
-    );
+    let c = Wrapped::register(name, helloworld_new, None);
     HELLOWORLD_CLASS = Some(c);
     puredata_sys::class_addbang(
         c,
