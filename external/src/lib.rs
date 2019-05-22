@@ -2,8 +2,10 @@ pub mod args;
 pub mod builder;
 pub mod external;
 pub mod inlet;
+pub mod method;
 pub mod obj;
 pub mod outlet;
+pub mod pd;
 pub mod wrapper;
 
 /*
