@@ -4,6 +4,7 @@ use std::path::PathBuf;
 fn main() {
     let bindings = bindgen::Builder::default()
         .header("wrapper.h")
+        .constified_enum_module("t_atomtype")
         .rustfmt_bindings(true)
         .generate()
         .expect("Unable to generate bindings");
