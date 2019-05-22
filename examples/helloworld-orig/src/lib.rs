@@ -9,20 +9,20 @@ pub struct HelloWorld {
 }
 
 impl HelloWorld {
-    pub fn got_float(&mut self, f: puredata_sys::t_float) {
+    pub extern "C" fn got_float(&mut self, f: puredata_sys::t_float) {
         unsafe {
             let m =
                 CString::new(format!("got float {}", f).to_string()).expect("CString::new failed");
             puredata_sys::post(m.as_ptr());
         }
     }
-    pub fn bang(&mut self) {
+    pub extern "C" fn bang(&mut self) {
         let m = CString::new("HELLO WORLD!!").expect("CString::new failed");
         unsafe {
             puredata_sys::post(m.as_ptr());
         }
     }
-    pub fn new_pd() -> *mut ::std::os::raw::c_void {
+    pub extern "C" fn new_pd() -> *mut ::std::os::raw::c_void {
         unsafe {
             let obj = std::mem::transmute::<*mut puredata_sys::t_pd, *mut Self>(
                 puredata_sys::pd_new(HELLOWORLD_CLASS.unwrap()),
@@ -38,7 +38,7 @@ pub unsafe extern "C" fn helloworld_setup() {
     let c = puredata_sys::class_new(
         puredata_sys::gensym(name.as_ptr()),
         Some(std::mem::transmute::<
-            fn() -> *mut ::std::os::raw::c_void,
+            extern "C" fn() -> *mut ::std::os::raw::c_void,
             unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
         >(HelloWorld::new_pd)),
         None,
@@ -50,14 +50,14 @@ pub unsafe extern "C" fn helloworld_setup() {
     puredata_sys::class_addbang(
         c,
         Some(std::mem::transmute::<
-            fn(&mut HelloWorld),
+            extern "C" fn(&mut HelloWorld),
             unsafe extern "C" fn(),
         >(HelloWorld::bang)),
     );
     puredata_sys::class_addmethod(
         c,
         Some(std::mem::transmute::<
-            fn(&mut HelloWorld, puredata_sys::t_float),
+            extern "C" fn(&mut HelloWorld, puredata_sys::t_float),
             unsafe extern "C" fn(),
         >(HelloWorld::got_float)),
         puredata_sys::gensym(name.as_ptr()),
