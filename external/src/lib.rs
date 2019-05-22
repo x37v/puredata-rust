@@ -1,5 +1,6 @@
 pub mod args;
 pub mod builder;
+pub mod class;
 pub mod external;
 pub mod inlet;
 pub mod method;
