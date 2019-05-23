@@ -16,12 +16,19 @@ impl HelloWorld {
             puredata_sys::post(m.as_ptr());
         }
     }
-    pub extern "C" fn bang(&mut self) {
+    
+    fn bang(&mut self) {
         let m = CString::new("HELLO WORLD!!").expect("CString::new failed");
         unsafe {
             puredata_sys::post(m.as_ptr());
         }
     }
+
+    pub unsafe extern "C" fn bang_trampoline(s: *mut Self) {
+        let obj = &mut *(s as *mut Self);
+        obj.bang();
+    }
+
     pub extern "C" fn new_pd() -> *mut ::std::os::raw::c_void {
         unsafe {
             let obj = std::mem::transmute::<*mut puredata_sys::t_pd, *mut Self>(
@@ -50,9 +57,9 @@ pub unsafe extern "C" fn helloworld_setup() {
     puredata_sys::class_addbang(
         c,
         Some(std::mem::transmute::<
-            extern "C" fn(&mut HelloWorld),
+            unsafe extern "C" fn(*mut HelloWorld),
             unsafe extern "C" fn(),
-        >(HelloWorld::bang)),
+        >(HelloWorld::bang_trampoline)),
     );
     puredata_sys::class_addmethod(
         c,
