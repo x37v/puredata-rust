@@ -150,6 +150,7 @@ pub type SFSSSSS<T> = fn (&mut T, puredata_sys::t_symbol, puredata_sys::t_float,
 pub enum Method<T> {
     Bang(fn(&mut T)),
     Float(F1<T>),
+    Symbol(S1<T>),
     Sel(CString, fn(&mut T)),
 
     //selector, func, number of defaults (from back, at most the arity of the func)
