@@ -59,17 +59,9 @@ fn main() {
         .constified_enum_module("t_atomtype")
         .rustfmt_bindings(true);
 
-    for i in vars.iter() {
-        builder = builder.whitelist_var(i);
-    }
-
-    for i in funcs.iter() {
-        builder = builder.whitelist_function(i);
-    }
-
-    for i in types.iter() {
-        builder = builder.whitelist_type(i);
-    }
+    builder = vars.iter().fold(builder, |b, i| b.whitelist_var(i));
+    builder = funcs.iter().fold(builder, |b, i| b.whitelist_function(i));
+    builder = types.iter().fold(builder, |b, i| b.whitelist_type(i));
 
     let bindings = builder.generate().expect("Unable to generate bindings");
 
