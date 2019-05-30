@@ -47,7 +47,7 @@ impl<T> Class<T> {
                         )),
                     );
                 }
-                _ => (), //XXX TODO
+                _ => unimplemented!(), //XXX TODO
             }
         }
     }
