@@ -1191,7 +1191,7 @@ pub enum Method<T> {
     Bang(B<T>),
     Float(F1<T>),
     Symbol(S1<T>),
-    Sel(CString, fn(&mut T)),
+    Sel(CString, B<T>),
 
     //selector, func, number of defaults (from back, at most the arity of the func)
     SelF1(CString, F1<T>, usize),
