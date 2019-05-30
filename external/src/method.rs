@@ -1,5 +1,8 @@
 use std::ffi::CString;
 
+//an alias for the methods that pure data wants for registration with its API
+pub type PdMethod = unsafe extern "C" fn();
+
 pub type B<T> = extern "C" fn(&mut T);
 pub type F1<T> = extern "C" fn(&mut T, puredata_sys::t_float);
 pub type F2<T> = extern "C" fn(&mut T, puredata_sys::t_float, puredata_sys::t_float);
