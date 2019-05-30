@@ -1,5 +1,5 @@
 use crate::method;
-use crate::method::Method;
+use crate::method::{Method, PdMethod};
 use std::ffi::CString;
 use std::marker::PhantomData;
 
@@ -42,9 +42,7 @@ impl<T> Class<T> {
                 Method::Bang(f) => {
                     puredata_sys::class_addbang(
                         self.pd_class,
-                        Some(std::mem::transmute::<method::B<T>, unsafe extern "C" fn()>(
-                            f,
-                        )),
+                        Some(std::mem::transmute::<method::B<T>, PdMethod>(f)),
                     );
                 }
                 _ => unimplemented!(), //XXX TODO
