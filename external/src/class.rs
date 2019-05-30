@@ -1,3 +1,5 @@
+use crate::method;
+use crate::method::Method;
 use std::ffi::CString;
 use std::marker::PhantomData;
 
@@ -34,15 +36,19 @@ impl<T> Class<T> {
         }
     }
 
-    pub fn add_bang(&mut self, m: extern "C" fn(&mut T)) {
+    pub fn add_method(&mut self, m: Method<T>) {
         unsafe {
-            puredata_sys::class_addbang(
-                self.pd_class,
-                Some(std::mem::transmute::<
-                    extern "C" fn(&mut T),
-                    unsafe extern "C" fn(),
-                >(m)),
-            );
+            match m {
+                Method::Bang(f) => {
+                    puredata_sys::class_addbang(
+                        self.pd_class,
+                        Some(std::mem::transmute::<method::B<T>, unsafe extern "C" fn()>(
+                            f,
+                        )),
+                    );
+                }
+                _ => (), //XXX TODO
+            }
         }
     }
 }
