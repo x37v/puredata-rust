@@ -1,7 +1,9 @@
-#N canvas 2 72 1362 694 10;
+#N canvas 541 74 860 615 10;
 #X declare -path .;
 #X obj 412 209 declare -path .;
 #X obj 347 298 helloworld;
 #X obj 336 232 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
+#X msg 388 249 helloworld 4;
 #X connect 2 0 1 0;
+#X connect 3 0 1 0;
