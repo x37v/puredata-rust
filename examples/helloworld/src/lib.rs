@@ -1,6 +1,7 @@
 use puredata_external::builder::ExternalBuilder;
 use puredata_external::external::External;
 use puredata_external::outlet::{OutletSend, OutletType};
+use puredata_external::pd;
 use puredata_external::wrapper::ExternalWrapper;
 
 use std::ffi::CString;
@@ -27,11 +28,9 @@ impl External for HelloWorldExternal {
 
 impl HelloWorldExternal {
     pub fn bang(&mut self) {
-        unsafe {
-            let m = CString::new(format!("hello {}", **self.inlet).to_string())
-                .expect("CString::new failed");
-            puredata_sys::post(m.as_ptr());
-        }
+        let m = CString::new(format!("hello {}", **self.inlet).to_string())
+            .expect("CString::new failed");
+        pd::post(m);
     }
 }
 
@@ -46,6 +45,11 @@ pub unsafe extern "C" fn helloworld_bang(x: &mut Wrapped) {
     }
 }
 
+pub unsafe extern "C" fn helloworld_float(x: &mut Wrapped, arg: puredata_sys::t_float) {
+    let m = CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
+    puredata_sys::post(m.as_ptr());
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn helloworld_setup() {
     let name = CString::new("helloworld").expect("CString::new failed");
@@ -57,5 +61,17 @@ pub unsafe extern "C" fn helloworld_setup() {
             unsafe extern "C" fn(&mut Wrapped),
             unsafe extern "C" fn(),
         >(helloworld_bang)),
+    );
+
+    let name = CString::new("blah").expect("CString::new failed");
+    puredata_sys::class_addmethod(
+        c,
+        Some(std::mem::transmute::<
+            unsafe extern "C" fn(&mut Wrapped, puredata_sys::t_float),
+            unsafe extern "C" fn(),
+        >(helloworld_float)),
+        puredata_sys::gensym(name.as_ptr()),
+        puredata_sys::t_atomtype::A_DEFFLOAT,
+        0,
     );
 }
