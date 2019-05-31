@@ -32,22 +32,24 @@ impl HelloWorldExternal {
             .expect("CString::new failed");
         pd::post(m);
     }
+    pub fn float(&mut self, arg: puredata_sys::t_float) {
+        let m = CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
+        pd::post(m);
+    }
 }
 
 pub unsafe extern "C" fn helloworld_new() -> *mut ::std::os::raw::c_void {
     Wrapped::new(HELLOWORLD_CLASS.unwrap())
 }
 
-pub unsafe extern "C" fn helloworld_bang(x: &mut Wrapped) {
-    //XXX sketchy, but works
-    if let Some(e) = &mut x.external {
-        e.bang();
-    }
+pub unsafe extern "C" fn helloworld_bang_trampoline(x: *mut Wrapped) {
+    let x = &mut *x;
+    x.wrapped().bang();
 }
 
-pub unsafe extern "C" fn helloworld_float(x: &mut Wrapped, arg: puredata_sys::t_float) {
-    let m = CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
-    puredata_sys::post(m.as_ptr());
+pub unsafe extern "C" fn helloworld_float_trampoline(x: *mut Wrapped, arg: puredata_sys::t_float) {
+    let x = &mut *x;
+    x.wrapped().float(arg);
 }
 
 #[no_mangle]
@@ -58,18 +60,18 @@ pub unsafe extern "C" fn helloworld_setup() {
     puredata_sys::class_addbang(
         c,
         Some(std::mem::transmute::<
-            unsafe extern "C" fn(&mut Wrapped),
+            unsafe extern "C" fn(*mut Wrapped),
             unsafe extern "C" fn(),
-        >(helloworld_bang)),
+        >(helloworld_bang_trampoline)),
     );
 
     let name = CString::new("blah").expect("CString::new failed");
     puredata_sys::class_addmethod(
         c,
         Some(std::mem::transmute::<
-            unsafe extern "C" fn(&mut Wrapped, puredata_sys::t_float),
+            unsafe extern "C" fn(*mut Wrapped, puredata_sys::t_float),
             unsafe extern "C" fn(),
-        >(helloworld_float)),
+        >(helloworld_float_trampoline)),
         puredata_sys::gensym(name.as_ptr()),
         puredata_sys::t_atomtype::A_DEFFLOAT,
         0,
