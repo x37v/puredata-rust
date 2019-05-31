@@ -9,7 +9,7 @@ where
     T: External,
 {
     x_obj: puredata_sys::t_object,
-    pub external: Option<T>, //XXX TMP
+    pub external: Option<T>,
 }
 
 impl<T> ExternalWrapper<T>
@@ -28,6 +28,10 @@ where
         let mut builder = Builder::new(self);
         let e = External::new(&mut builder);
         self.external = Some(e);
+    }
+
+    pub fn wrapped(&mut self) -> &mut T {
+        self.external.as_mut().expect("external not initialized")
     }
 
     pub unsafe fn register(
