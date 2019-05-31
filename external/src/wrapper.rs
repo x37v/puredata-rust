@@ -24,7 +24,7 @@ where
         obj as *mut Self as *mut ::std::os::raw::c_void
     }
 
-    pub fn init(&mut self) {
+    fn init(&mut self) {
         let mut builder = Builder::new(self);
         let e = External::new(&mut builder);
         self.external = Some(e);
