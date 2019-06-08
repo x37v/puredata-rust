@@ -46,7 +46,7 @@ impl<T> Class<T> {
         //fill in defaults
         let l = types.len();
         assert!(l >= defaults);
-        for i in (l - defaults..l).rev() {
+        for i in l - defaults..l {
             match types[i] {
                 puredata_sys::t_atomtype::A_FLOAT | puredata_sys::t_atomtype::A_DEFFLOAT => {
                     types[i] = puredata_sys::t_atomtype::A_DEFFLOAT
