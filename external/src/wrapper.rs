@@ -1,7 +1,6 @@
 use crate::builder::Builder;
 use crate::external::External;
 use crate::obj::AsObject;
-use std::ffi::CString;
 
 #[repr(C)]
 pub struct ExternalWrapper<T>
@@ -32,21 +31,6 @@ where
 
     pub fn wrapped(&mut self) -> &mut T {
         self.external.as_mut().expect("external not initialized")
-    }
-
-    pub unsafe fn register(
-        name: CString,
-        creator: unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
-        destroyer: Option<unsafe extern "C" fn()>,
-    ) -> *mut puredata_sys::_class {
-        puredata_sys::class_new(
-            puredata_sys::gensym(name.as_ptr()),
-            Some(creator),
-            destroyer,
-            std::mem::size_of::<ExternalWrapper<T>>(),
-            0,
-            0,
-        )
     }
 }
 
