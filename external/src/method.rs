@@ -3,28 +3,32 @@ use std::ffi::CString;
 //an alias for the methods that pure data wants for registration with its API
 pub type PdMethod = unsafe extern "C" fn();
 
-pub type B<T> = extern "C" fn(&mut T);
-pub type F1<T> = extern "C" fn(&mut T, puredata_sys::t_float);
-pub type F2<T> = extern "C" fn(&mut T, puredata_sys::t_float, puredata_sys::t_float);
-pub type F3<T> =
-    extern "C" fn(&mut T, puredata_sys::t_float, puredata_sys::t_float, puredata_sys::t_float);
-pub type F4<T> = extern "C" fn(
-    &mut T,
+pub type B<T> = unsafe extern "C" fn(*mut T);
+pub type F1<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_float);
+pub type F2<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_float, puredata_sys::t_float);
+pub type F3<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type F4<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_float,
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type F5<T> = extern "C" fn(
-    &mut T,
+pub type F5<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_float,
     puredata_sys::t_float,
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type F6<T> = extern "C" fn(
-    &mut T,
+pub type F6<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -33,534 +37,554 @@ pub type F6<T> = extern "C" fn(
     puredata_sys::t_float,
 );
 
-pub type S1<T> = extern "C" fn(&mut T, puredata_sys::t_symbol);
-pub type S2<T> = extern "C" fn(&mut T, puredata_sys::t_symbol, puredata_sys::t_symbol);
-pub type S3<T> =
-    extern "C" fn(&mut T, puredata_sys::t_symbol, puredata_sys::t_symbol, puredata_sys::t_symbol);
-pub type S4<T> = extern "C" fn(
-    &mut T,
+pub type S1<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_symbol);
+pub type S2<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_symbol, puredata_sys::t_symbol);
+pub type S3<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type S4<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type S5<T> = extern "C" fn(
-    &mut T,
+pub type S5<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type S6<T> = extern "C" fn(
-    &mut T,
+pub type S6<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+
+pub type FS<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_float, puredata_sys::t_symbol);
+pub type SF<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_symbol, puredata_sys::t_float);
+
+pub type FSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type SFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type FSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type SFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+
+pub type FSFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type SFFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type FSSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type SFSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type FSFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type SFFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type FSSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type SFSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+
+pub type FSFFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type SFFFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type FSSFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type SFSFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type FSFSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type SFFSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type FSSSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type SFSSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type FSFFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type SFFFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type FSSFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type SFSFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type FSFSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type SFFSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type FSSSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type SFSSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+
+pub type FSFFFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type SFFFFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type FSSFFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type SFSFFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type FSFSFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type SFFSFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type FSSSFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type SFSSFF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+);
+pub type FSFFSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type SFFFSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type FSSFSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type SFSFSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type FSFSSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type SFFSSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type FSSSSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type SFSSSF<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+);
+pub type FSFFFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type SFFFFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type FSSFFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type SFSFFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type FSFSFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type SFFSFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type FSSSFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type SFSSFS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+);
+pub type FSFFSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type SFFFSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type FSSFSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type SFSFSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type FSFSSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type SFFSSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type FSSSSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_float,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+    puredata_sys::t_symbol,
+);
+pub type SFSSSS<T> = unsafe extern "C" fn(
+    *mut T,
+    puredata_sys::t_symbol,
+    puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
 
-pub type FS<T> = extern "C" fn(&mut T, puredata_sys::t_float, puredata_sys::t_symbol);
-pub type SF<T> = extern "C" fn(&mut T, puredata_sys::t_symbol, puredata_sys::t_float);
-
-pub type FSF<T> =
-    extern "C" fn(&mut T, puredata_sys::t_float, puredata_sys::t_symbol, puredata_sys::t_float);
-pub type SFF<T> =
-    extern "C" fn(&mut T, puredata_sys::t_symbol, puredata_sys::t_float, puredata_sys::t_float);
-pub type FSS<T> =
-    extern "C" fn(&mut T, puredata_sys::t_float, puredata_sys::t_symbol, puredata_sys::t_symbol);
-pub type SFS<T> =
-    extern "C" fn(&mut T, puredata_sys::t_symbol, puredata_sys::t_float, puredata_sys::t_symbol);
-
-pub type FSFF<T> = extern "C" fn(
-    &mut T,
+pub type FSFFFFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
-);
-pub type SFFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type FSSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type SFSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type FSFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type SFFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type FSSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type SFSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-
-pub type FSFFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type SFFFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type FSSFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type SFSFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type FSFSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type SFFSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type FSSSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type SFSSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type FSFFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type SFFFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type FSSFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type SFSFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type FSFSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type SFFSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type FSSSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type SFSSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-
-pub type FSFFFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type SFFFFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type FSSFFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type SFSFFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type FSFSFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type SFFSFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type FSSSFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type SFSSFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-);
-pub type FSFFSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type SFFFSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type FSSFSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type SFSFSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type FSFSSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type SFFSSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type FSSSSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type SFSSSF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-);
-pub type FSFFFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type SFFFFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type FSSFFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type SFSFFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type FSFSFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type SFFSFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type FSSSFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type SFSSFS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-);
-pub type FSFFSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type SFFFSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type FSSFSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type SFSFSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type FSFSSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type SFFSSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type FSSSSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-pub type SFSSSS<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-    puredata_sys::t_symbol,
-);
-
-pub type FSFFFFF<T> = extern "C" fn(
-    &mut T,
-    puredata_sys::t_float,
-    puredata_sys::t_symbol,
-    puredata_sys::t_float,
-    puredata_sys::t_float,
     puredata_sys::t_float,
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type SFFFFFF<T> = extern "C" fn(
-    &mut T,
+pub type SFFFFFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -569,8 +593,8 @@ pub type SFFFFFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type FSSFFFF<T> = extern "C" fn(
-    &mut T,
+pub type FSSFFFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -579,8 +603,8 @@ pub type FSSFFFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type SFSFFFF<T> = extern "C" fn(
-    &mut T,
+pub type SFSFFFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -589,8 +613,8 @@ pub type SFSFFFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type FSFSFFF<T> = extern "C" fn(
-    &mut T,
+pub type FSFSFFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -599,8 +623,8 @@ pub type FSFSFFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type SFFSFFF<T> = extern "C" fn(
-    &mut T,
+pub type SFFSFFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -609,8 +633,8 @@ pub type SFFSFFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type FSSSFFF<T> = extern "C" fn(
-    &mut T,
+pub type FSSSFFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -619,8 +643,8 @@ pub type FSSSFFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type SFSSFFF<T> = extern "C" fn(
-    &mut T,
+pub type SFSSFFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -629,8 +653,8 @@ pub type SFSSFFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type FSFFSFF<T> = extern "C" fn(
-    &mut T,
+pub type FSFFSFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -639,8 +663,8 @@ pub type FSFFSFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type SFFFSFF<T> = extern "C" fn(
-    &mut T,
+pub type SFFFSFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -649,8 +673,8 @@ pub type SFFFSFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type FSSFSFF<T> = extern "C" fn(
-    &mut T,
+pub type FSSFSFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -659,8 +683,8 @@ pub type FSSFSFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type SFSFSFF<T> = extern "C" fn(
-    &mut T,
+pub type SFSFSFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -669,8 +693,8 @@ pub type SFSFSFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type FSFSSFF<T> = extern "C" fn(
-    &mut T,
+pub type FSFSSFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -679,8 +703,8 @@ pub type FSFSSFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type SFFSSFF<T> = extern "C" fn(
-    &mut T,
+pub type SFFSSFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -689,8 +713,8 @@ pub type SFFSSFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type FSSSSFF<T> = extern "C" fn(
-    &mut T,
+pub type FSSSSFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -699,8 +723,8 @@ pub type FSSSSFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type SFSSSFF<T> = extern "C" fn(
-    &mut T,
+pub type SFSSSFF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -709,8 +733,8 @@ pub type SFSSSFF<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_float,
 );
-pub type FSFFFSF<T> = extern "C" fn(
-    &mut T,
+pub type FSFFFSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -719,8 +743,8 @@ pub type FSFFFSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type SFFFFSF<T> = extern "C" fn(
-    &mut T,
+pub type SFFFFSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -729,8 +753,8 @@ pub type SFFFFSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type FSSFFSF<T> = extern "C" fn(
-    &mut T,
+pub type FSSFFSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -739,8 +763,8 @@ pub type FSSFFSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type SFSFFSF<T> = extern "C" fn(
-    &mut T,
+pub type SFSFFSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -749,8 +773,8 @@ pub type SFSFFSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type FSFSFSF<T> = extern "C" fn(
-    &mut T,
+pub type FSFSFSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -759,8 +783,8 @@ pub type FSFSFSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type SFFSFSF<T> = extern "C" fn(
-    &mut T,
+pub type SFFSFSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -769,8 +793,8 @@ pub type SFFSFSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type FSSSFSF<T> = extern "C" fn(
-    &mut T,
+pub type FSSSFSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -779,8 +803,8 @@ pub type FSSSFSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type SFSSFSF<T> = extern "C" fn(
-    &mut T,
+pub type SFSSFSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -789,8 +813,8 @@ pub type SFSSFSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type FSFFSSF<T> = extern "C" fn(
-    &mut T,
+pub type FSFFSSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -799,8 +823,8 @@ pub type FSFFSSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type SFFFSSF<T> = extern "C" fn(
-    &mut T,
+pub type SFFFSSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -809,8 +833,8 @@ pub type SFFFSSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type FSSFSSF<T> = extern "C" fn(
-    &mut T,
+pub type FSSFSSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -819,8 +843,8 @@ pub type FSSFSSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type SFSFSSF<T> = extern "C" fn(
-    &mut T,
+pub type SFSFSSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -829,8 +853,8 @@ pub type SFSFSSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type FSFSSSF<T> = extern "C" fn(
-    &mut T,
+pub type FSFSSSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -839,8 +863,8 @@ pub type FSFSSSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type SFFSSSF<T> = extern "C" fn(
-    &mut T,
+pub type SFFSSSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -849,8 +873,8 @@ pub type SFFSSSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type FSSSSSF<T> = extern "C" fn(
-    &mut T,
+pub type FSSSSSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -859,8 +883,8 @@ pub type FSSSSSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type SFSSSSF<T> = extern "C" fn(
-    &mut T,
+pub type SFSSSSF<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -869,8 +893,8 @@ pub type SFSSSSF<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_float,
 );
-pub type FSFFFFS<T> = extern "C" fn(
-    &mut T,
+pub type FSFFFFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -879,8 +903,8 @@ pub type FSFFFFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type SFFFFFS<T> = extern "C" fn(
-    &mut T,
+pub type SFFFFFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -889,8 +913,8 @@ pub type SFFFFFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type FSSFFFS<T> = extern "C" fn(
-    &mut T,
+pub type FSSFFFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -899,8 +923,8 @@ pub type FSSFFFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type SFSFFFS<T> = extern "C" fn(
-    &mut T,
+pub type SFSFFFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -909,8 +933,8 @@ pub type SFSFFFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type FSFSFFS<T> = extern "C" fn(
-    &mut T,
+pub type FSFSFFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -919,8 +943,8 @@ pub type FSFSFFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type SFFSFFS<T> = extern "C" fn(
-    &mut T,
+pub type SFFSFFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -929,8 +953,8 @@ pub type SFFSFFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type FSSSFFS<T> = extern "C" fn(
-    &mut T,
+pub type FSSSFFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -939,8 +963,8 @@ pub type FSSSFFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type SFSSFFS<T> = extern "C" fn(
-    &mut T,
+pub type SFSSFFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -949,8 +973,8 @@ pub type SFSSFFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type FSFFSFS<T> = extern "C" fn(
-    &mut T,
+pub type FSFFSFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -959,8 +983,8 @@ pub type FSFFSFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type SFFFSFS<T> = extern "C" fn(
-    &mut T,
+pub type SFFFSFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -969,8 +993,8 @@ pub type SFFFSFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type FSSFSFS<T> = extern "C" fn(
-    &mut T,
+pub type FSSFSFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -979,8 +1003,8 @@ pub type FSSFSFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type SFSFSFS<T> = extern "C" fn(
-    &mut T,
+pub type SFSFSFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -989,8 +1013,8 @@ pub type SFSFSFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type FSFSSFS<T> = extern "C" fn(
-    &mut T,
+pub type FSFSSFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -999,8 +1023,8 @@ pub type FSFSSFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type SFFSSFS<T> = extern "C" fn(
-    &mut T,
+pub type SFFSSFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -1009,8 +1033,8 @@ pub type SFFSSFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type FSSSSFS<T> = extern "C" fn(
-    &mut T,
+pub type FSSSSFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -1019,8 +1043,8 @@ pub type FSSSSFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type SFSSSFS<T> = extern "C" fn(
-    &mut T,
+pub type SFSSSFS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -1029,8 +1053,8 @@ pub type SFSSSFS<T> = extern "C" fn(
     puredata_sys::t_float,
     puredata_sys::t_symbol,
 );
-pub type FSFFFSS<T> = extern "C" fn(
-    &mut T,
+pub type FSFFFSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -1039,8 +1063,8 @@ pub type FSFFFSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type SFFFFSS<T> = extern "C" fn(
-    &mut T,
+pub type SFFFFSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -1049,8 +1073,8 @@ pub type SFFFFSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type FSSFFSS<T> = extern "C" fn(
-    &mut T,
+pub type FSSFFSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -1059,8 +1083,8 @@ pub type FSSFFSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type SFSFFSS<T> = extern "C" fn(
-    &mut T,
+pub type SFSFFSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -1069,8 +1093,8 @@ pub type SFSFFSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type FSFSFSS<T> = extern "C" fn(
-    &mut T,
+pub type FSFSFSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -1079,8 +1103,8 @@ pub type FSFSFSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type SFFSFSS<T> = extern "C" fn(
-    &mut T,
+pub type SFFSFSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -1089,8 +1113,8 @@ pub type SFFSFSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type FSSSFSS<T> = extern "C" fn(
-    &mut T,
+pub type FSSSFSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -1099,8 +1123,8 @@ pub type FSSSFSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type SFSSFSS<T> = extern "C" fn(
-    &mut T,
+pub type SFSSFSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -1109,8 +1133,8 @@ pub type SFSSFSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type FSFFSSS<T> = extern "C" fn(
-    &mut T,
+pub type FSFFSSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -1119,8 +1143,8 @@ pub type FSFFSSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type SFFFSSS<T> = extern "C" fn(
-    &mut T,
+pub type SFFFSSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -1129,8 +1153,8 @@ pub type SFFFSSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type FSSFSSS<T> = extern "C" fn(
-    &mut T,
+pub type FSSFSSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -1139,8 +1163,8 @@ pub type FSSFSSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type SFSFSSS<T> = extern "C" fn(
-    &mut T,
+pub type SFSFSSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
@@ -1149,8 +1173,8 @@ pub type SFSFSSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type FSFSSSS<T> = extern "C" fn(
-    &mut T,
+pub type FSFSSSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
@@ -1159,8 +1183,8 @@ pub type FSFSSSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type SFFSSSS<T> = extern "C" fn(
-    &mut T,
+pub type SFFSSSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_float,
@@ -1169,8 +1193,8 @@ pub type SFFSSSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type FSSSSSS<T> = extern "C" fn(
-    &mut T,
+pub type FSSSSSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
@@ -1179,8 +1203,8 @@ pub type FSSSSSS<T> = extern "C" fn(
     puredata_sys::t_symbol,
     puredata_sys::t_symbol,
 );
-pub type SFSSSSS<T> = extern "C" fn(
-    &mut T,
+pub type SFSSSSS<T> = unsafe extern "C" fn(
+    *mut T,
     puredata_sys::t_symbol,
     puredata_sys::t_float,
     puredata_sys::t_symbol,
