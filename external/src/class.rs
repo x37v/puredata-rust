@@ -179,3 +179,9 @@ impl<T> Class<T> {
         }
     }
 }
+
+impl<T> Into<*mut puredata_sys::_class> for Class<T> {
+    fn into(self) -> *mut puredata_sys::_class {
+        self.pd_class
+    }
+}
