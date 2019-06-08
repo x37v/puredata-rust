@@ -168,6 +168,16 @@ impl<T> Class<T> {
             }
         }
     }
+
+    pub fn new_instance(&mut self) -> *mut ::std::os::raw::c_void {
+        unsafe {
+            let obj = std::mem::transmute::<*mut puredata_sys::t_pd, *mut Self>(
+                puredata_sys::pd_new(self.pd_class),
+            );
+            //XXX run init?
+            obj as *mut ::std::os::raw::c_void
+        }
+    }
 }
 
 impl<T> Into<*mut puredata_sys::_class> for Class<T> {
