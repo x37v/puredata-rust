@@ -1,5 +1,7 @@
 use puredata_external::builder::ExternalBuilder;
+use puredata_external::class::Class;
 use puredata_external::external::External;
+use puredata_external::method::Method;
 use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
 use puredata_external::wrapper::ExternalWrapper;
@@ -33,13 +35,14 @@ impl HelloWorldExternal {
         pd::post(m);
     }
     pub fn float(&mut self, arg: puredata_sys::t_float) {
-        let m = CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
+        let m =
+            CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
         pd::post(m);
     }
 }
 
 pub unsafe extern "C" fn helloworld_new() -> *mut ::std::os::raw::c_void {
-    Wrapped::new(HELLOWORLD_CLASS.unwrap())
+    Wrapped::new(HELLOWORLD_CLASS.expect("hello world class not set"))
 }
 
 pub unsafe extern "C" fn helloworld_bang_trampoline(x: *mut Wrapped) {
@@ -55,25 +58,11 @@ pub unsafe extern "C" fn helloworld_float_trampoline(x: *mut Wrapped, arg: pured
 #[no_mangle]
 pub unsafe extern "C" fn helloworld_setup() {
     let name = CString::new("helloworld").expect("CString::new failed");
-    let c = Wrapped::register(name, helloworld_new, None);
-    HELLOWORLD_CLASS = Some(c);
-    puredata_sys::class_addbang(
-        c,
-        Some(std::mem::transmute::<
-            unsafe extern "C" fn(*mut Wrapped),
-            unsafe extern "C" fn(),
-        >(helloworld_bang_trampoline)),
-    );
+    let mut c = Class::<Wrapped>::register_new(name, helloworld_new, None);
+    c.add_method(Method::Bang(helloworld_bang_trampoline));
 
     let name = CString::new("blah").expect("CString::new failed");
-    puredata_sys::class_addmethod(
-        c,
-        Some(std::mem::transmute::<
-            unsafe extern "C" fn(*mut Wrapped, puredata_sys::t_float),
-            unsafe extern "C" fn(),
-        >(helloworld_float_trampoline)),
-        puredata_sys::gensym(name.as_ptr()),
-        puredata_sys::t_atomtype::A_DEFFLOAT,
-        0,
-    );
+    c.add_method(Method::SelF1(name, helloworld_float_trampoline, 1));
+
+    HELLOWORLD_CLASS = Some(c.into());
 }
