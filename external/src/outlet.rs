@@ -88,6 +88,8 @@ impl SignalOutlet {
     }
 }
 
+impl OutletSignal for SignalOutlet {}
+
 impl Drop for SignalOutlet {
     fn drop(&mut self) {
         unsafe {
