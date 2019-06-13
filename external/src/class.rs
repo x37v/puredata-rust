@@ -1,11 +1,17 @@
 use crate::method;
-use crate::method::{Method, PdMethod};
+use crate::method::{Method, PdDspMethod, PdMethod};
 use std::ffi::CString;
 use std::marker::PhantomData;
+use std::os::raw::c_int;
 
 pub struct Class<T> {
     pd_class: *mut puredata_sys::_class,
     phantom: PhantomData<T>,
+}
+
+pub enum SignalClassType<T> {
+    NoInput(PdDspMethod<T>),
+    WithInput(PdDspMethod<T>, c_int), //method, byte offset of translation float field in struct T
 }
 
 impl<T> Class<T> {
@@ -34,6 +40,42 @@ impl<T> Class<T> {
                 phantom: PhantomData,
             }
         }
+    }
+
+    fn register_dsp(&mut self, dsp_method: PdDspMethod<T>) {
+        let dsp = CString::new("dsp").expect("failed to allocate 'dsp' cstring");
+        unsafe {
+            puredata_sys::class_addmethod(
+                self.pd_class,
+                Some(std::mem::transmute::<method::PdDspMethod<T>, PdMethod>(
+                    dsp_method,
+                )),
+                puredata_sys::gensym(dsp.as_ptr()),
+                puredata_sys::t_atomtype::A_CANT,
+                0,
+            );
+        }
+    }
+
+    pub fn register_new_signal(
+        name: CString,
+        creator: unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
+        dsp_method: SignalClassType<T>,
+        destroyer: Option<unsafe extern "C" fn(&mut T)>,
+    ) -> Self {
+        let mut s = Self::register_new(name, creator, destroyer);
+        match dsp_method {
+            SignalClassType::NoInput(m) => {
+                s.register_dsp(m);
+            }
+            SignalClassType::WithInput(m, onset) => {
+                s.register_dsp(m);
+                unsafe {
+                    puredata_sys::class_domainsignalin(s.pd_class, onset);
+                }
+            }
+        }
+        s
     }
 
     fn add_sel_method(
