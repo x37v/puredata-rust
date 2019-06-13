@@ -1,0 +1,17 @@
+[package]
+name = "hellodsp"
+version = "0.1.0"
+authors = ["Alex Norman <alex@x37v.info>"]
+edition = "2018"
+
+[lib]
+name = "hellodsp"
+crate-type = ["cdylib"]
+
+[dependencies]
+puredata-sys = { path = "../../puredata-sys" }
+puredata-external = { path = "../../external" }
+
+[profile.release]
+lto = true
+panic = "abort"
