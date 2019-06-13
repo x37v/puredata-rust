@@ -52,7 +52,7 @@ fn main() {
         "pd_error",
         "logpost",
     ];
-    let types = ["t_atomtype", "t_symbol"];
+    let types = ["t_atomtype", "t_symbol", "t_signal"];
 
     let mut builder = bindgen::Builder::default()
         .header("wrapper.h")
