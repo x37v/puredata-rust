@@ -6,8 +6,6 @@ pub trait External {
 
 pub trait SignalExternal {
     fn new(builder: &mut dyn SignalExternalBuilder<Self>) -> Self;
-    //TODO make this const once it becomes stable
-    fn has_input() -> bool;
     fn process(
         &mut self,
         inputs: &[&[puredata_sys::t_float]],

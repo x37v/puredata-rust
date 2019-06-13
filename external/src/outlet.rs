@@ -5,6 +5,9 @@ pub trait OutletSend {
     fn send_float(&self, f: puredata_sys::t_float);
 }
 
+//marker traits
+pub trait OutletSignal {}
+
 #[derive(Copy, Clone)]
 pub enum OutletType {
     Bang,
@@ -17,6 +20,10 @@ pub enum OutletType {
 
 pub struct Outlet {
     //outlet_type: OutletType,
+    ptr: *mut puredata_sys::_outlet,
+}
+
+pub struct SignalOutlet {
     ptr: *mut puredata_sys::_outlet,
 }
 
@@ -66,6 +73,22 @@ impl OutletSend for Outlet {
 }
 
 impl Drop for Outlet {
+    fn drop(&mut self) {
+        unsafe {
+            puredata_sys::outlet_free(self.ptr);
+        }
+    }
+}
+
+impl SignalOutlet {
+    pub fn new(owner: &mut dyn AsObject) -> Self {
+        Self {
+            ptr: puredata_sys::outlet_new(owner.as_obj(), &mut puredata_sys::s_signal),
+        }
+    }
+}
+
+impl Drop for SignalOutlet {
     fn drop(&mut self) {
         unsafe {
             puredata_sys::outlet_free(self.ptr);

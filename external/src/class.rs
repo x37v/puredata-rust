@@ -57,7 +57,7 @@ impl<T> Class<T> {
         }
     }
 
-    pub fn register_new_signal(
+    pub fn register_dsp_new(
         name: CString,
         creator: unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
         dsp_method: SignalClassType<T>,

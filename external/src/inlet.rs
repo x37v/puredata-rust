@@ -1,3 +1,5 @@
+pub trait InletSignal {}
+
 pub mod passive {
     use crate::obj::AsObject;
     use std::boxed::Box;
