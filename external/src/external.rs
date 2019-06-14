@@ -8,6 +8,7 @@ pub trait SignalExternal {
     fn new(builder: &mut dyn SignalExternalBuilder<Self>) -> Self;
     fn process(
         &mut self,
+        frames: usize,
         inputs: &[&[puredata_sys::t_float]],
         outputs: &[&mut [puredata_sys::t_float]],
     );
