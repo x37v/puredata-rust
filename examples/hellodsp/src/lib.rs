@@ -9,7 +9,6 @@ use puredata_external::wrapper::SignalExternalWrapper;
 use std::ffi::CString;
 use std::ops::Deref;
 use std::rc::Rc;
-use std::slice;
 
 pub type Wrapped = SignalExternalWrapper<HelloWorldExternal>;
 
@@ -78,8 +77,7 @@ pub unsafe extern "C" fn hellodsp_tilde_dsp_trampoline(
 pub unsafe extern "C" fn hellodsp_tilde_perform_trampoline(
     w: *mut puredata_sys::t_int,
 ) -> *mut puredata_sys::t_int {
-    let x = std::mem::transmute::<_, *mut Wrapped>(w.offset(1));
-    let x = &mut *x;
+    let x = &mut *std::mem::transmute::<_, *mut Wrapped>(w.offset(1));
     x.perform(w)
 }
 
