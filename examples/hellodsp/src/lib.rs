@@ -80,11 +80,7 @@ pub unsafe extern "C" fn hellodsp_tilde_perform_trampoline(
 ) -> *mut puredata_sys::t_int {
     let x = std::mem::transmute::<_, *mut Wrapped>(w.offset(1));
     let x = &mut *x;
-    let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
-    let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(w.offset(3));
-    let input = slice::from_raw_parts(input, nframes);
-    x.wrapped().process(nframes, &[input], &mut []);
-    w.offset(4)
+    x.perform(w)
 }
 
 #[no_mangle]

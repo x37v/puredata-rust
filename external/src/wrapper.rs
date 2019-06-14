@@ -99,6 +99,16 @@ where
             );
         }
     }
+
+    pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
+        unsafe {
+            let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
+            let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(w.offset(3));
+            let input = slice::from_raw_parts(input, nframes);
+            self.wrapped().process(nframes, &[input], &mut []);
+            w.offset(4)
+        }
+    }
 }
 
 impl<T> AsObject for SignalExternalWrapper<T>
