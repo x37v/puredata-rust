@@ -70,6 +70,30 @@ impl<'a, T> ExternalBuilder<T> for Builder<'a, T> {
     }
 }
 
+impl<'a, T> SignalExternalBuilder<T> for SignalBuilder<'a, T> {
+    fn new_passive_float_inlet(
+        &mut self,
+        initial_value: puredata_sys::t_float,
+    ) -> Rc<dyn Deref<Target = puredata_sys::t_float>> {
+        Rc::new(FloatInlet::new(self.obj, initial_value))
+    }
+
+    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>) {
+        self.float_inlets.push(func);
+    }
+
+    fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend> {
+        Rc::new(Outlet::new(t, self.obj))
+    }
+
+    fn new_signal_inlet(&mut self) -> Rc<dyn InletSignal> {
+        unimplemented!();
+    }
+    fn new_signal_outlet(&mut self) -> Rc<dyn OutletSignal> {
+        unimplemented!();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
