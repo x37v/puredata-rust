@@ -1,4 +1,4 @@
-use crate::builder::Builder;
+use crate::builder::{Builder, SignalBuilder};
 use crate::external::{External, SignalExternal};
 use crate::obj::AsObject;
 
@@ -74,6 +74,7 @@ where
     pub fn wrapped(&mut self) -> &mut T {
         self.external.as_mut().expect("external not initialized")
     }
+
     pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal) {}
 }
 
