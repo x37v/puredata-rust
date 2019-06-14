@@ -9,6 +9,7 @@ use puredata_external::wrapper::SignalExternalWrapper;
 use std::ffi::CString;
 use std::ops::Deref;
 use std::rc::Rc;
+use std::slice;
 
 pub type Wrapped = SignalExternalWrapper<HelloWorldExternal>;
 
@@ -31,8 +32,12 @@ impl SignalExternal for HelloWorldExternal {
         inputs: &[&[puredata_sys::t_float]],
         outputs: &[&mut [puredata_sys::t_float]],
     ) {
-        println!("process!! {} {}", inputs.len(), outputs.len());
-        //TODO
+        println!(
+            "process!! {} {} {}",
+            inputs.len(),
+            outputs.len(),
+            inputs[0].len()
+        );
     }
 }
 
@@ -77,11 +82,12 @@ pub unsafe extern "C" fn hellodsp_tilde_dsp_trampoline(
 pub unsafe extern "C" fn hellodsp_tilde_perform_trampoline(
     w: *mut puredata_sys::t_int,
 ) -> *mut puredata_sys::t_int {
-    /*
+    let x = std::mem::transmute::<_, *mut Wrapped>(w.offset(1));
     let x = &mut *x;
-    let inputs = slice::from_raw_parts(input_vec, inputs);
-    x.wrapped().perform(samples, inputs, outputs);
-    */
+    let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
+    let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(w.offset(3));
+    let input = slice::from_raw_parts(input, nframes);
+    x.wrapped().process(&[input], &mut []);
     w.offset(4)
 }
 
