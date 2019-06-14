@@ -31,6 +31,7 @@ impl SignalExternal for HelloWorldExternal {
         inputs: &[&[puredata_sys::t_float]],
         outputs: &[&mut [puredata_sys::t_float]],
     ) {
+        println!("process!! {} {}", inputs.len(), outputs.len());
         //TODO
     }
 }
@@ -70,7 +71,18 @@ pub unsafe extern "C" fn hellodsp_tilde_dsp_trampoline(
     sp: *mut *mut puredata_sys::t_signal,
 ) {
     let x = &mut *x;
-    x.dsp(sp);
+    x.dsp(sp, hellodsp_tilde_perform_trampoline);
+}
+
+pub unsafe extern "C" fn hellodsp_tilde_perform_trampoline(
+    w: *mut puredata_sys::t_int,
+) -> *mut puredata_sys::t_int {
+    /*
+    let x = &mut *x;
+    let inputs = slice::from_raw_parts(input_vec, inputs);
+    x.wrapped().perform(samples, inputs, outputs);
+    */
+    w
 }
 
 #[no_mangle]
