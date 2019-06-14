@@ -29,15 +29,11 @@ impl SignalExternal for HelloWorldExternal {
     }
     fn process(
         &mut self,
+        frames: usize,
         inputs: &[&[puredata_sys::t_float]],
         outputs: &[&mut [puredata_sys::t_float]],
     ) {
-        println!(
-            "process!! {} {} {}",
-            inputs.len(),
-            outputs.len(),
-            inputs[0].len()
-        );
+        println!("process!! {} {} {}", frames, inputs.len(), outputs.len(),);
     }
 }
 
@@ -87,7 +83,7 @@ pub unsafe extern "C" fn hellodsp_tilde_perform_trampoline(
     let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
     let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(w.offset(3));
     let input = slice::from_raw_parts(input, nframes);
-    x.wrapped().process(&[input], &mut []);
+    x.wrapped().process(nframes, &[input], &mut []);
     w.offset(4)
 }
 
