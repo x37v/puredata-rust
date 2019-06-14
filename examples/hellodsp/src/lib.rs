@@ -82,7 +82,7 @@ pub unsafe extern "C" fn hellodsp_tilde_perform_trampoline(
     let inputs = slice::from_raw_parts(input_vec, inputs);
     x.wrapped().perform(samples, inputs, outputs);
     */
-    w
+    w.offset(4)
 }
 
 #[no_mangle]
