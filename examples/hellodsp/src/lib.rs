@@ -1,16 +1,16 @@
-use puredata_external::builder::ExternalBuilder;
+use puredata_external::builder::SignalExternalBuilder;
 use puredata_external::class::{Class, SignalClassType};
-use puredata_external::external::External;
+use puredata_external::external::SignalExternal;
 use puredata_external::method::Method;
 use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
-use puredata_external::wrapper::ExternalWrapper;
+use puredata_external::wrapper::SignalExternalWrapper;
 
 use std::ffi::CString;
 use std::ops::Deref;
 use std::rc::Rc;
 
-pub type Wrapped = ExternalWrapper<HelloWorldExternal>;
+pub type Wrapped = SignalExternalWrapper<HelloWorldExternal>;
 
 static mut HELLODSP_CLASS: Option<*mut puredata_sys::_class> = None;
 
@@ -19,12 +19,19 @@ pub struct HelloWorldExternal {
     //outlet: Rc<dyn OutletSend>,
 }
 
-impl External for HelloWorldExternal {
-    fn new(builder: &mut dyn ExternalBuilder<Self>) -> Self {
+impl SignalExternal for HelloWorldExternal {
+    fn new(builder: &mut dyn SignalExternalBuilder<Self>) -> Self {
         Self {
             inlet: builder.new_passive_float_inlet(4f32),
             //outlet: builder.new_outlet(OutletType::Float),
         }
+    }
+    fn process(
+        &mut self,
+        inputs: &[&[puredata_sys::t_float]],
+        outputs: &[&mut [puredata_sys::t_float]],
+    ) {
+        //TODO
     }
 }
 
@@ -41,21 +48,24 @@ impl HelloWorldExternal {
     }
 }
 
-pub unsafe extern "C" fn hellodsp_new() -> *mut ::std::os::raw::c_void {
+pub unsafe extern "C" fn hellodsp_tilde_new() -> *mut ::std::os::raw::c_void {
     Wrapped::new(HELLODSP_CLASS.expect("hello dsp class not set"))
 }
 
-pub unsafe extern "C" fn hellodsp_bang_trampoline(x: *mut Wrapped) {
+pub unsafe extern "C" fn hellodsp_tilde_bang_trampoline(x: *mut Wrapped) {
     let x = &mut *x;
     x.wrapped().bang();
 }
 
-pub unsafe extern "C" fn hellodsp_float_trampoline(x: *mut Wrapped, arg: puredata_sys::t_float) {
+pub unsafe extern "C" fn hellodsp_tilde_float_trampoline(
+    x: *mut Wrapped,
+    arg: puredata_sys::t_float,
+) {
     let x = &mut *x;
     x.wrapped().float(arg);
 }
 
-pub unsafe extern "C" fn hellodsp_dsp_trampoline(
+pub unsafe extern "C" fn hellodsp_tilde_dsp_trampoline(
     x: *mut Wrapped,
     sp: *mut *mut puredata_sys::t_signal,
 ) {
@@ -64,18 +74,18 @@ pub unsafe extern "C" fn hellodsp_dsp_trampoline(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn hellodsp_setup() {
-    let name = CString::new("hellodsp").expect("CString::new failed");
+pub unsafe extern "C" fn hellodsp_tilde_setup() {
+    let name = CString::new("hellodsp~").expect("CString::new failed");
     let mut c = Class::<Wrapped>::register_dsp_new(
         name,
-        hellodsp_new,
-        SignalClassType::WithInput(hellodsp_dsp_trampoline, 0),
+        hellodsp_tilde_new,
+        SignalClassType::WithInput(hellodsp_tilde_dsp_trampoline, 0),
         None,
     );
-    c.add_method(Method::Bang(hellodsp_bang_trampoline));
+    c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
 
     let name = CString::new("blah").expect("CString::new failed");
-    c.add_method(Method::SelF1(name, hellodsp_float_trampoline, 1));
+    c.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
 
     HELLODSP_CLASS = Some(c.into());
 }
