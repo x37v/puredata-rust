@@ -100,12 +100,12 @@ where
 
     pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
         unsafe {
-            let sv = slice::from_raw_parts(sv, 1);
+            let dsp = self.dsp_inputs + self.dsp_outputs;
+            let sv = slice::from_raw_parts(sv, dsp);
             let len = (*sv[0]).s_n as usize;
 
             //ptr to self, nframes, inputs, outputs
-            /*
-            let vecsize = 2 + self.dsp_inputs + self.dsp_outputs;
+            let vecsize = 2 + dsp;
             let vecnbytes = vecsize * std::mem::size_of::<*mut puredata_sys::t_int>();
             let vecp = puredata_sys::getbytes(vecnbytes);
             let vec = std::mem::transmute::<_, *mut *mut puredata_sys::t_int>(vecp);
@@ -113,36 +113,30 @@ where
 
             let vec: &mut [*mut puredata_sys::t_int] = slice::from_raw_parts_mut(vec, vecsize);
             vec[1] = std::mem::transmute::<_, _>(len);
-            */
-            /*
-            for i in 0..(self.dsp_inputs + self.dsp_outputs) {
+            for i in 0..dsp {
                 vec[2 + i] = std::mem::transmute::<_, _>((*sv[i]).s_vec);
             }
-            */
 
-            let s = std::mem::transmute::<_, *mut Self>(self);
+            vec[0] = std::mem::transmute::<_, _>(self);
 
-            /*
-            vec[0] = std::mem::transmute::<_, _>(s);
             puredata_sys::dsp_addv(
                 Some(trampoline),
                 vecsize as std::os::raw::c_int,
                 std::mem::transmute::<_, *mut puredata_sys::t_int>(vecp),
             );
             puredata_sys::freebytes(vecp, vecnbytes);
-            */
-
-            puredata_sys::dsp_add(Some(trampoline), 3, s, (*sv[0]).s_n, (*sv[0]).s_vec);
         }
     }
 
     pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
         unsafe {
+            let dsp = self.dsp_inputs + self.dsp_outputs;
+
             let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
             let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(w.offset(3));
             let input = slice::from_raw_parts(input, nframes);
             self.wrapped().process(nframes, &[input], &mut []);
-            w.offset((3 + self.dsp_inputs + self.dsp_outputs) as isize)
+            w.offset((3 + dsp) as isize)
         }
     }
 }
