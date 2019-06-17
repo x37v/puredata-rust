@@ -21,9 +21,9 @@ pub struct HelloWorldExternal {
 
 impl SignalExternal for HelloWorldExternal {
     fn new(builder: &mut dyn SignalExternalBuilder<Self>) -> Self {
+        let builder = builder.with_dsp(1, 0);
         Self {
             inlet: builder.new_passive_float_inlet(4f32),
-            //outlet: builder.new_outlet(OutletType::Float),
         }
     }
     fn process(
@@ -32,7 +32,7 @@ impl SignalExternal for HelloWorldExternal {
         inputs: &[&[puredata_sys::t_float]],
         outputs: &[&mut [puredata_sys::t_float]],
     ) {
-        println!("process!! {} {} {}", frames, inputs.len(), outputs.len(),);
+        //println!("process!! {} {} {}", frames, inputs.len(), outputs.len(),);
     }
 }
 
@@ -77,7 +77,10 @@ pub unsafe extern "C" fn hellodsp_tilde_dsp_trampoline(
 pub unsafe extern "C" fn hellodsp_tilde_perform_trampoline(
     w: *mut puredata_sys::t_int,
 ) -> *mut puredata_sys::t_int {
-    let x = &mut *std::mem::transmute::<_, *mut Wrapped>(w.offset(1));
+    //actually longer than 2 but .offset(1) didn't seem to work correctly
+    //but slice does
+    let x = std::slice::from_raw_parts(w, 2);
+    let x = &mut *std::mem::transmute::<_, *mut Wrapped>(x[1]);
     x.perform(w)
 }
 

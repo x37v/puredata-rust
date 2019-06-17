@@ -15,23 +15,13 @@ pub trait ExternalBuilder<T> {
 }
 
 pub trait SignalExternalBuilder<T> {
-    fn new_passive_float_inlet(
-        &mut self,
-        initial_value: puredata_sys::t_float,
-    ) -> Rc<dyn Deref<Target = puredata_sys::t_float>>;
-    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>);
-    fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend>;
-    fn new_signal_inlet(&mut self) -> Rc<dyn InletSignal>;
-    fn new_signal_outlet(&mut self) -> Rc<dyn OutletSignal>;
+    fn with_dsp(&mut self, inputs: usize, outputs: usize) -> &mut dyn ExternalBuilder<T>;
 }
 
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
-    float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
-}
-
-pub struct SignalBuilder<'a, T> {
-    obj: &'a mut dyn AsObject,
+    dsp_inputs: usize,
+    dsp_outputs: usize,
     float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
 }
 
@@ -39,17 +29,18 @@ impl<'a, T> Builder<'a, T> {
     pub fn new(obj: &'a mut dyn AsObject) -> Self {
         Self {
             obj,
+            dsp_inputs: 0,
+            dsp_outputs: 0,
             float_inlets: Vec::new(),
         }
     }
-}
 
-impl<'a, T> SignalBuilder<'a, T> {
-    pub fn new(obj: &'a mut dyn AsObject) -> Self {
-        Self {
-            obj,
-            float_inlets: Vec::new(),
-        }
+    pub fn dsp_inputs(&self) -> usize {
+        self.dsp_inputs
+    }
+
+    pub fn dsp_outputs(&self) -> usize {
+        self.dsp_outputs
     }
 }
 
@@ -70,27 +61,11 @@ impl<'a, T> ExternalBuilder<T> for Builder<'a, T> {
     }
 }
 
-impl<'a, T> SignalExternalBuilder<T> for SignalBuilder<'a, T> {
-    fn new_passive_float_inlet(
-        &mut self,
-        initial_value: puredata_sys::t_float,
-    ) -> Rc<dyn Deref<Target = puredata_sys::t_float>> {
-        Rc::new(FloatInlet::new(self.obj, initial_value))
-    }
-
-    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>) {
-        self.float_inlets.push(func);
-    }
-
-    fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend> {
-        Rc::new(Outlet::new(t, self.obj))
-    }
-
-    fn new_signal_inlet(&mut self) -> Rc<dyn InletSignal> {
-        unimplemented!();
-    }
-    fn new_signal_outlet(&mut self) -> Rc<dyn OutletSignal> {
-        unimplemented!();
+impl<'a, T> SignalExternalBuilder<T> for Builder<'a, T> {
+    fn with_dsp(&mut self, inputs: usize, outputs: usize) -> &mut dyn ExternalBuilder<T> {
+        self.dsp_inputs = inputs;
+        self.dsp_outputs = outputs;
+        self as &mut dyn ExternalBuilder<T>
     }
 }
 
