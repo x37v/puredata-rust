@@ -28,6 +28,8 @@ fn main() {
         "glob_.*",
         "canvas_.*",
         "sys_.*",
+        "signal.*",
+        "symbol.*",
         "class_.*",
         "obj_.*",
         "plus_perform",
