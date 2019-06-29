@@ -18,6 +18,14 @@ pub trait SignalExternalBuilder<T> {
     fn with_dsp(&mut self, inputs: usize, outputs: usize) -> &mut dyn ExternalBuilder<T>;
 }
 
+pub trait SignalGeneratorExternalBuilder<T>: ExternalBuilder<T> {
+    fn new_signal_outlet(&mut self);
+}
+
+pub trait SignalProcessorExternalBuilder<T>: SignalGeneratorExternalBuilder<T> {
+    fn new_signal_inlet(&mut self);
+}
+
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
     dsp_inputs: usize,

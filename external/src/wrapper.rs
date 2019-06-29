@@ -1,31 +1,61 @@
-use crate::builder::Builder;
-use crate::external::{External, SignalExternal};
+use crate::builder::*;
+use crate::external::*;
 use crate::method::PdDspPerform;
 use crate::obj::AsObject;
 use crate::outlet::{OutletSignal, SignalOutlet};
 use std::rc::Rc;
 use std::slice;
 
-#[repr(C)]
-pub struct ExternalWrapper<T>
+struct ControlExternalWrapperInternal<T>
 where
-    T: External,
+    T: ControlExternal,
 {
-    x_obj: puredata_sys::t_object,
-    pub external: Option<T>,
+    wrapped: T,
+}
+
+struct SignalGeneratorExternalWrapperInternal<T>
+where
+    T: SignalGeneratorExternal,
+{
+    wrapped: T,
+    signal_outlets: Vec<Rc<dyn OutletSignal>>,
+}
+
+struct SignalProcessorExternalWrapperInternal<T>
+where
+    T: SignalProcessorExternal,
+{
+    wrapped: T,
+    signal_outlets: Vec<Rc<dyn OutletSignal>>,
+    signal_inlets: Vec<Rc<dyn InletSignal>>,
 }
 
 #[repr(C)]
-pub struct SignalExternalWrapper<T>
+pub struct ControlExternalWrapper<T>
 where
-    T: SignalExternal,
+    T: ControlExternal,
+{
+    x_obj: puredata_sys::t_object,
+    wrapped: Option<ControlExternalWrapperInternal<T>>,
+}
+
+#[repr(C)]
+pub struct SignalGeneratorExternalWrapper<T>
+where
+    T: SignalGeneratorExternal,
+{
+    x_obj: puredata_sys::t_object,
+    wrapped: Option<SignalGeneratorExternalWrapperInternal<T>>,
+}
+
+#[repr(C)]
+pub struct SignalProcessorExternalWrapper<T>
+where
+    T: SignalProcessorExternal,
 {
     convert: puredata_sys::t_float, //intentionally at the start
     x_obj: puredata_sys::t_object,
-    pub external: Option<T>,
-    dsp_inputs: usize,
-    dsp_outputs: usize,
-    signal_outlet: Option<Rc<dyn OutletSignal>>,
+    wrapped: Option<SignalGeneratorExternalWrapperInternal<T>>,
 }
 
 impl<T> ExternalWrapper<T>
