@@ -1,16 +1,16 @@
-use puredata_external::builder::SignalExternalBuilder;
+use puredata_external::builder::SignalProcessorExternalBuilder;
 use puredata_external::class::{Class, SignalClassType};
-use puredata_external::external::SignalExternal;
+use puredata_external::external::SignalProcessorExternal;
 use puredata_external::method::Method;
 use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
-use puredata_external::wrapper::SignalExternalWrapper;
+use puredata_external::wrapper::SignalProcessorExternalWrapper;
 
 use std::ffi::CString;
 use std::ops::Deref;
 use std::rc::Rc;
 
-pub type Wrapped = SignalExternalWrapper<HelloWorldExternal>;
+pub type Wrapped = SignalProcessorExternalWrapper<HelloWorldExternal>;
 
 static mut HELLODSP_CLASS: Option<*mut puredata_sys::_class> = None;
 
@@ -19,9 +19,8 @@ pub struct HelloWorldExternal {
     //outlet: Rc<dyn OutletSend>,
 }
 
-impl SignalExternal for HelloWorldExternal {
-    fn new(builder: &mut dyn SignalExternalBuilder<Self>) -> Self {
-        let builder = builder.with_dsp(1, 0);
+impl SignalProcessorExternal for HelloWorldExternal {
+    fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Self {
         Self {
             inlet: builder.new_passive_float_inlet(4f32),
         }
@@ -32,7 +31,7 @@ impl SignalExternal for HelloWorldExternal {
         inputs: &[&[puredata_sys::t_float]],
         outputs: &[&mut [puredata_sys::t_float]],
     ) {
-        //println!("process!! {} {} {}", frames, inputs.len(), outputs.len(),);
+        println!("process!! {} {} {}", frames, inputs.len(), outputs.len(),);
     }
 }
 
