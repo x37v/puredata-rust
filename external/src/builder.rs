@@ -5,7 +5,17 @@ use crate::outlet::{Outlet, OutletSend, OutletSignal, OutletType};
 use std::ops::Deref;
 use std::rc::Rc;
 
-//XXX do these builders actually need the generic parameter??
+pub type RcInletSignal = Rc<dyn InletSignal>;
+pub type RcOutletSignal = Rc<dyn OutletSignal>;
+pub type BoxFloatInlet<T> = Box<Fn(&mut T, puredata_sys::t_float)>;
+
+pub type IntoBuiltControl<T> = (Vec<BoxFloatInlet<T>>);
+pub type IntoBuiltGenerator<T> = (Vec<BoxFloatInlet<T>>, Vec<RcOutletSignal>);
+pub type IntoBuiltProcessor<T> = (
+    Vec<BoxFloatInlet<T>>,
+    Vec<RcOutletSignal>,
+    Vec<RcInletSignal>,
+);
 
 pub trait ControlExternalBuilder<T> {
     fn new_passive_float_inlet(
@@ -26,8 +36,8 @@ pub trait SignalProcessorExternalBuilder<T>: SignalGeneratorExternalBuilder<T> {
 
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
-    dsp_inputs: usize,
-    dsp_outputs: usize,
+    dsp_inputs: Vec<Rc<dyn InletSignal>>,
+    dsp_outputs: Vec<Rc<dyn OutletSignal>>,
     float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
 }
 
@@ -35,18 +45,36 @@ impl<'a, T> Builder<'a, T> {
     pub fn new(obj: &'a mut dyn AsObject) -> Self {
         Self {
             obj,
-            dsp_inputs: 0,
-            dsp_outputs: 0,
+            dsp_inputs: Vec::new(),
+            dsp_outputs: Vec::new(),
             float_inlets: Vec::new(),
         }
     }
 
     pub fn dsp_inputs(&self) -> usize {
-        self.dsp_inputs
+        self.dsp_inputs.len()
     }
 
     pub fn dsp_outputs(&self) -> usize {
-        self.dsp_outputs
+        self.dsp_outputs.len()
+    }
+}
+
+impl<'a, T> Into<IntoBuiltControl<T>> for Builder<'a, T> {
+    fn into(self) -> IntoBuiltControl<T> {
+        (self.float_inlets)
+    }
+}
+
+impl<'a, T> Into<IntoBuiltGenerator<T>> for Builder<'a, T> {
+    fn into(self) -> IntoBuiltGenerator<T> {
+        (self.float_inlets, self.dsp_outputs)
+    }
+}
+
+impl<'a, T> Into<IntoBuiltProcessor<T>> for Builder<'a, T> {
+    fn into(self) -> IntoBuiltProcessor<T> {
+        (self.float_inlets, self.dsp_outputs, self.dsp_inputs)
     }
 }
 
@@ -64,6 +92,18 @@ impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
 
     fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend> {
         Rc::new(Outlet::new(t, self.obj))
+    }
+}
+
+impl<'a, T> SignalGeneratorExternalBuilder<T> for Builder<'a, T> {
+    fn new_signal_outlet(&mut self) {
+        unimplemented!();
+    }
+}
+
+impl<'a, T> SignalProcessorExternalBuilder<T> for Builder<'a, T> {
+    fn new_signal_inlet(&mut self) {
+        unimplemented!();
     }
 }
 
