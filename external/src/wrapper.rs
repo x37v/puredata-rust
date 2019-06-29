@@ -77,9 +77,10 @@ where
     T: SignalGeneratorExternal,
 {
     pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
+        let temp: IntoBuiltGenerator<T> = builder.into();
         Self {
             wrapped,
-            signal_outlets: Vec::new(),
+            signal_outlets: temp.1,
         }
     }
 
@@ -97,10 +98,11 @@ where
     T: SignalProcessorExternal,
 {
     pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
+        let temp: IntoBuiltProcessor<T> = builder.into();
         Self {
             wrapped,
-            signal_inlets: Vec::new(),
-            signal_outlets: Vec::new(),
+            signal_outlets: temp.1,
+            signal_inlets: temp.2,
         }
     }
 
