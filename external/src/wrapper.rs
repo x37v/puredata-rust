@@ -48,6 +48,7 @@ where
 {
     wrapped: T,
     signal_outlets: Vec<Rc<dyn OutletSignal>>,
+    outlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
 }
 
 struct SignalProcessorExternalWrapperInternal<T>
@@ -57,13 +58,15 @@ where
     wrapped: T,
     signal_outlets: Vec<Rc<dyn OutletSignal>>,
     signal_inlets: Vec<Rc<dyn InletSignal>>,
+    outlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
+    inlet_buffer: Vec<&'static [puredata_sys::t_float]>,
 }
 
 impl<T> ControlExternalWrapperInternal<T>
 where
     T: ControlExternal,
 {
-    pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
+    pub fn new<'a>(wrapped: T, _builder: Builder<T>) -> Self {
         Self { wrapped }
     }
 
@@ -78,9 +81,11 @@ where
 {
     pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
         let temp: IntoBuiltGenerator<T> = builder.into();
+        let outlets = temp.1.len();
         Self {
             wrapped,
             signal_outlets: temp.1,
+            outlet_buffer: Vec::with_capacity(outlets),
         }
     }
 
@@ -91,6 +96,21 @@ where
     pub fn signal_iolets(&self) -> usize {
         self.signal_outlets.len()
     }
+
+    pub fn generate(&mut self, nframes: usize, buffer: *mut puredata_sys::t_int) {
+        //assign the slices
+        unsafe {
+            for i in 0..self.outlet_buffer.len() {
+                let output = std::mem::transmute::<_, *mut puredata_sys::t_sample>(
+                    buffer.offset(i as isize),
+                );
+                let output = slice::from_raw_parts_mut(output, nframes);
+                self.outlet_buffer[i] = output;
+            }
+        }
+        let output_slice = self.outlet_buffer.as_ref();
+        self.wrapped.generate(nframes, output_slice);
+    }
 }
 
 impl<T> SignalProcessorExternalWrapperInternal<T>
@@ -99,10 +119,14 @@ where
 {
     pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
         let temp: IntoBuiltProcessor<T> = builder.into();
+        let outlets = temp.1.len();
+        let inlets = temp.2.len();
         Self {
             wrapped,
             signal_outlets: temp.1,
             signal_inlets: temp.2,
+            outlet_buffer: Vec::with_capacity(outlets),
+            inlet_buffer: Vec::with_capacity(inlets),
         }
     }
 
@@ -112,6 +136,31 @@ where
 
     pub fn signal_iolets(&self) -> usize {
         self.signal_outlets.len() + self.signal_inlets.len()
+    }
+
+    pub fn process(&mut self, nframes: usize, buffer: *mut puredata_sys::t_int) {
+        //assign the slices
+        unsafe {
+            for i in 0..self.outlet_buffer.len() {
+                let output = std::mem::transmute::<_, *mut puredata_sys::t_sample>(
+                    buffer.offset(i as isize),
+                );
+                let output = slice::from_raw_parts_mut(output, nframes);
+                self.outlet_buffer[i] = output;
+            }
+
+            let offset = self.outlet_buffer.len() as isize;
+            for i in 0..self.inlet_buffer.len() {
+                let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(
+                    buffer.offset(i as isize + offset),
+                );
+                let input = slice::from_raw_parts(input, nframes);
+                self.inlet_buffer[i] = input;
+            }
+        }
+        let output_slice = self.outlet_buffer.as_ref();
+        let input_slice = self.inlet_buffer.as_ref();
+        self.wrapped.process(nframes, input_slice, output_slice);
     }
 }
 
@@ -179,7 +228,23 @@ where
             .expect("external not initialized")
             .signal_iolets()
     }
-    //TODO, dsp and perform
+
+    pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
+        let iolets = self.signal_iolets();
+        setup_dsp(self, iolets, sv, trampoline);
+    }
+
+    pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
+        unsafe {
+            let iolets = self.signal_iolets();
+            let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
+            self.wrapped
+                .as_mut()
+                .expect("external not initialized")
+                .generate(nframes, w.offset(3));
+            w.offset((3 + iolets) as isize)
+        }
+    }
 }
 
 impl<T> SignalProcessorExternalWrapper<T>
@@ -214,71 +279,55 @@ where
             .signal_iolets()
     }
 
-    /*
-    fn init(&mut self) -> *mut ::std::os::raw::c_void {
-        let mut builder = Builder::new(self);
-        let e = SignalProcessorExternal::new(&mut builder);
-        //let dsp_inputs = builder.dsp_inputs();
-        //let dsp_outputs = builder.dsp_outputs();
-
-        self.external = Some(e);
-        self.dsp_inputs = dsp_inputs;
-        self.dsp_outputs = dsp_outputs;
-
-        //XXX allocate inputs/outputs
-        //self.signal_outlet = Some(Rc::new(SignalOutlet::new(self)));
-
-        let r = if dsp_inputs + dsp_outputs == 0 {
-            //XXX indicate error?
-            self.external = None;
-            std::ptr::null_mut::<Self>()
-        } else {
-            self as *mut Self
-        };
-        r as *mut ::std::os::raw::c_void
-    }
-    */
-
     pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
-        unsafe {
-            let dsp = self.signal_iolets();
-            let sv = slice::from_raw_parts(sv, dsp);
-            let len = (*sv[0]).s_n as usize;
-
-            //ptr to self, nframes, inputs, outputs
-            let vecsize = 2 + dsp;
-            let vecnbytes = vecsize * std::mem::size_of::<*mut puredata_sys::t_int>();
-            let vecp = puredata_sys::getbytes(vecnbytes);
-            let vec = std::mem::transmute::<_, *mut *mut puredata_sys::t_int>(vecp);
-            assert!(!vecp.is_null(), "null pointer from puredata_sys::getbytes",);
-
-            let vec: &mut [*mut puredata_sys::t_int] = slice::from_raw_parts_mut(vec, vecsize);
-            vec[1] = std::mem::transmute::<_, _>(len);
-            for i in 0..dsp {
-                vec[2 + i] = std::mem::transmute::<_, _>((*sv[i]).s_vec);
-            }
-
-            vec[0] = std::mem::transmute::<_, _>(self);
-
-            puredata_sys::dsp_addv(
-                Some(trampoline),
-                vecsize as std::os::raw::c_int,
-                std::mem::transmute::<_, *mut puredata_sys::t_int>(vecp),
-            );
-            puredata_sys::freebytes(vecp, vecnbytes);
-        }
+        let iolets = self.signal_iolets();
+        setup_dsp(self, iolets, sv, trampoline);
     }
 
     pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
         unsafe {
-            let dsp = self.signal_iolets();
-
+            let iolets = self.signal_iolets();
             let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
-            let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(w.offset(3));
-            let input = slice::from_raw_parts(input, nframes);
-            self.wrapped().process(nframes, &[input], &mut []);
-            w.offset((3 + dsp) as isize)
+            self.wrapped
+                .as_mut()
+                .expect("external not initialized")
+                .process(nframes, w.offset(3));
+            w.offset((3 + iolets) as isize)
         }
+    }
+}
+
+fn setup_dsp<T>(
+    obj: &mut T,
+    iolets: usize,
+    sv: *mut *mut puredata_sys::t_signal,
+    trampoline: PdDspPerform,
+) {
+    unsafe {
+        let sv = slice::from_raw_parts(sv, iolets);
+        let len = (*sv[0]).s_n as usize;
+
+        //ptr to self, nframes, inputs, outputs
+        let vecsize = 2 + iolets;
+        let vecnbytes = vecsize * std::mem::size_of::<*mut puredata_sys::t_int>();
+        let vecp = puredata_sys::getbytes(vecnbytes);
+        let vec = std::mem::transmute::<_, *mut *mut puredata_sys::t_int>(vecp);
+        assert!(!vecp.is_null(), "null pointer from puredata_sys::getbytes",);
+
+        let vec: &mut [*mut puredata_sys::t_int] = slice::from_raw_parts_mut(vec, vecsize);
+        vec[1] = std::mem::transmute::<_, _>(len);
+        for i in 0..iolets {
+            vec[2 + i] = std::mem::transmute::<_, _>((*sv[i]).s_vec);
+        }
+
+        vec[0] = std::mem::transmute::<_, _>(obj);
+
+        puredata_sys::dsp_addv(
+            Some(trampoline),
+            vecsize as std::os::raw::c_int,
+            std::mem::transmute::<_, *mut puredata_sys::t_int>(vecp),
+        );
+        puredata_sys::freebytes(vecp, vecnbytes);
     }
 }
 
