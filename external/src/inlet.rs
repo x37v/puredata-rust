@@ -56,6 +56,7 @@ impl SignalInlet {
                     &mut puredata_sys::s_signal,
                     &mut puredata_sys::s_signal,
                 ),
+                //ptr: puredata_sys::signalinlet_new(obj, 0 as puredata_sys::t_float),
             }
         }
     }
