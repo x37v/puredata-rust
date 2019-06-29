@@ -5,7 +5,9 @@ use crate::outlet::{Outlet, OutletSend, OutletSignal, OutletType};
 use std::ops::Deref;
 use std::rc::Rc;
 
-pub trait ExternalBuilder<T> {
+//XXX do these builders actually need the generic parameter??
+
+pub trait ControlExternalBuilder<T> {
     fn new_passive_float_inlet(
         &mut self,
         initial_value: puredata_sys::t_float,
@@ -14,11 +16,7 @@ pub trait ExternalBuilder<T> {
     fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend>;
 }
 
-pub trait SignalExternalBuilder<T> {
-    fn with_dsp(&mut self, inputs: usize, outputs: usize) -> &mut dyn ExternalBuilder<T>;
-}
-
-pub trait SignalGeneratorExternalBuilder<T>: ExternalBuilder<T> {
+pub trait SignalGeneratorExternalBuilder<T>: ControlExternalBuilder<T> {
     fn new_signal_outlet(&mut self);
 }
 
@@ -52,7 +50,7 @@ impl<'a, T> Builder<'a, T> {
     }
 }
 
-impl<'a, T> ExternalBuilder<T> for Builder<'a, T> {
+impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
     fn new_passive_float_inlet(
         &mut self,
         initial_value: puredata_sys::t_float,
@@ -66,14 +64,6 @@ impl<'a, T> ExternalBuilder<T> for Builder<'a, T> {
 
     fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend> {
         Rc::new(Outlet::new(t, self.obj))
-    }
-}
-
-impl<'a, T> SignalExternalBuilder<T> for Builder<'a, T> {
-    fn with_dsp(&mut self, inputs: usize, outputs: usize) -> &mut dyn ExternalBuilder<T> {
-        self.dsp_inputs = inputs;
-        self.dsp_outputs = outputs;
-        self as &mut dyn ExternalBuilder<T>
     }
 }
 

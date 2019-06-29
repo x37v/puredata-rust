@@ -4,10 +4,6 @@ use std::ffi::CString;
 use std::marker::PhantomData;
 use std::os::raw::c_int;
 
-pub trait ExternalClass {
-    pub fn register_new()
-}
-
 pub struct Class<T> {
     pd_class: *mut puredata_sys::_class,
     phantom: PhantomData<T>,

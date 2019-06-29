@@ -1,9 +1,7 @@
-use crate::builder::{
-    ExternalBuilder, SignalGeneratorExternalBuilder, SignalProcessorExternalBuilder,
-};
+use crate::builder::*;
 
 pub trait ControlExternal {
-    fn new(builder: &mut dyn ExternalBuilder<Self>) -> Self;
+    fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self;
 }
 
 pub trait SignalGeneratorExternal {

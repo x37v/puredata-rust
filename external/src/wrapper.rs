@@ -1,34 +1,11 @@
 use crate::builder::*;
 use crate::external::*;
+use crate::inlet::InletSignal;
 use crate::method::PdDspPerform;
 use crate::obj::AsObject;
 use crate::outlet::{OutletSignal, SignalOutlet};
 use std::rc::Rc;
 use std::slice;
-
-struct ControlExternalWrapperInternal<T>
-where
-    T: ControlExternal,
-{
-    wrapped: T,
-}
-
-struct SignalGeneratorExternalWrapperInternal<T>
-where
-    T: SignalGeneratorExternal,
-{
-    wrapped: T,
-    signal_outlets: Vec<Rc<dyn OutletSignal>>,
-}
-
-struct SignalProcessorExternalWrapperInternal<T>
-where
-    T: SignalProcessorExternal,
-{
-    wrapped: T,
-    signal_outlets: Vec<Rc<dyn OutletSignal>>,
-    signal_inlets: Vec<Rc<dyn InletSignal>>,
-}
 
 #[repr(C)]
 pub struct ControlExternalWrapper<T>
@@ -55,12 +32,82 @@ where
 {
     convert: puredata_sys::t_float, //intentionally at the start
     x_obj: puredata_sys::t_object,
-    wrapped: Option<SignalGeneratorExternalWrapperInternal<T>>,
+    wrapped: Option<SignalProcessorExternalWrapperInternal<T>>,
 }
 
-impl<T> ExternalWrapper<T>
+struct ControlExternalWrapperInternal<T>
 where
-    T: External,
+    T: ControlExternal,
+{
+    wrapped: T,
+}
+
+struct SignalGeneratorExternalWrapperInternal<T>
+where
+    T: SignalGeneratorExternal,
+{
+    wrapped: T,
+    signal_outlets: Vec<Rc<dyn OutletSignal>>,
+}
+
+struct SignalProcessorExternalWrapperInternal<T>
+where
+    T: SignalProcessorExternal,
+{
+    wrapped: T,
+    signal_outlets: Vec<Rc<dyn OutletSignal>>,
+    signal_inlets: Vec<Rc<dyn InletSignal>>,
+}
+
+impl<T> ControlExternalWrapperInternal<T>
+where
+    T: ControlExternal,
+{
+    pub fn new<'a>(wrapped: T, builder: &'a mut dyn ControlExternalBuilder<T>) -> Self {
+        Self { wrapped }
+    }
+
+    pub fn wrapped(&mut self) -> &mut T {
+        &mut self.wrapped
+    }
+}
+
+impl<T> SignalGeneratorExternalWrapperInternal<T>
+where
+    T: SignalGeneratorExternal,
+{
+    pub fn new<'a>(wrapped: T, builder: &'a mut dyn SignalGeneratorExternalBuilder<T>) -> Self {
+        Self {
+            wrapped,
+            signal_outlets: Vec::new(),
+        }
+    }
+
+    pub fn wrapped(&mut self) -> &mut T {
+        &mut self.wrapped
+    }
+}
+
+impl<T> SignalProcessorExternalWrapperInternal<T>
+where
+    T: SignalProcessorExternal,
+{
+    pub fn new<'a>(wrapped: T, builder: &'a mut dyn SignalProcessorExternalBuilder<T>) -> Self {
+        Self {
+            wrapped,
+            signal_inlets: Vec::new(),
+            signal_outlets: Vec::new(),
+        }
+    }
+
+    pub fn wrapped(&mut self) -> &mut T {
+        &mut self.wrapped
+    }
+}
+
+impl<T> ControlExternalWrapper<T>
+where
+    T: ControlExternal,
 {
     pub unsafe fn new(pd_class: *mut puredata_sys::_class) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
@@ -72,27 +119,30 @@ where
 
     fn init(&mut self) {
         let mut builder = Builder::new(self);
-        let e = External::new(&mut builder);
-        self.external = Some(e);
+        let e = ControlExternal::new(&mut builder);
+        self.wrapped = Some(ControlExternalWrapperInternal::new(e, &mut builder));
     }
 
     pub fn wrapped(&mut self) -> &mut T {
-        self.external.as_mut().expect("external not initialized")
+        self.wrapped
+            .as_mut()
+            .expect("external not initialized")
+            .wrapped()
     }
 }
 
-impl<T> AsObject for ExternalWrapper<T>
+impl<T> AsObject for ControlExternalWrapper<T>
 where
-    T: External,
+    T: ControlExternal,
 {
     fn as_obj(&mut self) -> *mut puredata_sys::t_object {
         &mut self.x_obj
     }
 }
 
-impl<T> SignalExternalWrapper<T>
+impl<T> SignalProcessorExternalWrapper<T>
 where
-    T: SignalExternal,
+    T: SignalProcessorExternal,
 {
     pub unsafe fn new(pd_class: *mut puredata_sys::_class) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
@@ -103,9 +153,9 @@ where
 
     fn init(&mut self) -> *mut ::std::os::raw::c_void {
         let mut builder = Builder::new(self);
-        let e = SignalExternal::new(&mut builder);
-        let dsp_inputs = builder.dsp_inputs();
-        let dsp_outputs = builder.dsp_outputs();
+        let e = SignalProcessorExternal::new(&mut builder);
+        //let dsp_inputs = builder.dsp_inputs();
+        //let dsp_outputs = builder.dsp_outputs();
 
         self.external = Some(e);
         self.dsp_inputs = dsp_inputs;
@@ -171,18 +221,18 @@ where
     }
 }
 
-impl<T> AsObject for SignalExternalWrapper<T>
+impl<T> AsObject for SignalGeneratorExternalWrapper<T>
 where
-    T: SignalExternal,
+    T: SignalGeneratorExternal,
 {
     fn as_obj(&mut self) -> *mut puredata_sys::t_object {
         &mut self.x_obj
     }
 }
 
-impl<T> Drop for SignalExternalWrapper<T>
+impl<T> Drop for SignalGeneratorExternalWrapper<T>
 where
-    T: SignalExternal,
+    T: SignalGeneratorExternal,
 {
     fn drop(&mut self) {
         //TODO
