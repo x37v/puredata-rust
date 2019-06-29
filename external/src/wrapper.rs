@@ -82,10 +82,16 @@ where
     pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
         let temp: IntoBuiltGenerator<T> = builder.into();
         let outlets = temp.1.len();
+        let mut outlet_buffer = Vec::new();
+        unsafe {
+            for i in 0..outlets {
+                outlet_buffer.push(slice::from_raw_parts_mut(std::ptr::null_mut(), 0));
+            }
+        }
         Self {
             wrapped,
             signal_outlets: temp.1,
-            outlet_buffer: Vec::with_capacity(outlets),
+            outlet_buffer,
         }
     }
 
@@ -119,14 +125,25 @@ where
 {
     pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
         let temp: IntoBuiltProcessor<T> = builder.into();
+        let inlets = temp.2.len() + 1; //one default
         let outlets = temp.1.len();
-        let inlets = temp.2.len();
+        let mut inlet_buffer = Vec::new();
+        let mut outlet_buffer = Vec::new();
+        //reserve space for slices, 0 len for now
+        unsafe {
+            for i in 0..inlets {
+                inlet_buffer.push(slice::from_raw_parts(std::ptr::null(), 0));
+            }
+            for i in 0..outlets {
+                outlet_buffer.push(slice::from_raw_parts_mut(std::ptr::null_mut(), 0));
+            }
+        }
         Self {
             wrapped,
             signal_outlets: temp.1,
             signal_inlets: temp.2,
-            outlet_buffer: Vec::with_capacity(outlets),
-            inlet_buffer: Vec::with_capacity(inlets),
+            inlet_buffer,
+            outlet_buffer,
         }
     }
 
@@ -135,28 +152,31 @@ where
     }
 
     pub fn signal_iolets(&self) -> usize {
-        self.signal_outlets.len() + self.signal_inlets.len()
+        self.inlet_buffer.len() + self.outlet_buffer.len()
     }
 
     pub fn process(&mut self, nframes: usize, buffer: *mut puredata_sys::t_int) {
         //assign the slices
+        //inputs first
         unsafe {
+            for i in 0..self.inlet_buffer.len() {
+                let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(
+                    buffer.offset(i as isize),
+                );
+                let input = slice::from_raw_parts(input, nframes);
+                self.inlet_buffer[i] = input;
+            }
+
+            let offset = self.inlet_buffer.len() as isize;
             for i in 0..self.outlet_buffer.len() {
                 let output = std::mem::transmute::<_, *mut puredata_sys::t_sample>(
-                    buffer.offset(i as isize),
+                    buffer.offset(i as isize + offset),
                 );
                 let output = slice::from_raw_parts_mut(output, nframes);
                 self.outlet_buffer[i] = output;
             }
 
             let offset = self.outlet_buffer.len() as isize;
-            for i in 0..self.inlet_buffer.len() {
-                let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(
-                    buffer.offset(i as isize + offset),
-                );
-                let input = slice::from_raw_parts(input, nframes);
-                self.inlet_buffer[i] = input;
-            }
         }
         let output_slice = self.outlet_buffer.as_ref();
         let input_slice = self.inlet_buffer.as_ref();
