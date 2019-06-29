@@ -1,4 +1,10 @@
+use crate::obj::AsObject;
+
 pub trait InletSignal {}
+
+pub struct SignalInlet {
+    ptr: *mut puredata_sys::_inlet,
+}
 
 pub mod passive {
     use crate::obj::AsObject;
@@ -38,3 +44,21 @@ pub mod passive {
         }
     }
 }
+
+impl SignalInlet {
+    pub fn new(owner: &mut dyn AsObject) -> Self {
+        unsafe {
+            let obj = owner.as_obj();
+            Self {
+                ptr: puredata_sys::inlet_new(
+                    obj,
+                    &mut (*obj).te_g.g_pd,
+                    &mut puredata_sys::s_signal,
+                    &mut puredata_sys::s_signal,
+                ),
+            }
+        }
+    }
+}
+
+impl InletSignal for SignalInlet {}

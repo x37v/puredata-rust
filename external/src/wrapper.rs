@@ -129,6 +129,12 @@ where
         let outlets = temp.1.len();
         let mut inlet_buffer = Vec::new();
         let mut outlet_buffer = Vec::new();
+
+        println!(
+            "SignalProcessorExternalWrapperInternal {} {}",
+            inlets, outlets
+        );
+
         //reserve space for slices, 0 len for now
         unsafe {
             for i in 0..inlets {
@@ -225,7 +231,7 @@ where
         let mut builder = Builder::new(self);
         let e = SignalGeneratorExternal::new(&mut builder);
         //make sure we have some output
-        let r = if builder.dsp_outputs() == 0 {
+        let r = if builder.signal_outlets() == 0 {
             //XXX indicate error
             std::ptr::null_mut::<Self>()
         } else {

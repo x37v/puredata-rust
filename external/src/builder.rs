@@ -1,7 +1,7 @@
 use crate::inlet::passive::FloatInlet;
-use crate::inlet::InletSignal;
+use crate::inlet::*;
 use crate::obj::AsObject;
-use crate::outlet::{Outlet, OutletSend, OutletSignal, OutletType};
+use crate::outlet::{Outlet, OutletSend, OutletSignal, OutletType, SignalOutlet};
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -36,8 +36,8 @@ pub trait SignalProcessorExternalBuilder<T>: SignalGeneratorExternalBuilder<T> {
 
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
-    dsp_inputs: Vec<Rc<dyn InletSignal>>,
-    dsp_outputs: Vec<Rc<dyn OutletSignal>>,
+    signal_inlets: Vec<Rc<dyn InletSignal>>,
+    signal_outlets: Vec<Rc<dyn OutletSignal>>,
     float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
 }
 
@@ -45,18 +45,18 @@ impl<'a, T> Builder<'a, T> {
     pub fn new(obj: &'a mut dyn AsObject) -> Self {
         Self {
             obj,
-            dsp_inputs: Vec::new(),
-            dsp_outputs: Vec::new(),
+            signal_inlets: Vec::new(),
+            signal_outlets: Vec::new(),
             float_inlets: Vec::new(),
         }
     }
 
-    pub fn dsp_inputs(&self) -> usize {
-        self.dsp_inputs.len()
+    pub fn signal_inlets(&self) -> usize {
+        self.signal_inlets.len()
     }
 
-    pub fn dsp_outputs(&self) -> usize {
-        self.dsp_outputs.len()
+    pub fn signal_outlets(&self) -> usize {
+        self.signal_outlets.len()
     }
 }
 
@@ -68,13 +68,13 @@ impl<'a, T> Into<IntoBuiltControl<T>> for Builder<'a, T> {
 
 impl<'a, T> Into<IntoBuiltGenerator<T>> for Builder<'a, T> {
     fn into(self) -> IntoBuiltGenerator<T> {
-        (self.float_inlets, self.dsp_outputs)
+        (self.float_inlets, self.signal_outlets)
     }
 }
 
 impl<'a, T> Into<IntoBuiltProcessor<T>> for Builder<'a, T> {
     fn into(self) -> IntoBuiltProcessor<T> {
-        (self.float_inlets, self.dsp_outputs, self.dsp_inputs)
+        (self.float_inlets, self.signal_outlets, self.signal_inlets)
     }
 }
 
@@ -97,13 +97,16 @@ impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
 
 impl<'a, T> SignalGeneratorExternalBuilder<T> for Builder<'a, T> {
     fn new_signal_outlet(&mut self) {
-        unimplemented!();
+        println!("building signal outlet");
+        self.signal_outlets
+            .push(Rc::new(SignalOutlet::new(self.obj)));
     }
 }
 
 impl<'a, T> SignalProcessorExternalBuilder<T> for Builder<'a, T> {
     fn new_signal_inlet(&mut self) {
-        unimplemented!();
+        println!("building signal inlet");
+        self.signal_inlets.push(Rc::new(SignalInlet::new(self.obj)));
     }
 }
 
