@@ -47,7 +47,7 @@ where
     T: SignalGeneratorExternal,
 {
     wrapped: T,
-    signal_outlets: Vec<Rc<dyn OutletSignal>>,
+    signal_outlets: Vec<RcOutletSignal>,
     outlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
 }
 
@@ -56,8 +56,8 @@ where
     T: SignalProcessorExternal,
 {
     wrapped: T,
-    signal_outlets: Vec<Rc<dyn OutletSignal>>,
-    signal_inlets: Vec<Rc<dyn InletSignal>>,
+    signal_outlets: Vec<RcOutletSignal>,
+    signal_inlets: Vec<RcInletSignal>,
     outlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
     inlet_buffer: Vec<&'static [puredata_sys::t_float]>,
 }

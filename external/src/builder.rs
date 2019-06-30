@@ -36,8 +36,8 @@ pub trait SignalProcessorExternalBuilder<T>: SignalGeneratorExternalBuilder<T> {
 
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
-    signal_inlets: Vec<Rc<dyn InletSignal>>,
-    signal_outlets: Vec<Rc<dyn OutletSignal>>,
+    signal_inlets: Vec<RcInletSignal>,
+    signal_outlets: Vec<RcOutletSignal>,
     float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
 }
 
