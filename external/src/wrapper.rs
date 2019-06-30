@@ -281,7 +281,9 @@ where
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
             pd_class,
         ));
+        println!("SignalProcessorExternalWrapper::new({:p})", &mut obj.x_obj);
         obj.init();
+
         obj as *mut Self as *mut ::std::os::raw::c_void
     }
 

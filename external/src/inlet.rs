@@ -23,6 +23,7 @@ pub mod passive {
                 let value = Box::into_raw(value);
                 let inlet = puredata_sys::floatinlet_new(owner.as_obj(), value);
                 let value = Box::from_raw(value);
+                println!("new passive float inlet {:p}", &mut (*owner.as_obj()));
                 Self { inlet, value }
             }
         }
@@ -49,6 +50,7 @@ impl SignalInlet {
     pub fn new(owner: &mut dyn AsObject) -> Self {
         unsafe {
             let obj = owner.as_obj();
+            println!("SignalInlet::new({:p})", obj);
             Self {
                 ptr: puredata_sys::inlet_new(
                     obj,

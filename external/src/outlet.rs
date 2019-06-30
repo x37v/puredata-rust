@@ -82,9 +82,11 @@ impl Drop for Outlet {
 
 impl SignalOutlet {
     pub fn new(owner: &mut dyn AsObject) -> Self {
+        let obj = owner.as_obj();
         unsafe {
+            println!("SignalOutlet::new({:p})", obj);
             Self {
-                ptr: puredata_sys::outlet_new(owner.as_obj(), &mut puredata_sys::s_signal),
+                ptr: puredata_sys::outlet_new(obj, &mut puredata_sys::s_signal),
             }
         }
     }
