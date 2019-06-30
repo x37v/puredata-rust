@@ -1,16 +1,16 @@
-use puredata_external::builder::ExternalBuilder;
+use puredata_external::builder::ControlExternalBuilder;
 use puredata_external::class::Class;
-use puredata_external::external::External;
+use puredata_external::external::ControlExternal;
 use puredata_external::method::Method;
 use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
-use puredata_external::wrapper::ExternalWrapper;
+use puredata_external::wrapper::ControlExternalWrapper;
 
 use std::ffi::CString;
 use std::ops::Deref;
 use std::rc::Rc;
 
-pub type Wrapped = ExternalWrapper<HelloWorldExternal>;
+pub type Wrapped = ControlExternalWrapper<HelloWorldExternal>;
 
 static mut HELLOWORLD_CLASS: Option<*mut puredata_sys::_class> = None;
 
@@ -19,8 +19,8 @@ pub struct HelloWorldExternal {
     //outlet: Rc<dyn OutletSend>,
 }
 
-impl External for HelloWorldExternal {
-    fn new(builder: &mut dyn ExternalBuilder<Self>) -> Self {
+impl ControlExternal for HelloWorldExternal {
+    fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
         Self {
             inlet: builder.new_passive_float_inlet(4f32),
             //outlet: builder.new_outlet(OutletType::Float),
