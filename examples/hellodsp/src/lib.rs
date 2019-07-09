@@ -22,6 +22,8 @@ pub struct HelloWorldExternal {
 impl SignalProcessorExternal for HelloWorldExternal {
     fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Self {
         builder.new_signal_outlet();
+        builder.new_signal_outlet();
+        builder.new_signal_outlet();
         //builder.new_signal_inlet();
         //builder.new_signal_inlet();
         Self {
@@ -92,7 +94,10 @@ pub unsafe extern "C" fn hellodsp_tilde_setup() {
     let mut c = Class::<Wrapped>::register_dsp_new(
         name,
         hellodsp_tilde_new,
-        SignalClassType::WithInput(hellodsp_tilde_dsp_trampoline, 0),
+        SignalClassType::WithInput(
+            hellodsp_tilde_dsp_trampoline,
+            std::mem::size_of::<puredata_sys::t_object>() as i32, //XXX should be offset of `convert`, in case the compiler moves it??
+        ),
         None,
     );
     c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));

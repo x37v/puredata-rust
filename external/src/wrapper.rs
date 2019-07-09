@@ -30,8 +30,8 @@ pub struct SignalProcessorExternalWrapper<T>
 where
     T: SignalProcessorExternal,
 {
-    convert: puredata_sys::t_float, //intentionally at the start
     x_obj: puredata_sys::t_object,
+    convert: puredata_sys::t_float,
     wrapped: Option<SignalProcessorExternalWrapperInternal<T>>,
 }
 
