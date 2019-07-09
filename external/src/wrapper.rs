@@ -114,7 +114,7 @@ where
                 self.outlet_buffer[i] = output;
             }
         }
-        let output_slice = self.outlet_buffer.as_ref();
+        let output_slice = self.outlet_buffer.as_mut();
         self.wrapped.generate(nframes, output_slice);
     }
 }
@@ -184,7 +184,7 @@ where
 
             let offset = self.outlet_buffer.len() as isize;
         }
-        let output_slice = self.outlet_buffer.as_ref();
+        let mut output_slice = self.outlet_buffer.as_mut();
         let input_slice = self.inlet_buffer.as_ref();
         self.wrapped.process(nframes, input_slice, output_slice);
     }
