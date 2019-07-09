@@ -162,29 +162,33 @@ where
     }
 
     pub fn process(&mut self, nframes: usize, buffer: *mut puredata_sys::t_int) {
+        let inlets = self.inlet_buffer.len();
+        let outlets = self.outlet_buffer.len();
         //assign the slices
         //inputs first
         unsafe {
-            for i in 0..self.inlet_buffer.len() {
-                let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(
-                    buffer.offset(i as isize),
-                );
+            let buffer = slice::from_raw_parts(buffer, inlets + outlets);
+            for i in 0..inlets {
+                let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(buffer[i]);
                 let input = slice::from_raw_parts(input, nframes);
                 self.inlet_buffer[i] = input;
             }
 
-            let offset = self.inlet_buffer.len() as isize;
-            for i in 0..self.outlet_buffer.len() {
-                let output = std::mem::transmute::<_, *mut puredata_sys::t_sample>(
-                    buffer.offset(i as isize + offset),
-                );
+            let offset = inlets;
+            for i in 0..outlets {
+                let output =
+                    std::mem::transmute::<_, *mut puredata_sys::t_sample>(buffer[i + offset]);
                 let output = slice::from_raw_parts_mut(output, nframes);
                 self.outlet_buffer[i] = output;
             }
-
-            let offset = self.outlet_buffer.len() as isize;
         }
-        let mut output_slice = self.outlet_buffer.as_mut();
+        println!(
+            "wrapper::process inlets {} outlets {} nframes {}",
+            self.inlet_buffer.len(),
+            self.outlet_buffer.len(),
+            nframes
+        );
+        let output_slice = self.outlet_buffer.as_mut();
         let input_slice = self.inlet_buffer.as_ref();
         self.wrapped.process(nframes, input_slice, output_slice);
     }
