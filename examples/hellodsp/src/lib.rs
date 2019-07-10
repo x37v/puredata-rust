@@ -6,8 +6,10 @@ use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
 use puredata_external::wrapper::SignalProcessorExternalWrapper;
 
+use field_offset::offset_of;
 use std::ffi::CString;
 use std::ops::Deref;
+
 use std::rc::Rc;
 
 pub type Wrapped = SignalProcessorExternalWrapper<HelloWorldExternal>;
@@ -15,8 +17,8 @@ pub type Wrapped = SignalProcessorExternalWrapper<HelloWorldExternal>;
 static mut HELLODSP_CLASS: Option<*mut puredata_sys::_class> = None;
 
 pub struct HelloWorldExternal {
-    //inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
-//outlet: Rc<dyn OutletSend>,
+    inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
+    //outlet: Rc<dyn OutletSend>,
 }
 
 impl SignalProcessorExternal for HelloWorldExternal {
@@ -24,19 +26,24 @@ impl SignalProcessorExternal for HelloWorldExternal {
         builder.new_signal_outlet();
         builder.new_signal_outlet();
         builder.new_signal_outlet();
-        //builder.new_signal_inlet();
+        builder.new_signal_inlet();
         //builder.new_signal_inlet();
         Self {
-            //inlet: builder.new_passive_float_inlet(4f32),
+            inlet: builder.new_passive_float_inlet(4f32),
         }
     }
     fn process(
         &mut self,
         frames: usize,
         inputs: &[&[puredata_sys::t_float]],
-        outputs: &[&mut [puredata_sys::t_float]],
+        outputs: &mut [&mut [puredata_sys::t_float]],
     ) {
-        println!("process!! {} {} {}", frames, inputs.len(), outputs.len(),);
+        let c = 0;
+        //for c in 0..std::cmp::min(inputs.len(), outputs.len()) {
+        for i in 0..frames {
+            outputs[c][i] = inputs[c][i];
+        }
+        //}
     }
 }
 
@@ -96,7 +103,7 @@ pub unsafe extern "C" fn hellodsp_tilde_setup() {
         hellodsp_tilde_new,
         SignalClassType::WithInput(
             hellodsp_tilde_dsp_trampoline,
-            std::mem::size_of::<puredata_sys::t_object>() as i32, //XXX should be offset of `convert`, in case the compiler moves it??
+            offset_of!(Wrapped => convert).get_byte_offset(),
         ),
         None,
     );
