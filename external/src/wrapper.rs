@@ -84,7 +84,7 @@ where
         let outlets = temp.1.len();
         let mut outlet_buffer = Vec::new();
         unsafe {
-            for i in 0..outlets {
+            for _ in 0..outlets {
                 outlet_buffer.push(slice::from_raw_parts_mut(std::ptr::null_mut(), 0));
             }
         }
@@ -137,10 +137,10 @@ where
 
         //reserve space for slices, 0 len for now
         unsafe {
-            for i in 0..inlets {
+            for _ in 0..inlets {
                 inlet_buffer.push(slice::from_raw_parts(std::ptr::null(), 0));
             }
-            for i in 0..outlets {
+            for _ in 0..outlets {
                 outlet_buffer.push(slice::from_raw_parts_mut(std::ptr::null_mut(), 0));
             }
         }
