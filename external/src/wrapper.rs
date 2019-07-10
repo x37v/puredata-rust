@@ -158,15 +158,16 @@ where
     }
 
     pub fn allocate_inlet_buffers(&mut self, nframes: usize) {
+        let t_sample_size = std::mem::size_of::<puredata_sys::t_sample>();
+        let vecnbytes = nframes * t_sample_size;
         for i in 0..self.inlet_buffer.len() {
-            let vecnbytes = nframes * std::mem::size_of::<puredata_sys::t_sample>();
             unsafe {
                 //free previous if we have one
                 let ol = self.inlet_buffer[i].len();
                 if ol != 0 {
                     puredata_sys::freebytes(
                         self.inlet_buffer[i].as_mut_ptr() as *mut ::std::os::raw::c_void,
-                        ol,
+                        ol * t_sample_size,
                     );
                 }
                 //XXX NEED TO FREE ON DROP
