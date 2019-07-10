@@ -60,7 +60,7 @@ where
     signal_outlets: Vec<RcOutletSignal>,
     signal_inlets: Vec<RcInletSignal>,
     outlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
-    inlet_buffer: Vec<&'static [puredata_sys::t_float]>,
+    inlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
 }
 
 impl<T> ControlExternalWrapperInternal<T>
@@ -134,7 +134,7 @@ where
         //reserve space for slices, 0 len for now
         unsafe {
             for _ in 0..inlets {
-                inlet_buffer.push(slice::from_raw_parts(std::ptr::null(), 0));
+                inlet_buffer.push(slice::from_raw_parts_mut(std::ptr::null_mut(), 0));
             }
             for _ in 0..outlets {
                 outlet_buffer.push(slice::from_raw_parts_mut(std::ptr::null_mut(), 0));
@@ -157,6 +157,26 @@ where
         self.inlet_buffer.len() + self.outlet_buffer.len()
     }
 
+    pub fn allocate_inlet_buffers(&mut self, nframes: usize) {
+        for i in 0..self.inlet_buffer.len() {
+            let vecnbytes = nframes * std::mem::size_of::<puredata_sys::t_sample>();
+            unsafe {
+                //free previous if we have one
+                let ol = self.inlet_buffer[i].len();
+                if ol != 0 {
+                    puredata_sys::freebytes(
+                        self.inlet_buffer[i].as_mut_ptr() as *mut ::std::os::raw::c_void,
+                        ol,
+                    );
+                }
+                //XXX NEED TO FREE ON DROP
+                let vecp = puredata_sys::getbytes(vecnbytes);
+                let vec = std::mem::transmute::<_, *mut puredata_sys::t_sample>(vecp);
+                self.inlet_buffer[i] = slice::from_raw_parts_mut(vec, nframes);
+            }
+        }
+    }
+
     pub fn process(&mut self, nframes: usize, buffer: *mut puredata_sys::t_int) {
         let inlets = self.inlet_buffer.len();
         let outlets = self.outlet_buffer.len();
@@ -167,7 +187,7 @@ where
             for i in 0..inlets {
                 let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(buffer[i]);
                 let input = slice::from_raw_parts(input, nframes);
-                self.inlet_buffer[i] = input;
+                self.inlet_buffer[i].copy_from_slice(input);
             }
 
             let offset = inlets;
@@ -178,8 +198,9 @@ where
                 self.outlet_buffer[i] = output;
             }
         }
-        let output_slice = self.outlet_buffer.as_mut();
-        let input_slice = self.inlet_buffer.as_ref();
+        let output_slice = self.outlet_buffer.as_mut_slice();
+        let input_slice = self.inlet_buffer.as_slice();
+        //XXX can we cast input_slice to not be mut internally?
         self.wrapped.process(nframes, input_slice, output_slice);
     }
 }
@@ -251,7 +272,7 @@ where
 
     pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
         let iolets = self.signal_iolets();
-        setup_dsp(self, iolets, sv, trampoline);
+        let _ = setup_dsp(self, iolets, sv, trampoline);
     }
 
     pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
@@ -306,8 +327,13 @@ where
 
     pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
         let iolets = self.signal_iolets();
-        setup_dsp(self, iolets, sv, trampoline);
-        //XXX need to allocate buffers to copy input data so we don't trample it
+        let frames = setup_dsp(self, iolets, sv, trampoline);
+
+        //allocate buffers to copy input data so we don't trample it
+        self.wrapped
+            .as_mut()
+            .expect("external not initialized")
+            .allocate_inlet_buffers(frames);
     }
 
     pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
@@ -328,7 +354,7 @@ fn setup_dsp<T>(
     iolets: usize,
     sv: *mut *mut puredata_sys::t_signal,
     trampoline: PdDspPerform,
-) {
+) -> usize {
     unsafe {
         let sv = slice::from_raw_parts(sv, iolets);
         let len = (*sv[0]).s_n as usize;
@@ -354,6 +380,7 @@ fn setup_dsp<T>(
             std::mem::transmute::<_, *mut puredata_sys::t_int>(vecp),
         );
         puredata_sys::freebytes(vecp, vecnbytes);
+        len
     }
 }
 
