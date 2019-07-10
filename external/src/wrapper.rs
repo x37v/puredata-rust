@@ -79,7 +79,7 @@ impl<T> SignalGeneratorExternalWrapperInternal<T>
 where
     T: SignalGeneratorExternal,
 {
-    pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
+    pub fn new(wrapped: T, builder: Builder<T>) -> Self {
         let temp: IntoBuiltGenerator<T> = builder.into();
         let outlets = temp.1.len();
         let mut outlet_buffer = Vec::new();
@@ -123,7 +123,7 @@ impl<T> SignalProcessorExternalWrapperInternal<T>
 where
     T: SignalProcessorExternal,
 {
-    pub fn new<'a>(wrapped: T, builder: Builder<T>) -> Self {
+    pub fn new(wrapped: T, builder: Builder<T>) -> Self {
         let temp: IntoBuiltProcessor<T> = builder.into();
         let inlets = temp.2.len() + 1; //one default
         let outlets = temp.1.len();
