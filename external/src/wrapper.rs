@@ -131,11 +131,6 @@ where
         let mut inlet_buffer = Vec::new();
         let mut outlet_buffer = Vec::new();
 
-        println!(
-            "SignalProcessorExternalWrapperInternal {} {}",
-            inlets, outlets
-        );
-
         //reserve space for slices, 0 len for now
         unsafe {
             for _ in 0..inlets {
@@ -183,12 +178,6 @@ where
                 self.outlet_buffer[i] = output;
             }
         }
-        println!(
-            "wrapper::process inlets {} outlets {} nframes {}",
-            self.inlet_buffer.len(),
-            self.outlet_buffer.len(),
-            nframes
-        );
         let output_slice = self.outlet_buffer.as_mut();
         let input_slice = self.inlet_buffer.as_ref();
         self.wrapped.process(nframes, input_slice, output_slice);
@@ -286,7 +275,6 @@ where
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
             pd_class,
         ));
-        println!("SignalProcessorExternalWrapper::new({:p})", &mut obj.x_obj);
         obj.init();
 
         obj as *mut Self as *mut ::std::os::raw::c_void

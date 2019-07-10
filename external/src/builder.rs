@@ -97,7 +97,6 @@ impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
 
 impl<'a, T> SignalGeneratorExternalBuilder<T> for Builder<'a, T> {
     fn new_signal_outlet(&mut self) {
-        println!("building signal outlet");
         self.signal_outlets
             .push(Rc::new(SignalOutlet::new(self.obj)));
     }
@@ -105,7 +104,6 @@ impl<'a, T> SignalGeneratorExternalBuilder<T> for Builder<'a, T> {
 
 impl<'a, T> SignalProcessorExternalBuilder<T> for Builder<'a, T> {
     fn new_signal_inlet(&mut self) {
-        println!("building signal inlet");
         self.signal_inlets.push(Rc::new(SignalInlet::new(self.obj)));
     }
 }
