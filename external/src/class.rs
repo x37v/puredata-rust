@@ -11,7 +11,7 @@ pub struct Class<T> {
 
 pub enum SignalClassType<T> {
     NoInput(PdDspMethod<T>),
-    WithInput(PdDspMethod<T>, c_int), //method, byte offset of translation float field in struct T
+    WithInput(PdDspMethod<T>, usize), //method, byte offset of translation float field in struct T
 }
 
 impl<T> Class<T> {
@@ -71,7 +71,7 @@ impl<T> Class<T> {
             SignalClassType::WithInput(m, onset) => {
                 s.register_dsp(m);
                 unsafe {
-                    puredata_sys::class_domainsignalin(s.pd_class, onset);
+                    puredata_sys::class_domainsignalin(s.pd_class, onset as c_int);
                 }
             }
         }

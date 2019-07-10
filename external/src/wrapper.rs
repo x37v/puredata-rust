@@ -31,7 +31,7 @@ where
     T: SignalProcessorExternal,
 {
     x_obj: puredata_sys::t_object,
-    convert: puredata_sys::t_float,
+    pub convert: puredata_sys::t_float,
     wrapped: Option<SignalProcessorExternalWrapperInternal<T>>,
 }
 
