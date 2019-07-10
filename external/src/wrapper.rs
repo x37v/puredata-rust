@@ -307,6 +307,7 @@ where
     pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
         let iolets = self.signal_iolets();
         setup_dsp(self, iolets, sv, trampoline);
+        //XXX need to allocate buffers to copy input data so we don't trample it
     }
 
     pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
