@@ -15,7 +15,7 @@ pub trait SignalProcessorExternal {
     fn process(
         &mut self,
         frames: usize,
-        inputs: &[&[puredata_sys::t_float]],
+        inputs: &[&mut [puredata_sys::t_float]],
         outputs: &mut [&mut [puredata_sys::t_float]],
     );
 }
