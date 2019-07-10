@@ -16,8 +16,8 @@ pub type Wrapped = SignalProcessorExternalWrapper<HelloWorldExternal>;
 static mut HELLODSP_CLASS: Option<*mut puredata_sys::_class> = None;
 
 pub struct HelloWorldExternal {
-    inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
-    //outlet: Rc<dyn OutletSend>,
+    //inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
+//outlet: Rc<dyn OutletSend>,
 }
 
 impl SignalProcessorExternal for HelloWorldExternal {
@@ -26,9 +26,9 @@ impl SignalProcessorExternal for HelloWorldExternal {
         builder.new_signal_outlet();
         builder.new_signal_outlet();
         builder.new_signal_inlet();
-        //builder.new_signal_inlet();
+        builder.new_signal_inlet();
         Self {
-            inlet: builder.new_passive_float_inlet(4f32),
+            //inlet: builder.new_passive_float_inlet(4f32),
         }
     }
     fn process(
@@ -37,12 +37,13 @@ impl SignalProcessorExternal for HelloWorldExternal {
         inputs: &[&[puredata_sys::t_float]],
         outputs: &mut [&mut [puredata_sys::t_float]],
     ) {
-        let c = 0;
-        //for c in 0..std::cmp::min(inputs.len(), outputs.len()) {
-        for i in 0..frames {
-            outputs[c][i] = inputs[c][i];
+        let chans = std::cmp::min(inputs.len(), outputs.len());
+        //println!("chans {}", chans);
+        for c in 0..chans {
+            for i in 0..frames {
+                outputs[c][i] = inputs[c][i];
+            }
         }
-        //}
     }
 }
 
