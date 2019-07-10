@@ -6,7 +6,6 @@ use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
 use puredata_external::wrapper::SignalProcessorExternalWrapper;
 
-use field_offset::offset_of;
 use std::ffi::CString;
 use std::ops::Deref;
 
@@ -103,7 +102,7 @@ pub unsafe extern "C" fn hellodsp_tilde_setup() {
         hellodsp_tilde_new,
         SignalClassType::WithInput(
             hellodsp_tilde_dsp_trampoline,
-            offset_of!(Wrapped => convert).get_byte_offset(),
+            Wrapped::float_convert_field_offset(),
         ),
         None,
     );

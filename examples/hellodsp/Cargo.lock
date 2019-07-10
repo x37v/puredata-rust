@@ -168,7 +168,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "hellodsp"
 version = "0.1.0"
 dependencies = [
- "field-offset 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "puredata-external 0.1.0",
  "puredata-sys 0.1.0",
 ]
@@ -244,6 +243,7 @@ dependencies = [
 name = "puredata-external"
 version = "0.1.0"
 dependencies = [
+ "field-offset 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "puredata-sys 0.1.0",
 ]
 
