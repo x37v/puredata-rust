@@ -4,6 +4,7 @@ use crate::inlet::InletSignal;
 use crate::method::PdDspPerform;
 use crate::obj::AsObject;
 use crate::outlet::{OutletSignal, SignalOutlet};
+use field_offset::offset_of;
 use std::rc::Rc;
 use std::slice;
 
@@ -31,7 +32,7 @@ where
     T: SignalProcessorExternal,
 {
     x_obj: puredata_sys::t_object,
-    pub convert: puredata_sys::t_float,
+    convert: puredata_sys::t_float,
     wrapped: Option<SignalProcessorExternalWrapperInternal<T>>,
 }
 
@@ -309,6 +310,10 @@ where
             .as_ref()
             .expect("external not initialized")
             .signal_iolets()
+    }
+
+    pub fn float_convert_field_offset() -> usize {
+        offset_of!(Self => convert).get_byte_offset()
     }
 
     pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
