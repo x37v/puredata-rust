@@ -106,10 +106,10 @@ where
     pub fn generate(&mut self, nframes: usize, buffer: *mut puredata_sys::t_int) {
         //assign the slices
         unsafe {
-            for i in 0..self.outlet_buffer.len() {
-                let output = std::mem::transmute::<_, *mut puredata_sys::t_sample>(
-                    buffer.offset(i as isize),
-                );
+            let outlets = self.outlet_buffer.len();
+            let buffer = slice::from_raw_parts(buffer, outlets);
+            for i in 0..outlets {
+                let output = std::mem::transmute::<_, *mut puredata_sys::t_sample>(buffer[i]);
                 let output = slice::from_raw_parts_mut(output, nframes);
                 self.outlet_buffer[i] = output;
             }
