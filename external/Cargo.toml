@@ -6,4 +6,3 @@ edition = "2018"
 
 [dependencies]
 puredata-sys = { path = "../puredata-sys" }
-field-offset = "0.1.1"
