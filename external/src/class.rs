@@ -18,13 +18,13 @@ impl<T> Class<T> {
     pub fn register_new(
         name: CString,
         creator: unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
-        destroyer: Option<unsafe extern "C" fn(&mut T)>,
+        destroyer: Option<unsafe extern "C" fn(*mut T)>,
     ) -> Self {
         unsafe {
             let destroyer = match destroyer {
                 None => None,
                 Some(d) => Some(std::mem::transmute::<
-                    unsafe extern "C" fn(&mut T),
+                    unsafe extern "C" fn(*mut T),
                     unsafe extern "C" fn(),
                 >(d)),
             };
@@ -61,7 +61,7 @@ impl<T> Class<T> {
         name: CString,
         creator: unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
         dsp_method: SignalClassType<T>,
-        destroyer: Option<unsafe extern "C" fn(&mut T)>,
+        destroyer: Option<unsafe extern "C" fn(*mut T)>,
     ) -> Self {
         let mut s = Self::register_new(name, creator, destroyer);
         match dsp_method {
