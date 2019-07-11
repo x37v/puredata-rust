@@ -429,7 +429,6 @@ where
     T: SignalProcessorExternal,
 {
     fn drop(&mut self) {
-        println!("DROPPING SignalProcessorExternalWrapperInternal");
         //free copy buffers
         let t_sample_size = std::mem::size_of::<puredata_sys::t_sample>();
         for b in self.inlet_buffer.iter_mut() {
