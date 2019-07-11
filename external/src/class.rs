@@ -67,7 +67,7 @@ impl<T> Class<T> {
                     unsafe extern "C" fn(),
                 >(d)),
             };
-            let flags = 0; //CLASS_DEFAULT
+            let flags = puredata_sys::CLASS_DEFAULT;
             let mut args = [0; 6];
             Self {
                 pd_class: puredata_sys::class_new(
@@ -75,7 +75,7 @@ impl<T> Class<T> {
                     Some(creator),
                     destroyer,
                     std::mem::size_of::<T>(),
-                    flags,
+                    flags as i32,
                     args[0],
                     args[1],
                     args[2],
