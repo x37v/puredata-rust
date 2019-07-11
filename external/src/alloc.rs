@@ -4,7 +4,7 @@ use puredata_sys::{getbytes, freebytes};
 
 ///A slice allocated and freed using puredata_sys
 #[repr(transparent)]
-pub struct Slice<T: 'static + Sized + Copy> (&'static mut [T]);
+pub struct Slice<T: 'static + Sized + Copy> (pub &'static mut [T]);
 
 impl<T> Slice<T>
 where T:'static + Copy {
@@ -44,11 +44,13 @@ where T:'static + Sized + Copy + Default {
     ///
     /// # Remarks
     ///
-    /// This will set all the current content to `Default::default()` for `T`.
+    /// If actually resized, this will set all the content to `Default::default()` for `T`.
     pub fn resize(&mut self, len: usize) {
-        //TODO use resizebytes?
-        self.cleanup();
-        self.alloc(len);
+        if self.0.len() != len {
+            //TODO use resizebytes?
+            self.cleanup();
+            self.alloc(len);
+        }
     }
 
     fn alloc(&mut self, len: usize) {
