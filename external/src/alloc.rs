@@ -3,6 +3,7 @@ use std::mem::size_of;
 use puredata_sys::{getbytes, freebytes};
 
 ///A slice allocated and freed using puredata_sys
+#[repr(transparent)]
 pub struct Slice<T: 'static + Sized + Copy> (&'static mut [T]);
 
 impl<T> Slice<T>
