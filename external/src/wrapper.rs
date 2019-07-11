@@ -60,7 +60,7 @@ where
     signal_outlets: Vec<RcOutletSignal>,
     signal_inlets: Vec<RcInletSignal>,
     outlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
-    inlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
+    inlet_buffer: Vec<crate::alloc::Slice<puredata_sys::t_float>>,
 }
 
 impl<T> ControlExternalWrapperInternal<T>
@@ -134,7 +134,7 @@ where
         //reserve space for slices, 0 len for now
         unsafe {
             for _ in 0..inlets {
-                inlet_buffer.push(slice::from_raw_parts_mut(std::ptr::null_mut(), 0));
+                inlet_buffer.push(Default::default());
             }
             for _ in 0..outlets {
                 outlet_buffer.push(slice::from_raw_parts_mut(std::ptr::null_mut(), 0));
@@ -158,23 +158,8 @@ where
     }
 
     pub fn allocate_inlet_buffers(&mut self, nframes: usize) {
-        let t_sample_size = std::mem::size_of::<puredata_sys::t_sample>();
-        let vecnbytes = nframes * t_sample_size;
-
-        for b in self.inlet_buffer.iter_mut().filter(|b| b.len() != nframes) {
-            unsafe {
-                //free previous if we have one
-                if b.len() != 0 {
-                    puredata_sys::freebytes(
-                        b.as_mut_ptr() as *mut ::std::os::raw::c_void,
-                        b.len() * t_sample_size,
-                    );
-                }
-                //will free on drop
-                let vecp = puredata_sys::getbytes(vecnbytes);
-                let vec = std::mem::transmute::<_, *mut puredata_sys::t_sample>(vecp);
-                *b = slice::from_raw_parts_mut(vec, nframes);
-            }
+        for b in self.inlet_buffer.iter_mut() {
+            b.resize(nframes);
         }
     }
 
@@ -188,7 +173,7 @@ where
             for i in 0..inlets {
                 let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(buffer[i]);
                 let input = slice::from_raw_parts(input, nframes);
-                self.inlet_buffer[i].copy_from_slice(input);
+                self.inlet_buffer[i].0.copy_from_slice(input);
             }
 
             let offset = inlets;
@@ -201,8 +186,12 @@ where
         }
         let output_slice = self.outlet_buffer.as_mut_slice();
         let input_slice = self.inlet_buffer.as_slice();
-        //XXX can we cast input_slice to not be mut internally?
-        self.wrapped.process(nframes, input_slice, output_slice);
+        unsafe {
+            //the Slice newtype is transparent so we can just treat it as if it were the inner type
+            let input_slice = std::mem::transmute::<_,_>(input_slice);
+            //XXX can we cast input_slice to not be mut internally?
+            self.wrapped.process(nframes, input_slice, output_slice);
+        }
     }
 }
 
@@ -429,15 +418,6 @@ where
     T: SignalProcessorExternal,
 {
     fn drop(&mut self) {
-        //free copy buffers
-        let t_sample_size = std::mem::size_of::<puredata_sys::t_sample>();
-        for b in self.inlet_buffer.iter_mut().filter(|b| b.len() != 0) {
-            unsafe {
-                puredata_sys::freebytes(
-                    b.as_mut_ptr() as *mut ::std::os::raw::c_void,
-                    b.len() * t_sample_size,
-                );
-            }
-        }
+        //anything needed?
     }
 }
