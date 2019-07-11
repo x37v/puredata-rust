@@ -1,3 +1,4 @@
+pub mod alloc;
 pub mod atom;
 pub mod args;
 pub mod builder;
