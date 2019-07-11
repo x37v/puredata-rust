@@ -160,20 +160,20 @@ where
     pub fn allocate_inlet_buffers(&mut self, nframes: usize) {
         let t_sample_size = std::mem::size_of::<puredata_sys::t_sample>();
         let vecnbytes = nframes * t_sample_size;
-        for i in 0..self.inlet_buffer.len() {
+
+        for b in self.inlet_buffer.iter_mut().filter(|b| b.len() != nframes) {
             unsafe {
                 //free previous if we have one
-                let ol = self.inlet_buffer[i].len();
-                if ol != 0 {
+                if b.len() != 0 {
                     puredata_sys::freebytes(
-                        self.inlet_buffer[i].as_mut_ptr() as *mut ::std::os::raw::c_void,
-                        ol * t_sample_size,
+                        b.as_mut_ptr() as *mut ::std::os::raw::c_void,
+                        b.len() * t_sample_size,
                     );
                 }
                 //will free on drop
                 let vecp = puredata_sys::getbytes(vecnbytes);
                 let vec = std::mem::transmute::<_, *mut puredata_sys::t_sample>(vecp);
-                self.inlet_buffer[i] = slice::from_raw_parts_mut(vec, nframes);
+                *b = slice::from_raw_parts_mut(vec, nframes);
             }
         }
     }
@@ -431,15 +431,12 @@ where
     fn drop(&mut self) {
         //free copy buffers
         let t_sample_size = std::mem::size_of::<puredata_sys::t_sample>();
-        for b in self.inlet_buffer.iter_mut() {
-            let len = b.len();
-            if len != 0 {
-                unsafe {
-                    puredata_sys::freebytes(
-                        b.as_mut_ptr() as *mut ::std::os::raw::c_void,
-                        len * t_sample_size,
-                    );
-                }
+        for b in self.inlet_buffer.iter_mut().filter(|b| b.len() != 0) {
+            unsafe {
+                puredata_sys::freebytes(
+                    b.as_mut_ptr() as *mut ::std::os::raw::c_void,
+                    b.len() * t_sample_size,
+                );
             }
         }
     }
