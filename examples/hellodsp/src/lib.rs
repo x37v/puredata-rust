@@ -48,6 +48,12 @@ impl SignalProcessorExternal for HelloWorldExternal {
     }
 }
 
+impl Drop for HelloWorldExternal {
+    fn drop(&mut self) {
+        //if you need to do something
+    }
+}
+
 impl HelloWorldExternal {
     pub fn bang(&mut self) {
         //let m = CString::new(format!("hello {}", **self.inlet).to_string())
