@@ -71,6 +71,11 @@ pub unsafe extern "C" fn hellodsp_tilde_new() -> *mut ::std::os::raw::c_void {
     Wrapped::new(HELLODSP_CLASS.expect("hello dsp class not set"))
 }
 
+pub unsafe extern "C" fn hellodsp_tilde_free(x: *mut Wrapped) {
+    let x = &mut *x;
+    x.free();
+}
+
 pub unsafe extern "C" fn hellodsp_tilde_bang_trampoline(x: *mut Wrapped) {
     let x = &mut *x;
     x.wrapped().bang();
@@ -112,7 +117,7 @@ pub unsafe extern "C" fn hellodsp_tilde_setup() {
             hellodsp_tilde_dsp_trampoline,
             Wrapped::float_convert_field_offset(),
         ),
-        None,
+        Some(hellodsp_tilde_free),
     );
     c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
 

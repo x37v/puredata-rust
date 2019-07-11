@@ -170,7 +170,7 @@ where
                         ol * t_sample_size,
                     );
                 }
-                //XXX NEED TO FREE ON DROP
+                //will free on drop
                 let vecp = puredata_sys::getbytes(vecnbytes);
                 let vec = std::mem::transmute::<_, *mut puredata_sys::t_sample>(vecp);
                 self.inlet_buffer[i] = slice::from_raw_parts_mut(vec, nframes);
@@ -224,6 +224,10 @@ where
         self.wrapped = Some(ControlExternalWrapperInternal::new(e, builder));
     }
 
+    pub fn free(&mut self) {
+        self.wrapped = None;
+    }
+
     pub fn wrapped(&mut self) -> &mut T {
         self.wrapped
             .as_mut()
@@ -255,6 +259,10 @@ where
             self as *mut Self
         };
         r as *mut ::std::os::raw::c_void
+    }
+
+    pub fn free(&mut self) {
+        self.wrapped = None;
     }
 
     pub fn wrapped(&mut self) -> &mut T {
@@ -306,6 +314,10 @@ where
         let mut builder = Builder::new(self);
         let e = SignalProcessorExternal::new(&mut builder);
         self.wrapped = Some(SignalProcessorExternalWrapperInternal::new(e, builder));
+    }
+
+    pub fn free(&mut self) {
+        self.wrapped = None;
     }
 
     pub fn wrapped(&mut self) -> &mut T {
@@ -412,20 +424,24 @@ where
     }
 }
 
-impl<T> Drop for SignalGeneratorExternalWrapper<T>
-where
-    T: SignalGeneratorExternal,
-{
-    fn drop(&mut self) {
-        //TODO
-    }
-}
-
-impl<T> Drop for SignalProcessorExternalWrapper<T>
+impl<T> Drop for SignalProcessorExternalWrapperInternal<T>
 where
     T: SignalProcessorExternal,
 {
     fn drop(&mut self) {
-        //TODO
+        println!("DROPPING SignalProcessorExternalWrapperInternal");
+        //free copy buffers
+        let t_sample_size = std::mem::size_of::<puredata_sys::t_sample>();
+        for b in self.inlet_buffer.iter_mut() {
+            let len = b.len();
+            if len != 0 {
+                unsafe {
+                    puredata_sys::freebytes(
+                        b.as_mut_ptr() as *mut ::std::os::raw::c_void,
+                        len * t_sample_size,
+                    );
+                }
+            }
+        }
     }
 }
