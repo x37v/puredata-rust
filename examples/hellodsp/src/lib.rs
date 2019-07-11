@@ -33,23 +33,17 @@ impl SignalProcessorExternal for HelloWorldExternal {
     }
     fn process(
         &mut self,
-        frames: usize,
+        _frames: usize,
         inputs: &[&mut [puredata_sys::t_float]],
         outputs: &mut [&mut [puredata_sys::t_float]],
     ) {
-        let chans = std::cmp::min(inputs.len(), outputs.len());
-        //println!("chans {}", chans);
-        for c in 0..chans {
+        for (output, input) in outputs.iter_mut().zip(inputs.iter()) {
+            output.copy_from_slice(input);
             /*
-            println!(
-                "\tout {:p}, in {:p}",
-                outputs[c].as_ptr(),
-                inputs[c].as_ptr()
-            );
-            */
-            for i in 0..frames {
-                outputs[c][i] = inputs[c][i];
+            for (o, i) in output.iter_mut().zip(input.iter()) {
+                *o = *i;
             }
+            */
         }
     }
 }
