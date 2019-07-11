@@ -11,16 +11,16 @@ use std::ops::Deref;
 
 use std::rc::Rc;
 
-pub type Wrapped = SignalProcessorExternalWrapper<HelloWorldExternal>;
+pub type Wrapped = SignalProcessorExternalWrapper<HelloDSPExternal>;
 
 static mut HELLODSP_CLASS: Option<*mut puredata_sys::_class> = None;
 
-pub struct HelloWorldExternal {
+pub struct HelloDSPExternal {
     //inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
 //outlet: Rc<dyn OutletSend>,
 }
 
-impl SignalProcessorExternal for HelloWorldExternal {
+impl SignalProcessorExternal for HelloDSPExternal {
     fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Self {
         builder.new_signal_outlet();
         builder.new_signal_outlet();
@@ -48,13 +48,13 @@ impl SignalProcessorExternal for HelloWorldExternal {
     }
 }
 
-impl Drop for HelloWorldExternal {
+impl Drop for HelloDSPExternal {
     fn drop(&mut self) {
         //if you need to do something
     }
 }
 
-impl HelloWorldExternal {
+impl HelloDSPExternal {
     pub fn bang(&mut self) {
         //let m = CString::new(format!("hello {}", **self.inlet).to_string())
         let m = CString::new(format!("hello").to_string()).expect("CString::new failed");
