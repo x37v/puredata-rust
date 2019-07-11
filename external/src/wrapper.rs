@@ -170,7 +170,7 @@ where
                         ol * t_sample_size,
                     );
                 }
-                //XXX NEED TO FREE ON DROP
+                //will free on drop
                 let vecp = puredata_sys::getbytes(vecnbytes);
                 let vec = std::mem::transmute::<_, *mut puredata_sys::t_sample>(vecp);
                 self.inlet_buffer[i] = slice::from_raw_parts_mut(vec, nframes);
