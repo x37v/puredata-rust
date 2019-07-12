@@ -18,21 +18,20 @@ external_processor! {
         //THIS IS A TEST
     }
 
+    impl HelloDSP {
+        //#[bang_method]
+        pub fn bang(&mut self) {
+            //let m = CString::new(format!("hello {}", **self.inlet).to_string())
+            let m = CString::new(format!("hello").to_string()).expect("CString::new failed");
+            pd::post(m);
+        }
 
-impl HelloDSP {
-    //#[bang_method]
-    pub fn bang(&mut self) {
-        //let m = CString::new(format!("hello {}", **self.inlet).to_string())
-        let m = CString::new(format!("hello").to_string()).expect("CString::new failed");
-        pd::post(m);
+        pub fn float(&mut self, arg: puredata_sys::t_float) {
+            let m =
+                CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
+            pd::post(m);
+        }
     }
-
-    pub fn float(&mut self, arg: puredata_sys::t_float) {
-        let m =
-            CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
-        pd::post(m);
-    }
-}
 }
 
 impl SignalProcessorExternal for HelloDSP {

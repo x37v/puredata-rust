@@ -55,16 +55,20 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     let perform_method = Ident::new(&(flat_name.clone() + "_perform"), Span::call_site());
     let setup_method = Ident::new(&(flat_name.clone() + "_setup"), Span::call_site());
 
-    let iblock = &impl_blocks[0]; //allow for more than 1
+    let mut iblock = &impl_blocks[0]; //allow for more than 1
 
-    let expanded = quote! {
+    let the_struct = quote! {
         //original struct
         pub struct #struct_name #struct_contents
+    };
 
+    let wrapped_class = quote! {
         //generated
         type Wrapped = SignalProcessorExternalWrapper<#struct_name>;
         static mut #class_object: Option<*mut puredata_sys::_class> = None;
+    };
 
+    let alloc_trampolines = quote! {
         //new trampoline
         pub unsafe extern "C" fn #new_method () -> *mut ::std::os::raw::c_void {
             Wrapped::new(#class_object.expect("hello dsp class not set"))
@@ -75,7 +79,9 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
             let x = &mut *x;
             x.free();
         }
+    };
 
+    let dsp_trampolines = quote! {
         pub unsafe extern "C" fn #dsp_method(
             x: *mut Wrapped,
             sp: *mut *mut puredata_sys::t_signal,
@@ -93,7 +99,19 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
             let x = &mut *std::mem::transmute::<_, *mut Wrapped>(x[1]);
             x.perform(w)
         }
+    };
 
+    let mut register_methods = quote! {
+        c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
+    };
+
+    register_methods = quote! {
+        #register_methods
+        let name = CString::new("blah").expect("CString::new failed");
+        c.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
+    };
+
+    let setup_trampoline = quote! {
         #[no_mangle]
         pub unsafe extern "C" fn #setup_method() {
             let name = CString::new(#class_name).expect("CString::new failed");
@@ -106,15 +124,18 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
                 ),
                 Some(#free_method),
             );
-            //c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
-
-            //let name = CString::new("blah").expect("CString::new failed");
-            //c.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
-
+            #register_methods
             #class_object = Some(c.into());
         }
+    };
 
-        #iblock //XXX actually mutate
+    let expanded = quote! {
+        #the_struct
+        #wrapped_class
+        #setup_trampoline
+        #alloc_trampolines
+        #dsp_trampolines
+        //#iblock //XXX actually mutate
     };
     proc_macro::TokenStream::from(expanded)
 }
