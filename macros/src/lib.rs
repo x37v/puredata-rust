@@ -7,23 +7,31 @@ use quote::{quote, quote_spanned};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::spanned::Spanned;
 use syn::{
-    parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, LitStr, Token,
-    Type, Visibility,
+    parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, ItemImpl,
+    LitStr, Token, Type, Visibility,
 };
 
 struct ProcessorExternal {
     struct_name: Ident,
     struct_contents: ExprBlock,
+    impl_blocks: Vec<ItemImpl>,
 }
+
 impl Parse for ProcessorExternal {
     fn parse(input: ParseStream) -> Result<Self> {
         input.parse::<Token![pub]>()?;
         input.parse::<Token![struct]>()?;
         let struct_name: Ident = input.parse()?;
         let struct_contents: ExprBlock = input.parse()?;
+
+        let mut impl_blocks = Vec::new();
+        let iblock: ItemImpl = input.parse()?;
+        impl_blocks.push(iblock);
+
         Ok(ProcessorExternal {
             struct_name,
             struct_contents,
+            impl_blocks,
         })
     }
 }
@@ -33,6 +41,7 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     let ProcessorExternal {
         struct_name,
         struct_contents,
+        impl_blocks,
     } = parse_macro_input!(input as ProcessorExternal);
 
     let pdname = struct_name.to_string().to_lowercase();
@@ -45,6 +54,8 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     let dsp_method = Ident::new(&(flat_name.clone() + "_dsp"), Span::call_site());
     let perform_method = Ident::new(&(flat_name.clone() + "_perform"), Span::call_site());
     let setup_method = Ident::new(&(flat_name.clone() + "_setup"), Span::call_site());
+
+    let iblock = &impl_blocks[0]; //allow for more than 1
 
     let expanded = quote! {
         //original struct
@@ -102,6 +113,8 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
 
             #class_object = Some(c.into());
         }
+
+        #iblock //XXX actually mutate
     };
     proc_macro::TokenStream::from(expanded)
 }
