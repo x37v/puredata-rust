@@ -5,14 +5,14 @@ use quote::{quote, quote_spanned};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::spanned::Spanned;
 use syn::{
-    parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, ItemImpl,
+    parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, Item, ItemImpl,
     LitStr, Token, Type, Visibility,
 };
 
 struct ProcessorExternal {
     struct_name: Ident,
     struct_contents: ExprBlock,
-    impl_blocks: Vec<ItemImpl>,
+    impl_blocks: Vec<Item>,
 }
 
 impl Parse for ProcessorExternal {
@@ -23,8 +23,9 @@ impl Parse for ProcessorExternal {
         let struct_contents: ExprBlock = input.parse()?;
 
         let mut impl_blocks = Vec::new();
-        let iblock: ItemImpl = input.parse()?;
-        impl_blocks.push(iblock);
+        while !input.is_empty() {
+            impl_blocks.push(input.parse()?);
+        }
 
         Ok(ProcessorExternal {
             struct_name,
@@ -128,21 +129,23 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
         }
     };
 
-    let mut impl_restore = quote! {};
-    for b in impl_blocks {
-        impl_restore = quote! {
-            #b
-        };
-    }
+    //TODO modify to remove attributes
+    let impls = impl_blocks;
 
     let expanded = quote! {
         #the_struct
+
         #wrapped_class
+
         #setup_trampoline
+
         #alloc_trampolines
+
         #dsp_trampolines
-        #impl_restore
+
+        #(#impls)*
     };
+
     proc_macro::TokenStream::from(expanded)
 }
 
