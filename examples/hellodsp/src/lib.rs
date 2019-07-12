@@ -32,34 +32,35 @@ external_processor! {
             pd::post(m);
         }
     }
-}
 
-impl SignalProcessorExternal for HelloDSP {
-    fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Self {
-        builder.new_signal_outlet();
-        builder.new_signal_outlet();
-        builder.new_signal_outlet();
-        builder.new_signal_inlet();
-        builder.new_signal_inlet();
-        Self {
+    impl SignalProcessorExternal for HelloDSP {
+        fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Self {
+            builder.new_signal_outlet();
+            builder.new_signal_outlet();
+            builder.new_signal_outlet();
+            builder.new_signal_inlet();
+            builder.new_signal_inlet();
+            Self {
                 //inlet: builder.new_passive_float_inlet(4f32),
             }
-    }
-    fn process(
-        &mut self,
-        _frames: usize,
-        inputs: &[&mut [puredata_sys::t_float]],
-        outputs: &mut [&mut [puredata_sys::t_float]],
-    ) {
-        for (output, input) in outputs.iter_mut().zip(inputs.iter()) {
-            output.copy_from_slice(input);
+        }
+        fn process(
+            &mut self,
+            _frames: usize,
+            inputs: &[&mut [puredata_sys::t_float]],
+            outputs: &mut [&mut [puredata_sys::t_float]],
+            ) {
+            for (output, input) in outputs.iter_mut().zip(inputs.iter()) {
+                output.copy_from_slice(input);
+            }
         }
     }
-}
 
-impl Drop for HelloDSP {
-    fn drop(&mut self) {
-        //if you need to do something
+
+    impl Drop for HelloDSP {
+        fn drop(&mut self) {
+            //if you need to do something
+        }
     }
 }
 
