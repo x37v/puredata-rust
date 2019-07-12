@@ -156,6 +156,23 @@ version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "hellodsp"
+version = "0.1.0"
+dependencies = [
+ "puredata-external 0.1.0",
+ "puredata-external-macros 0.1.0",
+ "puredata-sys 0.1.0",
+]
+
+[[package]]
+name = "helloworld"
+version = "0.1.0"
+dependencies = [
+ "puredata-external 0.1.0",
+ "puredata-sys 0.1.0",
+]
+
+[[package]]
 name = "humantime"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

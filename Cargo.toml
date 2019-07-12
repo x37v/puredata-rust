@@ -3,5 +3,10 @@
 members = [
 	"external",
 	"macros",
-	"examples",
+	"examples/hellodsp",
+	"examples/helloworld",
 ]
+
+[profile.release]
+lto = true
+panic = "abort"
