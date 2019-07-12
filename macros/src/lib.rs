@@ -44,18 +44,19 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
         impl_blocks,
     } = parse_macro_input!(input as ProcessorExternal);
 
-    let pdname = struct_name.to_string().to_lowercase();
-    let flat_name = pdname.clone() + "_tilde";
+    let lower_name = struct_name.to_string().to_lowercase();
+    let upper_name = struct_name.to_string().to_uppercase();
+    let flat_name = lower_name.clone() + "_tilde";
 
-    let class_name = LitStr::new(&(pdname.clone() + "~"), Span::call_site());
-    let class_object = Ident::new(&(pdname.to_uppercase() + "_CLASS"), Span::call_site());
-    let new_method = Ident::new(&(flat_name.clone() + "_new"), Span::call_site());
-    let free_method = Ident::new(&(flat_name.clone() + "_free"), Span::call_site());
-    let dsp_method = Ident::new(&(flat_name.clone() + "_dsp"), Span::call_site());
-    let perform_method = Ident::new(&(flat_name.clone() + "_perform"), Span::call_site());
-    let setup_method = Ident::new(&(flat_name.clone() + "_setup"), Span::call_site());
+    let name_ident = struct_name.clone();
 
-    let mut iblock = &impl_blocks[0]; //allow for more than 1
+    let class_name = LitStr::new(&(lower_name.clone() + "~"), name_ident.span());
+    let class_object = Ident::new(&(upper_name + "_CLASS"), name_ident.span());
+    let new_method = Ident::new(&(flat_name.clone() + "_new"), name_ident.span());
+    let free_method = Ident::new(&(flat_name.clone() + "_free"), name_ident.span());
+    let dsp_method = Ident::new(&(flat_name.clone() + "_dsp"), name_ident.span());
+    let perform_method = Ident::new(&(flat_name.clone() + "_perform"), name_ident.span());
+    let setup_method = Ident::new(&(flat_name.clone() + "_setup"), name_ident.span());
 
     let the_struct = quote! {
         //original struct
@@ -129,13 +130,20 @@ pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenSt
         }
     };
 
+    let mut impl_restore = quote! {};
+    for b in impl_blocks {
+        impl_restore = quote! {
+            #b
+        };
+    }
+
     let expanded = quote! {
         #the_struct
         #wrapped_class
         #setup_trampoline
         #alloc_trampolines
         #dsp_trampolines
-        //#iblock //XXX actually mutate
+        #impl_restore
     };
     proc_macro::TokenStream::from(expanded)
 }
