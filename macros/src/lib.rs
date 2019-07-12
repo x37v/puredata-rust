@@ -9,13 +9,13 @@ use syn::{
     LitStr, Token, Type, Visibility,
 };
 
-struct ProcessorExternal {
+struct External {
     struct_name: Ident,
     struct_contents: ExprBlock,
     impl_blocks: Vec<Item>,
 }
 
-impl Parse for ProcessorExternal {
+impl Parse for External {
     fn parse(input: ParseStream) -> Result<Self> {
         input.parse::<Token![pub]>()?;
         input.parse::<Token![struct]>()?;
@@ -27,7 +27,7 @@ impl Parse for ProcessorExternal {
             impl_blocks.push(input.parse()?);
         }
 
-        Ok(ProcessorExternal {
+        Ok(Self {
             struct_name,
             struct_contents,
             impl_blocks,
@@ -36,12 +36,12 @@ impl Parse for ProcessorExternal {
 }
 
 #[proc_macro]
-pub fn external_processor(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let ProcessorExternal {
+pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let External {
         struct_name,
         struct_contents,
         impl_blocks,
-    } = parse_macro_input!(input as ProcessorExternal);
+    } = parse_macro_input!(input as External);
 
     let lower_name = struct_name.to_string().to_lowercase();
     let upper_name = struct_name.to_string().to_uppercase();

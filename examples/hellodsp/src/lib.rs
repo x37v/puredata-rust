@@ -6,14 +6,14 @@ use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
 use puredata_external::wrapper::SignalProcessorExternalWrapper;
 
-use puredata_external_macros::external_processor;
+use puredata_external_macros::external;
 
 use std::ffi::CString;
 use std::ops::Deref;
 
 use std::rc::Rc;
 
-external_processor! {
+external! {
     pub struct HelloDSP {
         //THIS IS A TEST
     }
