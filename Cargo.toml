@@ -3,4 +3,5 @@
 members = [
 	"external",
 	"macros",
+	"examples",
 ]

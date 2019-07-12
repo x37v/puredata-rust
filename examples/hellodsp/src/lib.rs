@@ -6,44 +6,57 @@ use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
 use puredata_external::wrapper::SignalProcessorExternalWrapper;
 
+use puredata_external_macros::external_processor;
+
 use std::ffi::CString;
 use std::ops::Deref;
 
 use std::rc::Rc;
 
-pub type Wrapped = SignalProcessorExternalWrapper<HelloDSPExternal>;
+external_processor! {
+    pub struct HelloDSPExternal {
+        //inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
+        //outlet: Rc<dyn OutletSend>,
+    }
 
-static mut HELLODSP_CLASS: Option<*mut puredata_sys::_class> = None;
-
-pub struct HelloDSPExternal {
-    //inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
-//outlet: Rc<dyn OutletSend>,
-}
-
-impl SignalProcessorExternal for HelloDSPExternal {
-    fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Self {
-        builder.new_signal_outlet();
-        builder.new_signal_outlet();
-        builder.new_signal_outlet();
-        builder.new_signal_inlet();
-        builder.new_signal_inlet();
-        Self {
-            //inlet: builder.new_passive_float_inlet(4f32),
+    impl SignalProcessorExternal for HelloDSPExternal {
+        fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Self {
+            builder.new_signal_outlet();
+            builder.new_signal_outlet();
+            builder.new_signal_outlet();
+            builder.new_signal_inlet();
+            builder.new_signal_inlet();
+            Self {
+                //inlet: builder.new_passive_float_inlet(4f32),
+            }
+        }
+        fn process(
+            &mut self,
+            _frames: usize,
+            inputs: &[&mut [puredata_sys::t_float]],
+            outputs: &mut [&mut [puredata_sys::t_float]],
+            ) {
+            for (output, input) in outputs.iter_mut().zip(inputs.iter()) {
+                output.copy_from_slice(input);
+                /*
+                   for (o, i) in output.iter_mut().zip(input.iter()) {
+                 *o = *i;
+                 }
+                 */
+            }
         }
     }
-    fn process(
-        &mut self,
-        _frames: usize,
-        inputs: &[&mut [puredata_sys::t_float]],
-        outputs: &mut [&mut [puredata_sys::t_float]],
-    ) {
-        for (output, input) in outputs.iter_mut().zip(inputs.iter()) {
-            output.copy_from_slice(input);
-            /*
-            for (o, i) in output.iter_mut().zip(input.iter()) {
-                *o = *i;
-            }
-            */
+
+    impl HelloDSPExternal {
+        pub fn bang(&mut self) {
+            //let m = CString::new(format!("hello {}", **self.inlet).to_string())
+            let m = CString::new(format!("hello").to_string()).expect("CString::new failed");
+            pd::post(m);
+        }
+        pub fn float(&mut self, arg: puredata_sys::t_float) {
+            let m =
+                CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
+            pd::post(m);
         }
     }
 }
@@ -54,18 +67,9 @@ impl Drop for HelloDSPExternal {
     }
 }
 
-impl HelloDSPExternal {
-    pub fn bang(&mut self) {
-        //let m = CString::new(format!("hello {}", **self.inlet).to_string())
-        let m = CString::new(format!("hello").to_string()).expect("CString::new failed");
-        pd::post(m);
-    }
-    pub fn float(&mut self, arg: puredata_sys::t_float) {
-        let m =
-            CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
-        pd::post(m);
-    }
-}
+pub type Wrapped = SignalProcessorExternalWrapper<HelloDSPExternal>;
+
+static mut HELLODSP_CLASS: Option<*mut puredata_sys::_class> = None;
 
 pub unsafe extern "C" fn hellodsp_tilde_new() -> *mut ::std::os::raw::c_void {
     Wrapped::new(HELLODSP_CLASS.expect("hello dsp class not set"))
