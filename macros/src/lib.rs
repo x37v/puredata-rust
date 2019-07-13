@@ -28,13 +28,15 @@ impl Parse for Parsed {
 pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let Parsed { items } = parse_macro_input!(input as Parsed);
 
+    let mut impls = Vec::new();
     let mut structs = Vec::new();
     let mut remain = Vec::new();
+
     for item in items.iter() {
-        if let Item::Struct(x) = item {
-            structs.push(x);
-        } else {
-            remain.push(item);
+        match item {
+            Item::Struct(x) => structs.push(x),
+            Item::Impl(x) => impls.push(x),
+            _ => remain.push(item),
         }
     }
 
@@ -54,10 +56,6 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let dsp_method = Ident::new(&(flat_name.clone() + "_dsp"), name_ident.span());
     let perform_method = Ident::new(&(flat_name.clone() + "_perform"), name_ident.span());
     let setup_method = Ident::new(&(flat_name.clone() + "_setup"), name_ident.span());
-
-    let the_struct = quote! {
-        #the_struct
-    };
 
     let wrapped_class = quote! {
         //generated
@@ -128,6 +126,8 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let expanded = quote! {
         #the_struct
+
+        #(#impls)*
 
         #wrapped_class
 
