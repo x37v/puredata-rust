@@ -34,6 +34,46 @@ fn get_type(the_struct: &ItemStruct, impls: &Vec<ItemImpl>) -> Result<ExternalTy
     Ok(ExternalType::Signal)
 }
 
+//return the class initialization item
+fn add_dsp(
+    trampolines: &mut Vec<proc_macro2::TokenStream>,
+    new_method: &Ident,
+    free_method: &Ident,
+    flat_name: &String,
+    name_span: Span,
+) -> proc_macro2::TokenStream {
+    let dsp_method = Ident::new(&(flat_name.clone() + "_dsp"), name_span.clone());
+    let perform_method = Ident::new(&(flat_name.clone() + "_perform"), name_span.clone());
+
+    trampolines.push(quote! {
+        pub unsafe extern "C" fn #dsp_method(
+            x: *mut Wrapped,
+            sp: *mut *mut puredata_sys::t_signal,
+            ) {
+            let x = &mut *x;
+            x.dsp(sp, #perform_method);
+        }
+
+        pub unsafe extern "C" fn #perform_method(
+            w: *mut puredata_sys::t_int,
+            ) -> *mut puredata_sys::t_int {
+            //actually longer than 2 but .offset(1) didn't seem to work correctly
+            //but slice does
+            let x = std::slice::from_raw_parts(w, 2);
+            let x = &mut *std::mem::transmute::<_, *mut Wrapped>(x[1]);
+            x.perform(w)
+        }
+    });
+
+    quote! {
+        Class::<Wrapped>::register_dsp_new(
+            name,
+            #new_method,
+            SignalClassType::WithInput( #dsp_method, Wrapped::float_convert_field_offset(),),
+            Some(#free_method),);
+    }
+}
+
 #[proc_macro]
 pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let Parsed { items } = parse_macro_input!(input as Parsed);
@@ -64,8 +104,6 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let class_object = Ident::new(&(upper_name + "_CLASS"), name_ident.span());
     let new_method = Ident::new(&(flat_name.clone() + "_new"), name_ident.span());
     let free_method = Ident::new(&(flat_name.clone() + "_free"), name_ident.span());
-    let dsp_method = Ident::new(&(flat_name.clone() + "_dsp"), name_ident.span());
-    let perform_method = Ident::new(&(flat_name.clone() + "_perform"), name_ident.span());
     let setup_method = Ident::new(&(flat_name.clone() + "_setup"), name_ident.span());
 
     let wrapped_class = quote! {
@@ -87,50 +125,32 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     });
 
-    trampolines.push(quote! {
-        pub unsafe extern "C" fn #dsp_method(
-            x: *mut Wrapped,
-            sp: *mut *mut puredata_sys::t_signal,
-            ) {
-            let x = &mut *x;
-            x.dsp(sp, #perform_method);
-        }
-
-        pub unsafe extern "C" fn #perform_method(
-            w: *mut puredata_sys::t_int,
-            ) -> *mut puredata_sys::t_int {
-            //actually longer than 2 but .offset(1) didn't seem to work correctly
-            //but slice does
-            let x = std::slice::from_raw_parts(w, 2);
-            let x = &mut *std::mem::transmute::<_, *mut Wrapped>(x[1]);
-            x.perform(w)
-        }
+    let mut register_methods = Vec::new();
+    register_methods.push(quote! {
+        c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
     });
 
-    let mut register_methods = quote! {
-        c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
-    };
-
-    register_methods = quote! {
-        #register_methods
+    register_methods.push(quote! {
         let name = CString::new("blah").expect("CString::new failed");
         c.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
-    };
+    });
+
+    let class_new_method = add_dsp(
+        &mut trampolines,
+        &new_method,
+        &free_method,
+        &flat_name,
+        name_ident.span(),
+    );
 
     trampolines.push(quote! {
         #[no_mangle]
         pub unsafe extern "C" fn #setup_method() {
             let name = CString::new(#class_name).expect("CString::new failed");
-            let mut c = Class::<Wrapped>::register_dsp_new(
-                name,
-                #new_method,
-                SignalClassType::WithInput(
-                    #dsp_method,
-                    Wrapped::float_convert_field_offset(),
-                ),
-                Some(#free_method),
-            );
-            #register_methods
+            let mut c = #class_new_method
+
+            #(#register_methods)*
+
             #class_object = Some(c.into());
         }
     });
