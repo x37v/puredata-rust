@@ -64,7 +64,7 @@ fn get_type(
 //return the class initialization item
 fn add_control(new_method: &Ident, free_method: &Ident) -> proc_macro2::TokenStream {
     quote! {
-        Class::<Wrapped>::register_new(name, #new_method, #free_method);
+        Class::<Wrapped>::register_new(name, #new_method, Some(#free_method));
     }
 }
 
@@ -166,7 +166,8 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     });
 
-    let mut register_methods = Vec::new();
+    let mut register_methods: Vec<proc_macro2::TokenStream> = Vec::new();
+    /*
     register_methods.push(quote! {
         #class_inst.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
     });
@@ -175,6 +176,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         let name = CString::new("blah").unwrap();
         #class_inst.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
     });
+    */
 
     let class_new_method = match etype {
         ExternalType::Signal => add_dsp(
