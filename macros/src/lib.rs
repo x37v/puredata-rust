@@ -42,19 +42,19 @@ fn get_type(
     //look through the impls and see if we find a matching one, return it and the ExternalType
     for i in impls {
         if let Some((_, p, _)) = &i.trait_ {
-            if let Some(type_trait) = type_traits
-                .iter()
-                .find(|x| p.segments.last().unwrap().value().ident == x.1)
-            {
-                match i.self_ty.as_ref() {
-                    Type::Path(tp) => {
-                        //matches struct
-                        if tp.path.is_ident(the_struct.ident.clone()) {
+            match i.self_ty.as_ref() {
+                Type::Path(tp) => {
+                    //matches struct
+                    if tp.path.is_ident(the_struct.ident.clone()) {
+                        if let Some(type_trait) = type_traits
+                            .iter()
+                            .find(|x| p.segments.last().unwrap().value().ident == x.1)
+                        {
                             return Ok((type_trait.0, type_trait.1));
                         }
                     }
-                    _ => (),
                 }
+                _ => (),
             }
         }
     }
