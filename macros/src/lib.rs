@@ -30,8 +30,9 @@ impl Parse for Parsed {
     }
 }
 
-fn get_type(the_struct: &ItemStruct, impls: &Vec<ItemImpl>) -> Result<ExternalType> {
-    Ok(ExternalType::Signal)
+fn get_type(the_struct: &ItemStruct, impls: &Vec<&ItemImpl>) -> Result<(ExternalType, String)> {
+    //XXX TODO
+    Ok((ExternalType::Signal, "SignalProcessorExternal".to_string()))
 }
 
 //return the class initialization item
@@ -92,23 +93,29 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     }
 
     let the_struct = structs.first().expect("couldn't find the struct");
+    let (etype, extern_impl) = get_type(&the_struct, &impls).unwrap();
 
     let name_ident = the_struct.clone();
     let struct_name = the_struct.ident.clone();
 
+    //build up names
     let lower_name = struct_name.to_string().to_lowercase();
     let upper_name = struct_name.to_string().to_uppercase();
-    let flat_name = lower_name.clone() + "_tilde";
+    let (flat_name, class_name) = match etype {
+        ExternalType::Signal => (format!("{:}_tilde", lower_name), format!("{}~", lower_name)),
+        ExternalType::Control => (lower_name.clone(), lower_name.clone()),
+    };
 
-    let class_name = LitStr::new(&(lower_name.clone() + "~"), name_ident.span());
-    let class_object = Ident::new(&(upper_name + "_CLASS"), name_ident.span());
-    let new_method = Ident::new(&(flat_name.clone() + "_new"), name_ident.span());
-    let free_method = Ident::new(&(flat_name.clone() + "_free"), name_ident.span());
-    let setup_method = Ident::new(&(flat_name.clone() + "_setup"), name_ident.span());
+    let class_name = LitStr::new(&(class_name), name_ident.span());
+    let class_object = Ident::new(&(format!("{:}_CLASS", upper_name)), name_ident.span());
+    let new_method = Ident::new(&(format!("{:}_new", flat_name)), name_ident.span());
+    let free_method = Ident::new(&(format!("{:}_free", flat_name)), name_ident.span());
+    let setup_method = Ident::new(&(format!("{:}_setup", flat_name)), name_ident.span());
+    let wrapper_type = Ident::new(&(format!("{:}Wrapper", extern_impl)), name_ident.span());
 
     let wrapped_class = quote! {
         //generated
-        type Wrapped = SignalProcessorExternalWrapper<#struct_name>;
+        type Wrapped = #wrapper_type<#struct_name>;
         static mut #class_object: Option<*mut puredata_sys::_class> = None;
     };
 
@@ -131,7 +138,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     });
 
     register_methods.push(quote! {
-        let name = CString::new("blah").expect("CString::new failed");
+        let name = CString::new("blah").unwrap();
         c.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
     });
 
@@ -146,7 +153,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     trampolines.push(quote! {
         #[no_mangle]
         pub unsafe extern "C" fn #setup_method() {
-            let name = CString::new(#class_name).expect("CString::new failed");
+            let name = CString::new(#class_name).unwrap();
             let mut c = #class_new_method
 
             #(#register_methods)*
