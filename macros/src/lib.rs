@@ -36,6 +36,13 @@ fn get_type(the_struct: &ItemStruct, impls: &Vec<&ItemImpl>) -> Result<(External
 }
 
 //return the class initialization item
+fn add_control(new_method: &Ident, free_method: &Ident) -> proc_macro2::TokenStream {
+    quote! {
+        Class::<Wrapped>::register_new(name, #new_method, #free_method);
+    }
+}
+
+//return the class initialization item
 fn add_dsp(
     trampolines: &mut Vec<proc_macro2::TokenStream>,
     new_method: &Ident,
@@ -142,13 +149,16 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         c.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
     });
 
-    let class_new_method = add_dsp(
-        &mut trampolines,
-        &new_method,
-        &free_method,
-        &flat_name,
-        name_ident.span(),
-    );
+    let class_new_method = match etype {
+        ExternalType::Signal => add_dsp(
+            &mut trampolines,
+            &new_method,
+            &free_method,
+            &flat_name,
+            name_ident.span(),
+        ),
+        ExternalType::Control => add_control(&new_method, &free_method),
+    };
 
     trampolines.push(quote! {
         #[no_mangle]
