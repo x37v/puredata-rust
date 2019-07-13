@@ -41,11 +41,13 @@ fn get_type(
     ];
     //look through the impls and see if we find a matching one, return it and the ExternalType
     for i in impls {
-        if let Some((_, p, _)) = &i.trait_ {
-            match i.self_ty.as_ref() {
-                Type::Path(tp) => {
-                    //matches struct
-                    if tp.path.is_ident(the_struct.ident.clone()) {
+        match i.self_ty.as_ref() {
+            Type::Path(tp) => {
+                //see if the type matches the struct we care about
+                if tp.path.is_ident(the_struct.ident.clone()) {
+                    //does this impl implement a trait?
+                    if let Some((_, p, _)) = &i.trait_ {
+                        //is it a trait we care about?
                         if let Some(type_trait) = type_traits
                             .iter()
                             .find(|x| p.segments.last().unwrap().value().ident == x.1)
@@ -54,8 +56,8 @@ fn get_type(
                         }
                     }
                 }
-                _ => (),
             }
+            _ => (),
         }
     }
     Err("Couldn't find External Implementation")
@@ -167,6 +169,22 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     });
 
     let mut register_methods: Vec<proc_macro2::TokenStream> = Vec::new();
+    let impls: Vec<&ItemImpl> = impls
+        .into_iter()
+        .map(|i| {
+            match i.self_ty.as_ref() {
+                Type::Path(tp) => {
+                    //matches struct
+                    if tp.path.is_ident(the_struct.ident.clone()) {
+                        return i;
+                    }
+                }
+                _ => (),
+            };
+            i
+        })
+        .collect();
+
     /*
     register_methods.push(quote! {
         #class_inst.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
