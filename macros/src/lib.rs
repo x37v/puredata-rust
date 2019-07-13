@@ -9,45 +9,43 @@ use syn::{
     LitStr, Token, Type, Visibility,
 };
 
-struct External {
-    struct_name: Ident,
-    struct_contents: ExprBlock,
-    impl_blocks: Vec<Item>,
+struct Parsed {
+    items: Vec<Item>,
 }
 
-impl Parse for External {
+impl Parse for Parsed {
     fn parse(input: ParseStream) -> Result<Self> {
-        input.parse::<Token![pub]>()?;
-        input.parse::<Token![struct]>()?;
-        let struct_name: Ident = input.parse()?;
-        let struct_contents: ExprBlock = input.parse()?;
-
-        let mut impl_blocks = Vec::new();
+        let mut items = Vec::new();
         while !input.is_empty() {
-            impl_blocks.push(input.parse()?);
+            items.push(input.parse()?);
         }
 
-        Ok(Self {
-            struct_name,
-            struct_contents,
-            impl_blocks,
-        })
+        Ok(Self { items })
     }
 }
 
 #[proc_macro]
 pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let External {
-        struct_name,
-        struct_contents,
-        impl_blocks,
-    } = parse_macro_input!(input as External);
+    let Parsed { items } = parse_macro_input!(input as Parsed);
+
+    let mut structs = Vec::new();
+    let mut remain = Vec::new();
+    for item in items.iter() {
+        if let Item::Struct(x) = item {
+            structs.push(x);
+        } else {
+            remain.push(item);
+        }
+    }
+
+    let the_struct = structs.first().expect("couldn't find the struct");
+
+    let name_ident = the_struct.clone();
+    let struct_name = the_struct.ident.clone();
 
     let lower_name = struct_name.to_string().to_lowercase();
     let upper_name = struct_name.to_string().to_uppercase();
     let flat_name = lower_name.clone() + "_tilde";
-
-    let name_ident = struct_name.clone();
 
     let class_name = LitStr::new(&(lower_name.clone() + "~"), name_ident.span());
     let class_object = Ident::new(&(upper_name + "_CLASS"), name_ident.span());
@@ -58,8 +56,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let setup_method = Ident::new(&(flat_name.clone() + "_setup"), name_ident.span());
 
     let the_struct = quote! {
-        //original struct
-        pub struct #struct_name #struct_contents
+        #the_struct
     };
 
     let wrapped_class = quote! {
@@ -129,9 +126,6 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     };
 
-    //TODO modify to remove attributes
-    let impls = impl_blocks;
-
     let expanded = quote! {
         #the_struct
 
@@ -143,7 +137,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
         #dsp_trampolines
 
-        #(#impls)*
+        #(#remain)*
     };
 
     proc_macro::TokenStream::from(expanded)
