@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro2::Span;
 use quote::{quote, quote_spanned};
-use syn::parse::{Parse, ParseStream, Result};
+use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
     parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, Item, ItemImpl,
@@ -20,7 +20,7 @@ struct Parsed {
 }
 
 impl Parse for Parsed {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
         let mut items = Vec::new();
         while !input.is_empty() {
             items.push(input.parse()?);
@@ -30,9 +30,35 @@ impl Parse for Parsed {
     }
 }
 
-fn get_type(the_struct: &ItemStruct, impls: &Vec<&ItemImpl>) -> Result<(ExternalType, String)> {
-    //XXX TODO
-    Ok((ExternalType::Signal, "SignalProcessorExternal".to_string()))
+fn get_type(
+    the_struct: &ItemStruct,
+    impls: &Vec<&ItemImpl>,
+) -> Result<(ExternalType, &'static str), &'static str> {
+    let type_traits = [
+        (ExternalType::Control, &"ControlExternal"),
+        (ExternalType::Signal, &"SignalGeneratorExternal"),
+        (ExternalType::Signal, &"SignalProcessorExternal"),
+    ];
+    //look through the impls and see if we find a matching one, return it and the ExternalType
+    for i in impls {
+        if let Some((_, p, _)) = &i.trait_ {
+            if let Some(type_trait) = type_traits
+                .iter()
+                .find(|x| p.segments.last().unwrap().value().ident == x.1)
+            {
+                match i.self_ty.as_ref() {
+                    Type::Path(tp) => {
+                        //matches struct
+                        if tp.path.is_ident(the_struct.ident.clone()) {
+                            return Ok((type_trait.0, type_trait.1));
+                        }
+                    }
+                    _ => (),
+                }
+            }
+        }
+    }
+    Err("Couldn't find External Implementation")
 }
 
 //return the class initialization item
