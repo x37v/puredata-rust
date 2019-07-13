@@ -114,7 +114,8 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     };
 
     let class_name = LitStr::new(&(class_name), name_ident.span());
-    let class_object = Ident::new(&(format!("{:}_CLASS", upper_name)), name_ident.span());
+    let class_static = Ident::new(&(format!("{:}_CLASS", upper_name)), name_ident.span());
+    let class_inst = Ident::new("c", name_ident.span());
     let new_method = Ident::new(&(format!("{:}_new", flat_name)), name_ident.span());
     let free_method = Ident::new(&(format!("{:}_free", flat_name)), name_ident.span());
     let setup_method = Ident::new(&(format!("{:}_setup", flat_name)), name_ident.span());
@@ -123,13 +124,13 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let wrapped_class = quote! {
         //generated
         type Wrapped = #wrapper_type<#struct_name>;
-        static mut #class_object: Option<*mut puredata_sys::_class> = None;
+        static mut #class_static: Option<*mut puredata_sys::_class> = None;
     };
 
     trampolines.push(quote! {
         //new trampoline
         pub unsafe extern "C" fn #new_method () -> *mut ::std::os::raw::c_void {
-            Wrapped::new(#class_object.expect("class not initialized"))
+            Wrapped::new(#class_static.expect("class not initialized"))
         }
 
         //free trampoline
@@ -141,12 +142,12 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let mut register_methods = Vec::new();
     register_methods.push(quote! {
-        c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
+        #class_inst.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
     });
 
     register_methods.push(quote! {
         let name = CString::new("blah").unwrap();
-        c.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
+        #class_inst.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
     });
 
     let class_new_method = match etype {
@@ -164,11 +165,11 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         #[no_mangle]
         pub unsafe extern "C" fn #setup_method() {
             let name = CString::new(#class_name).unwrap();
-            let mut c = #class_new_method
+            let mut #class_inst = #class_new_method
 
             #(#register_methods)*
 
-            #class_object = Some(c.into());
+            #class_static = Some(#class_inst.into());
         }
     });
 
