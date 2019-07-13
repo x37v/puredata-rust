@@ -6,8 +6,14 @@ use syn::parse::{Parse, ParseStream, Result};
 use syn::spanned::Spanned;
 use syn::{
     parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, Item, ItemImpl,
-    LitStr, Token, Type, Visibility,
+    ItemStruct, LitStr, Token, Type, Visibility,
 };
+
+#[derive(Copy, Clone, Debug)]
+enum ExternalType {
+    Control,
+    Signal,
+}
 
 struct Parsed {
     items: Vec<Item>,
@@ -24,6 +30,10 @@ impl Parse for Parsed {
     }
 }
 
+fn get_type(the_struct: &ItemStruct, impls: &Vec<ItemImpl>) -> Result<ExternalType> {
+    Ok(ExternalType::Signal)
+}
+
 #[proc_macro]
 pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let Parsed { items } = parse_macro_input!(input as Parsed);
@@ -31,6 +41,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut impls = Vec::new();
     let mut structs = Vec::new();
     let mut remain = Vec::new();
+    let mut trampolines = Vec::new();
 
     for item in items.iter() {
         match item {
@@ -63,10 +74,10 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         static mut #class_object: Option<*mut puredata_sys::_class> = None;
     };
 
-    let alloc_trampolines = quote! {
+    trampolines.push(quote! {
         //new trampoline
         pub unsafe extern "C" fn #new_method () -> *mut ::std::os::raw::c_void {
-            Wrapped::new(#class_object.expect("hello dsp class not set"))
+            Wrapped::new(#class_object.expect("class not initialized"))
         }
 
         //free trampoline
@@ -74,9 +85,9 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             let x = &mut *x;
             x.free();
         }
-    };
+    });
 
-    let dsp_trampolines = quote! {
+    trampolines.push(quote! {
         pub unsafe extern "C" fn #dsp_method(
             x: *mut Wrapped,
             sp: *mut *mut puredata_sys::t_signal,
@@ -94,7 +105,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             let x = &mut *std::mem::transmute::<_, *mut Wrapped>(x[1]);
             x.perform(w)
         }
-    };
+    });
 
     let mut register_methods = quote! {
         c.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
@@ -106,7 +117,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         c.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
     };
 
-    let setup_trampoline = quote! {
+    trampolines.push(quote! {
         #[no_mangle]
         pub unsafe extern "C" fn #setup_method() {
             let name = CString::new(#class_name).expect("CString::new failed");
@@ -122,7 +133,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             #register_methods
             #class_object = Some(c.into());
         }
-    };
+    });
 
     let expanded = quote! {
         #the_struct
@@ -131,11 +142,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
         #wrapped_class
 
-        #setup_trampoline
-
-        #alloc_trampolines
-
-        #dsp_trampolines
+        #(#trampolines)*
 
         #(#remain)*
     };
