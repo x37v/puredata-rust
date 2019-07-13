@@ -11,3 +11,4 @@ crate-type = ["cdylib"]
 [dependencies]
 puredata-sys = { path = "../../puredata-sys" }
 puredata-external = { path = "../../external" }
+puredata-external-macros = { path = "../../macros" }

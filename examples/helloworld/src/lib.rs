@@ -10,37 +10,38 @@ use std::ffi::CString;
 use std::ops::Deref;
 use std::rc::Rc;
 
-pub type Wrapped = ControlExternalWrapper<HelloWorldExternal>;
+use puredata_external_macros::external;
 
-static mut HELLOWORLD_CLASS: Option<*mut puredata_sys::_class> = None;
+external! {
+    pub struct HelloWorld {
+        inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
+        //outlet: Rc<dyn OutletSend>,
+    }
 
-pub struct HelloWorldExternal {
-    inlet: Rc<dyn Deref<Target = puredata_sys::t_float>>,
-    //outlet: Rc<dyn OutletSend>,
-}
+    impl ControlExternal for HelloWorld {
+        fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
+            Self {
+                inlet: builder.new_passive_float_inlet(4f32),
+                //outlet: builder.new_outlet(OutletType::Float),
+            }
+        }
+    }
 
-impl ControlExternal for HelloWorldExternal {
-    fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
-        Self {
-            inlet: builder.new_passive_float_inlet(4f32),
-            //outlet: builder.new_outlet(OutletType::Float),
+    impl HelloWorld {
+        pub fn bang(&mut self) {
+            let m = CString::new(format!("hello {}", **self.inlet).to_string())
+                .expect("CString::new failed");
+            pd::post(m);
+        }
+        pub fn float(&mut self, arg: puredata_sys::t_float) {
+            let m =
+                CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
+            pd::post(m);
         }
     }
 }
 
-impl HelloWorldExternal {
-    pub fn bang(&mut self) {
-        let m = CString::new(format!("hello {}", **self.inlet).to_string())
-            .expect("CString::new failed");
-        pd::post(m);
-    }
-    pub fn float(&mut self, arg: puredata_sys::t_float) {
-        let m =
-            CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
-        pd::post(m);
-    }
-}
-
+/*
 pub unsafe extern "C" fn helloworld_new() -> *mut ::std::os::raw::c_void {
     Wrapped::new(HELLOWORLD_CLASS.expect("hello world class not set"))
 }
@@ -66,3 +67,4 @@ pub unsafe extern "C" fn helloworld_setup() {
 
     HELLOWORLD_CLASS = Some(c.into());
 }
+*/
