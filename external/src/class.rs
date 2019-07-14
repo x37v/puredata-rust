@@ -68,7 +68,7 @@ impl<T> Class<T> {
                 >(d)),
             };
             let flags = puredata_sys::CLASS_DEFAULT;
-            let mut args = [0; 6];
+            let args = [0; 6];
             Self {
                 pd_class: puredata_sys::class_new(
                     puredata_sys::gensym(name.as_ptr()),
