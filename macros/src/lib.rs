@@ -179,7 +179,7 @@ fn add_bang(
 fn add_sel(
     trampoline_name: &Ident,
     method_name: &Ident,
-    method: &ImplItemMethod,
+    _method: &ImplItemMethod,
     attr: &Attribute,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let mut sel_name = Lit::Str(LitStr::new(&method_name.to_string(), method_name.span()));
