@@ -14,9 +14,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 external! {
-    pub struct HelloDSP {
-        //THIS IS A TEST
-    }
+    pub struct HelloDSP;
 
     impl HelloDSP {
         //#[bang_method]
