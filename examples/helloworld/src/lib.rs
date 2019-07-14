@@ -1,16 +1,10 @@
 use puredata_external::builder::ControlExternalBuilder;
-use puredata_external::class::Class;
 use puredata_external::external::ControlExternal;
-use puredata_external::method::Method;
-use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
-use puredata_external::wrapper::ControlExternalWrapper;
-
+use puredata_external_macros::external;
 use std::ffi::CString;
 use std::ops::Deref;
 use std::rc::Rc;
-
-use puredata_external_macros::external;
 
 external! {
     pub struct HelloWorld {
