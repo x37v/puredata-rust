@@ -5,8 +5,8 @@ use quote::{quote, quote_spanned};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
-    parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, Item, ItemImpl,
-    ItemStruct, LitStr, Token, Type, Visibility,
+    parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, ImplItem, Item,
+    ItemImpl, ItemStruct, LitStr, Token, Type, Visibility,
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -110,6 +110,58 @@ fn add_dsp(
     }
 }
 
+static METHOD_ATTRS: [&str; 1] = [&"bang"];
+
+//extract annotated methods and build trampolines
+fn update_method_trampolines(
+    trampolines: &mut Vec<proc_macro2::TokenStream>,
+    register_methods: &mut Vec<proc_macro2::TokenStream>,
+    item: &ItemImpl,
+    class_inst: &Ident,
+    flat_name: &String,
+) -> proc_macro2::TokenStream {
+    let mut item = item.clone();
+    item.items = item
+        .items
+        .iter()
+        .map(|i| match &i {
+            ImplItem::Method(m) => {
+                let mut m = m.clone();
+                for n in METHOD_ATTRS.iter() {
+                    if let Some(pos) = m
+                        .attrs
+                        .iter()
+                        .position(|a| a.path.segments.last().unwrap().value().ident == n)
+                    {
+                        let a = m.attrs.remove(pos);
+
+                        //XXX tmp, only supports bang right now
+                        let mname = m.sig.ident.clone();
+                        let trampoline_name = Ident::new(
+                            &(format!("{:}_{:}_trampoline", flat_name, mname)),
+                            m.sig.ident.span(),
+                        );
+                        trampolines.push(quote! {
+                            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped) {
+                                let x = &mut *x;
+                                x.wrapped().#mname();
+                            }
+                        });
+                        register_methods.push(quote! {
+                            #class_inst.add_method(Method::Bang(#trampoline_name));
+                        });
+                    }
+                }
+                ImplItem::Method(m)
+            }
+            _ => i.clone(),
+        })
+        .collect();
+    quote! {
+        #item
+    }
+}
+
 #[proc_macro]
 pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let Parsed { items } = parse_macro_input!(input as Parsed);
@@ -169,19 +221,26 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     });
 
     let mut register_methods: Vec<proc_macro2::TokenStream> = Vec::new();
-    let impls: Vec<&ItemImpl> = impls
+
+    let impls: Vec<proc_macro2::TokenStream> = impls
         .into_iter()
         .map(|i| {
             match i.self_ty.as_ref() {
                 Type::Path(tp) => {
                     //matches struct
                     if tp.path.is_ident(the_struct.ident.clone()) {
-                        return i;
+                        return update_method_trampolines(
+                            &mut trampolines,
+                            &mut register_methods,
+                            i,
+                            &class_inst,
+                            &flat_name,
+                        );
                     }
                 }
                 _ => (),
             };
-            i
+            quote! { #i }
         })
         .collect();
 
