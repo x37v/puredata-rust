@@ -5,8 +5,9 @@ use quote::{quote, quote_spanned};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
-    parse_macro_input, parse_quote, Attribute, Expr, ExprBlock, GenericParam, Generics, Ident,
-    ImplItem, ImplItemMethod, Item, ItemImpl, ItemStruct, LitInt, LitStr, Token, Type, Visibility,
+    parenthesized, parse_macro_input, parse_quote, Attribute, Expr, ExprBlock, GenericParam,
+    Generics, Ident, ImplItem, ImplItemMethod, Item, ItemImpl, ItemStruct, Lit, LitInt, LitStr,
+    Token, Type, Visibility,
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -19,6 +20,12 @@ struct Parsed {
     items: Vec<Item>,
 }
 
+#[derive(Debug)]
+struct SelArgs {
+    pub name: Option<Lit>,
+    pub defaults: Option<Lit>,
+}
+
 impl Parse for Parsed {
     fn parse(input: ParseStream) -> syn::parse::Result<Self> {
         let mut items = Vec::new();
@@ -27,6 +34,40 @@ impl Parse for Parsed {
         }
 
         Ok(Self { items })
+    }
+}
+
+impl Parse for SelArgs {
+    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
+        if input.is_empty() {
+            return Ok(Self {
+                name: None,
+                defaults: None,
+            });
+        }
+
+        let content;
+        parenthesized!(content in input);
+
+        let mut name = None;
+        let mut defaults = None;
+        while !content.is_empty() {
+            let key: Ident = content.parse()?;
+            let _: Token![=] = content.parse()?;
+            let value: Lit = content.parse()?;
+            match key.to_string().as_ref() {
+                "name" => name = Some(value),
+                "defaults" => defaults = Some(value),
+                v => {
+                    return Err(syn::Error::new(
+                        key.span(),
+                        format!("unknown sel attribute key '{}'", v),
+                    ));
+                }
+            }
+            let _: syn::Result<Token![,]> = content.parse();
+        }
+        Ok(Self { name, defaults })
     }
 }
 
@@ -141,9 +182,26 @@ fn add_sel(
     method: &ImplItemMethod,
     attr: &Attribute,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
-    let sel_name = LitStr::new(&method_name.to_string(), method_name.span());
+    let mut sel_name = Lit::Str(LitStr::new(&method_name.to_string(), method_name.span()));
+    let mut defaults = Lit::Int(LitInt::new(0, syn::IntSuffix::Usize, attr.span()));
+
+    //extract name and defaults if they're given
+    let args: syn::parse::Result<SelArgs> = syn::parse2(attr.tts.clone());
+    match args {
+        Ok(args) => {
+            if let Some(d) = args.defaults {
+                defaults = d.clone();
+            }
+            if let Some(n) = args.name {
+                sel_name = n.clone();
+            }
+        }
+        Err(e) => panic!(e),
+    }
+
     let sel_name = quote! { CString::new(#sel_name).unwrap() };
-    let defaults = LitInt::new(0, syn::IntSuffix::Usize, attr.span());
+
+    //TODO actually allow for more than just SelF1
     (
         quote! { Method::SelF1(#sel_name, #trampoline_name, #defaults)},
         quote! {
