@@ -31,9 +31,7 @@ external! {
             builder.new_signal_outlet();
             builder.new_signal_inlet();
             builder.new_signal_inlet();
-            Self {
-                //inlet: builder.new_passive_float_inlet(4f32),
-            }
+            Self { }
         }
         fn process(
             &mut self,
