@@ -1,30 +1,23 @@
 use puredata_external::builder::SignalProcessorExternalBuilder;
-use puredata_external::class::{Class, SignalClassType};
 use puredata_external::external::SignalProcessorExternal;
-use puredata_external::method::Method;
-use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
-use puredata_external::wrapper::SignalProcessorExternalWrapper;
 
 use puredata_external_macros::external;
 
 use std::ffi::CString;
-use std::ops::Deref;
-
-use std::rc::Rc;
 
 external! {
     pub struct HelloDSP;
 
     impl HelloDSP {
-        //#[bang_method]
+        #[bang]
         pub fn bang(&mut self) {
-            //let m = CString::new(format!("hello {}", **self.inlet).to_string())
             let m = CString::new(format!("hello").to_string()).expect("CString::new failed");
             pd::post(m);
         }
 
-        pub fn float(&mut self, arg: puredata_sys::t_float) {
+        #[sel(defaults=1)]
+        pub fn foo(&mut self, arg: puredata_sys::t_float) {
             let m =
                 CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
             pd::post(m);
@@ -60,17 +53,4 @@ external! {
             //if you need to do something
         }
     }
-}
-
-pub unsafe extern "C" fn hellodsp_tilde_bang_trampoline(x: *mut Wrapped) {
-    let x = &mut *x;
-    x.wrapped().bang();
-}
-
-pub unsafe extern "C" fn hellodsp_tilde_float_trampoline(
-    x: *mut Wrapped,
-    arg: puredata_sys::t_float,
-) {
-    let x = &mut *x;
-    x.wrapped().float(arg);
 }
