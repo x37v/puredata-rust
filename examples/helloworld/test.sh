@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-cargo build && mv ../../target/debug/libhelloworld.so helloworld.pd_linux && pd test.pd
+cargo build && cp -f ../../target/debug/libhelloworld.so helloworld.pd_linux && pd test.pd
