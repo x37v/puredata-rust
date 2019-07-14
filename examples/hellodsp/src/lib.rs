@@ -46,11 +46,4 @@ external! {
             }
         }
     }
-
-
-    impl Drop for HelloDSP {
-        fn drop(&mut self) {
-            //if you need to do something
-        }
-    }
 }
