@@ -6,7 +6,7 @@ use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
     parse_macro_input, parse_quote, Attribute, Expr, ExprBlock, GenericParam, Generics, Ident,
-    ImplItem, ImplItemMethod, Item, ItemImpl, ItemStruct, LitStr, Token, Type, Visibility,
+    ImplItem, ImplItemMethod, Item, ItemImpl, ItemStruct, LitInt, LitStr, Token, Type, Visibility,
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -143,9 +143,9 @@ fn add_sel(
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let sel_name = LitStr::new(&method_name.to_string(), method_name.span());
     let sel_name = quote! { CString::new(#sel_name).unwrap() };
-    //let defaults = Ident::new(&"1", attr.span());
+    let defaults = LitInt::new(0, syn::IntSuffix::Usize, attr.span());
     (
-        quote! { Method::SelF1(#sel_name, #trampoline_name, 1)},
+        quote! { Method::SelF1(#sel_name, #trampoline_name, #defaults)},
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, a0: puredata_sys::t_float) {
                 let x = &mut *x;
