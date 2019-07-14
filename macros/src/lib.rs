@@ -107,7 +107,7 @@ fn get_type(
 //return the class initialization item
 fn add_control(new_method: &Ident, free_method: &Ident) -> proc_macro2::TokenStream {
     quote! {
-        Class::<Wrapped>::register_new(name, #new_method, Some(#free_method));
+        puredata_external::class::Class::<Wrapped>::register_new(name, #new_method, Some(#free_method));
     }
 }
 
@@ -143,10 +143,10 @@ fn add_dsp(
     });
 
     quote! {
-        Class::<Wrapped>::register_dsp_new(
+        puredata_external::class::Class::<Wrapped>::register_dsp_new(
             name,
             #new_method,
-            SignalClassType::WithInput( #dsp_method, Wrapped::float_convert_field_offset(),),
+            puredata_external::class::SignalClassType::WithInput( #dsp_method, Wrapped::float_convert_field_offset(),),
             Some(#free_method),);
     }
 }
@@ -166,7 +166,7 @@ fn add_bang(
     _attr: &Attribute,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     (
-        quote! { Method::Bang(#trampoline_name) },
+        quote! { puredata_external::method::Method::Bang(#trampoline_name) },
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped) {
                 let x = &mut *x;
@@ -199,11 +199,11 @@ fn add_sel(
         Err(e) => panic!(e),
     }
 
-    let sel_name = quote! { CString::new(#sel_name).unwrap() };
+    let sel_name = quote! { std::ffi::CString::new(#sel_name).unwrap() };
 
     //TODO actually allow for more than just SelF1
     (
-        quote! { Method::SelF1(#sel_name, #trampoline_name, #defaults)},
+        quote! { puredata_external::method::Method::SelF1(#sel_name, #trampoline_name, #defaults)},
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, a0: puredata_sys::t_float) {
                 let x = &mut *x;
@@ -304,7 +304,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let wrapped_class = quote! {
         //generated
-        type Wrapped = #wrapper_type<#struct_name>;
+        type Wrapped = puredata_external::wrapper::#wrapper_type<#struct_name>;
         static mut #class_static: Option<*mut puredata_sys::_class> = None;
     };
 
@@ -370,7 +370,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     trampolines.push(quote! {
         #[no_mangle]
         pub unsafe extern "C" fn #setup_method() {
-            let name = CString::new(#class_name).unwrap();
+            let name = std::ffi::CString::new(#class_name).unwrap();
             let mut #class_inst = #class_new_method
 
             #(#register_methods)*
