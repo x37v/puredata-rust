@@ -50,31 +50,3 @@ external! {
         }
     }
 }
-
-/*
-pub unsafe extern "C" fn helloworld_new() -> *mut ::std::os::raw::c_void {
-    Wrapped::new(HELLOWORLD_CLASS.expect("hello world class not set"))
-}
-
-pub unsafe extern "C" fn helloworld_bang_trampoline(x: *mut Wrapped) {
-    let x = &mut *x;
-    x.wrapped().bang();
-}
-
-pub unsafe extern "C" fn helloworld_float_trampoline(x: *mut Wrapped, arg: puredata_sys::t_float) {
-    let x = &mut *x;
-    x.wrapped().float(arg);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn helloworld_setup() {
-    let name = CString::new("helloworld").expect("CString::new failed");
-    let mut c = Class::<Wrapped>::register_new(name, helloworld_new, None);
-    c.add_method(Method::Bang(helloworld_bang_trampoline));
-
-    let name = CString::new("blah").expect("CString::new failed");
-    c.add_method(Method::SelF1(name, helloworld_float_trampoline, 1));
-
-    HELLOWORLD_CLASS = Some(c.into());
-}
-*/
