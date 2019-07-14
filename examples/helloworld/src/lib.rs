@@ -28,14 +28,24 @@ external! {
     }
 
     impl HelloWorld {
+        #[bang]
         pub fn bang(&mut self) {
             let m = CString::new(format!("hello {}", **self.inlet).to_string())
                 .expect("CString::new failed");
             pd::post(m);
         }
-        pub fn float(&mut self, arg: puredata_sys::t_float) {
+
+        #[sel(defaults=1)]
+        pub fn blah(&mut self, arg: puredata_sys::t_float) {
             let m =
-                CString::new(format!("got float {}", arg).to_string()).expect("CString::new failed");
+                CString::new(format!("got blah {}", arg).to_string()).expect("CString::new failed");
+            pd::post(m);
+        }
+
+        #[sel(name = "soda", defaults=1)]
+        pub fn sel2(&mut self, arg: puredata_sys::t_float) {
+            let m =
+                CString::new(format!("got soda {}", arg).to_string()).expect("CString::new failed");
             pd::post(m);
         }
     }
