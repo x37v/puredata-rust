@@ -5,8 +5,8 @@ use quote::{quote, quote_spanned};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
-    parse_macro_input, parse_quote, Expr, ExprBlock, GenericParam, Generics, Ident, ImplItem, Item,
-    ItemImpl, ItemStruct, LitStr, Token, Type, Visibility,
+    parse_macro_input, parse_quote, Attribute, Expr, ExprBlock, GenericParam, Generics, Ident,
+    ImplItem, ImplItemMethod, Item, ItemImpl, ItemStruct, LitStr, Token, Type, Visibility,
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -110,7 +110,53 @@ fn add_dsp(
     }
 }
 
-static METHOD_ATTRS: [&str; 1] = [&"bang"];
+//returns the method type token stream (for registering), and the trampoline implementation
+type MethodRegisterFn = fn(
+    trampoline_name: &Ident,
+    method_name: &Ident,
+    _method: &ImplItemMethod,
+    attr: &Attribute,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream);
+
+fn add_bang(
+    trampoline_name: &Ident,
+    method_name: &Ident,
+    _method: &ImplItemMethod,
+    _attr: &Attribute,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    (
+        quote! { Method::Bang(#trampoline_name) },
+        quote! {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped) {
+                let x = &mut *x;
+                x.wrapped().#method_name();
+            }
+        },
+    )
+}
+
+fn add_sel(
+    trampoline_name: &Ident,
+    method_name: &Ident,
+    method: &ImplItemMethod,
+    attr: &Attribute,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let sel_name = LitStr::new(&method_name.to_string(), method_name.span());
+    let sel_name = quote! { CString::new(#sel_name).unwrap() };
+    //let defaults = Ident::new(&"1", attr.span());
+    (
+        quote! { Method::SelF1(#sel_name, #trampoline_name, 1)},
+        quote! {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, a0: puredata_sys::t_float) {
+                let x = &mut *x;
+                x.wrapped().#method_name(a0);
+            }
+        },
+    )
+}
+
+static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] =
+    &[(&"bang", add_bang), (&"sel", add_sel)];
 
 //extract annotated methods and build trampolines
 fn update_method_trampolines(
@@ -127,7 +173,7 @@ fn update_method_trampolines(
         .map(|i| match &i {
             ImplItem::Method(m) => {
                 let mut m = m.clone();
-                for n in METHOD_ATTRS.iter() {
+                for (n, add_method) in METHOD_ATTRS.iter() {
                     if let Some(pos) = m
                         .attrs
                         .iter()
@@ -136,19 +182,16 @@ fn update_method_trampolines(
                         let a = m.attrs.remove(pos);
 
                         //XXX tmp, only supports bang right now
-                        let mname = m.sig.ident.clone();
+                        let method_name = m.sig.ident.clone();
                         let trampoline_name = Ident::new(
-                            &(format!("{:}_{:}_trampoline", flat_name, mname)),
+                            &(format!("{:}_{:}_trampoline", flat_name, method_name)),
                             m.sig.ident.span(),
                         );
-                        trampolines.push(quote! {
-                            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped) {
-                                let x = &mut *x;
-                                x.wrapped().#mname();
-                            }
-                        });
+                        let (pd_method, trampoline) =
+                            add_method(&trampoline_name, &method_name, &m, &a);
+                        trampolines.push(trampoline);
                         register_methods.push(quote! {
-                            #class_inst.add_method(Method::Bang(#trampoline_name));
+                            #class_inst.add_method(#pd_method);
                         });
                     }
                 }
