@@ -113,6 +113,7 @@ mod tests {
     use super::*;
     use std::boxed::Box;
 
+    /*
     pub struct A;
     pub struct TestBuilder<T>
     where
@@ -171,4 +172,5 @@ mod tests {
         }));
         builder.call_floats(&mut a, 4f32);
     }
+    */
 }
