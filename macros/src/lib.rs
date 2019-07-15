@@ -201,12 +201,16 @@ fn add_sel(
     let sel_name = quote! { std::ffi::CString::new(#sel_name).unwrap() };
 
     //TODO actually allow for more than just SelF1
+    let variant = Ident::new(&"SelF1", method_name.span());
+    let tramp_args = quote! { a0: puredata_sys::t_float };
+    let wrapped_params = quote! { a0 };
+
     (
-        quote! { puredata_external::method::Method::SelF1(#sel_name, #trampoline_name, #defaults)},
+        quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name, #defaults)},
         quote! {
-            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, a0: puredata_sys::t_float) {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #tramp_args) {
                 let x = &mut *x;
-                x.wrapped().#method_name(a0);
+                x.wrapped().#method_name(#wrapped_params);
             }
         },
     )
