@@ -5,8 +5,8 @@ use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
-    parenthesized, parse_macro_input, Attribute, Ident, ImplItem, ImplItemMethod, Item, ItemImpl,
-    ItemStruct, Lit, LitInt, LitStr, Token, Type,
+    parenthesized, parse_macro_input, ArgCaptured, Attribute, FnArg, Ident, ImplItem,
+    ImplItemMethod, Item, ItemImpl, ItemStruct, Lit, LitInt, LitStr, Pat, Token, Type,
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -156,15 +156,15 @@ type MethodRegisterFn = fn(
     method_name: &Ident,
     _method: &ImplItemMethod,
     attr: &Attribute,
-) -> (proc_macro2::TokenStream, proc_macro2::TokenStream);
+) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)>;
 
 fn add_bang(
     trampoline_name: &Ident,
     method_name: &Ident,
     _method: &ImplItemMethod,
     _attr: &Attribute,
-) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
-    (
+) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
+    Ok((
         quote! { puredata_external::method::Method::Bang(#trampoline_name) },
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped) {
@@ -172,15 +172,15 @@ fn add_bang(
                 x.wrapped().#method_name();
             }
         },
-    )
+    ))
 }
 
 fn add_sel(
     trampoline_name: &Ident,
     method_name: &Ident,
-    _method: &ImplItemMethod,
+    method: &ImplItemMethod,
     attr: &Attribute,
-) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
     let mut sel_name = Lit::Str(LitStr::new(&method_name.to_string(), method_name.span()));
     let mut defaults = Lit::Int(LitInt::new(0, syn::IntSuffix::Usize, attr.span()));
 
@@ -195,17 +195,36 @@ fn add_sel(
                 sel_name = n.clone();
             }
         }
-        Err(e) => panic!(e),
+        Err(e) => return Err(syn::Error::new(attr.span(), e)),
     }
 
     let sel_name = quote! { std::ffi::CString::new(#sel_name).unwrap() };
+
+    //XXX assert that the first arg is SelfRef
+
+    //extract the args
+    for a in method.sig.decl.inputs.iter().skip(1) {
+        if let FnArg::Captured(a) = a {
+            if let Pat::Ident(i) = &a.pat {
+                if let Type::Path(p) = &a.ty {
+                    println!("arg {:?} {:?}", i.ident, p.path);
+                    continue;
+                }
+            }
+        }
+
+        return Err(syn::Error::new(
+            a.span(),
+            format!("unsupported arg type {:?}", a),
+        ));
+    }
 
     //TODO actually allow for more than just SelF1
     let variant = Ident::new(&"SelF1", method_name.span());
     let tramp_args = quote! { a0: puredata_sys::t_float };
     let wrapped_params = quote! { a0 };
 
-    (
+    Ok((
         quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name, #defaults)},
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #tramp_args) {
@@ -213,7 +232,7 @@ fn add_sel(
                 x.wrapped().#method_name(#wrapped_params);
             }
         },
-    )
+    ))
 }
 
 static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] =
@@ -226,9 +245,9 @@ fn update_method_trampolines(
     item: &ItemImpl,
     class_inst: &Ident,
     flat_name: &String,
-) -> proc_macro2::TokenStream {
+) -> syn::Result<proc_macro2::TokenStream> {
     let mut item = item.clone();
-    item.items = item
+    let updated_items: syn::Result<Vec<ImplItem>> = item
         .items
         .iter()
         .map(|i| match &i {
@@ -249,27 +268,34 @@ fn update_method_trampolines(
                             m.sig.ident.span(),
                         );
                         let (pd_method, trampoline) =
-                            add_method(&trampoline_name, &method_name, &m, &a);
+                            add_method(&trampoline_name, &method_name, &m, &a)?;
                         trampolines.push(trampoline);
                         register_methods.push(quote! {
                             #class_inst.add_method(#pd_method);
                         });
                     }
                 }
-                ImplItem::Method(m)
+                Ok(ImplItem::Method(m))
             }
-            _ => i.clone(),
+            _ => Ok(i.clone()),
         })
         .collect();
-    quote! {
+    item.items = updated_items?;
+    Ok(quote! {
         #item
-    }
+    })
 }
 
 #[proc_macro]
 pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let Parsed { items } = parse_macro_input!(input as Parsed);
+    match parse_and_build(items) {
+        Ok(ts) => ts,
+        Err(err) => err.to_compile_error().into(),
+    }
+}
 
+fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
     let mut impls = Vec::new();
     let mut structs = Vec::new();
     let mut remain = Vec::new();
@@ -326,27 +352,28 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let mut register_methods: Vec<proc_macro2::TokenStream> = Vec::new();
 
-    let impls: Vec<proc_macro2::TokenStream> = impls
+    let impls: syn::Result<Vec<proc_macro2::TokenStream>> = impls
         .into_iter()
         .map(|i| {
             match i.self_ty.as_ref() {
                 Type::Path(tp) => {
                     //matches struct
                     if tp.path.is_ident(the_struct.ident.clone()) {
-                        return update_method_trampolines(
+                        return Ok(update_method_trampolines(
                             &mut trampolines,
                             &mut register_methods,
                             i,
                             &class_inst,
                             &flat_name,
-                        );
+                        )?);
                     }
                 }
                 _ => (),
             };
-            quote! { #i }
+            Ok(quote! { #i })
         })
         .collect();
+    let impls = impls?;
 
     let class_new_method = match etype {
         ExternalType::Signal => add_dsp(
@@ -383,7 +410,7 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         #(#remain)*
     };
 
-    proc_macro::TokenStream::from(expanded)
+    Ok(proc_macro::TokenStream::from(expanded))
 }
 
 #[cfg(test)]
