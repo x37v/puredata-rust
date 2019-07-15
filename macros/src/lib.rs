@@ -1,13 +1,12 @@
 extern crate proc_macro;
 
 use proc_macro2::Span;
-use quote::{quote, quote_spanned};
+use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
-    parenthesized, parse_macro_input, parse_quote, Attribute, Expr, ExprBlock, GenericParam,
-    Generics, Ident, ImplItem, ImplItemMethod, Item, ItemImpl, ItemStruct, Lit, LitInt, LitStr,
-    Token, Type, Visibility,
+    parenthesized, parse_macro_input, Attribute, Ident, ImplItem, ImplItemMethod, Item, ItemImpl,
+    ItemStruct, Lit, LitInt, LitStr, Token, Type,
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -344,17 +343,6 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             quote! { #i }
         })
         .collect();
-
-    /*
-    register_methods.push(quote! {
-        #class_inst.add_method(Method::Bang(hellodsp_tilde_bang_trampoline));
-    });
-
-    register_methods.push(quote! {
-        let name = CString::new("blah").unwrap();
-        #class_inst.add_method(Method::SelF1(name, hellodsp_tilde_float_trampoline, 1));
-    });
-    */
 
     let class_new_method = match etype {
         ExternalType::Signal => add_dsp(
