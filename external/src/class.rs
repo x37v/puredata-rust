@@ -245,7 +245,7 @@ impl<T> Class<T> {
                         Some(std::mem::transmute::<method::F1<T>, PdMethod>(f)),
                     );
                 }
-                Method::SelF1(sel, f, defaults) => {
+                Method::SelF(sel, f, defaults) => {
                     self.add_sel_method(
                         sel,
                         Some(std::mem::transmute::<method::F1<T>, PdMethod>(f)),
