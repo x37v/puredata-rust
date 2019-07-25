@@ -3,7 +3,11 @@ name = "puredata-external"
 version = "0.1.0"
 authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
 puredata-sys = { path = "../puredata-sys" }
 field-offset = "0.1.1"
+
+[build-dependencies]
+quote = "0.6.13"

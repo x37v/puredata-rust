@@ -6,6 +6,9 @@ pub type PdDspMethod<T> = unsafe extern "C" fn(*mut T, *mut *mut puredata_sys::t
 pub type PdDspPerform = unsafe extern "C" fn(*mut puredata_sys::t_int) -> *mut puredata_sys::t_int;
 
 pub type B<T> = unsafe extern "C" fn(*mut T);
+
+include!(concat!(env!("OUT_DIR"), "/method-gen.rs"));
+
 pub type F1<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_float);
 pub type F2<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_float, puredata_sys::t_float);
 pub type F3<T> = unsafe extern "C" fn(
