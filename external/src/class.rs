@@ -242,13 +242,13 @@ impl<T> Class<T> {
                 Method::Float(f) => {
                     puredata_sys::class_doaddfloat(
                         self.pd_class,
-                        Some(std::mem::transmute::<method::F1<T>, PdMethod>(f)),
+                        Some(std::mem::transmute::<method::F<T>, PdMethod>(f)),
                     );
                 }
                 Method::SelF(sel, f, defaults) => {
                     self.add_sel_method(
                         sel,
-                        Some(std::mem::transmute::<method::F1<T>, PdMethod>(f)),
+                        Some(std::mem::transmute::<method::F<T>, PdMethod>(f)),
                         &mut [puredata_sys::t_atomtype::A_FLOAT],
                         defaults,
                     );

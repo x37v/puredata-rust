@@ -11,3 +11,5 @@ field-offset = "0.1.1"
 
 [build-dependencies]
 quote = "0.6.13"
+syn = "0.15.42"
+proc-macro2 = "0.4.30"
