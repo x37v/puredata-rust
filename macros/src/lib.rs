@@ -5,8 +5,8 @@ use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
-    parenthesized, parse_macro_input, ArgCaptured, Attribute, FnArg, Ident, ImplItem,
-    ImplItemMethod, Item, ItemImpl, ItemStruct, Lit, LitInt, LitStr, Pat, Token, Type,
+    parenthesized, parse_macro_input, Attribute, FnArg, Ident, ImplItem, ImplItemMethod, Item,
+    ItemImpl, ItemStruct, Lit, LitInt, LitStr, Pat, Token, Type, TypePath,
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -175,6 +175,10 @@ fn add_bang(
     ))
 }
 
+fn type_path_final_eq(p: &TypePath, ident: &str) -> bool {
+    p.path.segments.last().unwrap().value().ident == ident
+}
+
 fn add_sel(
     trampoline_name: &Ident,
     method_name: &Ident,
@@ -203,33 +207,62 @@ fn add_sel(
     //XXX assert that the first arg is SelfRef
 
     //extract the args
-    for a in method.sig.decl.inputs.iter().skip(1) {
-        if let FnArg::Captured(a) = a {
-            if let Pat::Ident(i) = &a.pat {
-                if let Type::Path(p) = &a.ty {
-                    println!("arg {:?} {:?}", i.ident, p.path);
-                    continue;
-                }
+    let args: syn::Result<Vec<(&Ident, &Type)>> = method
+        .sig
+        .decl
+        .inputs
+        .iter()
+        .skip(1)
+        .map(|a| {
+            if let FnArg::Captured(a) = a {
+                match (&a.pat, &a.ty) {
+                    (Pat::Ident(i), Type::Path(p)) => {
+                        if type_path_final_eq(&p, &"t_float") {
+                            println!("arg {:?} {:?}", i.ident, p.path);
+                            return Ok((&i.ident, &a.ty));
+                        }
+                    }
+                    (Pat::Ident(i), Type::Ptr(ptr)) => {
+                        if let Type::Path(p) = ptr.elem.as_ref() {
+                            if ptr.mutability.is_some() {
+                                if type_path_final_eq(&p, &"t_symbol") {
+                                    println!("arg {:?} {:?}", i.ident, p.path);
+                                    return Ok((&i.ident, &a.ty));
+                                }
+                            }
+                        }
+                    }
+                    _ => (),
+                };
             }
-        }
 
-        return Err(syn::Error::new(
-            a.span(),
-            format!("unsupported arg type {:?}", a),
-        ));
-    }
+            return Err(syn::Error::new(
+                a.span(),
+                format!("unsupported arg type {:?}", a),
+            ));
+        })
+        .collect();
+    let args = args?;
 
-    //TODO actually allow for more than just SelF1
-    let variant = Ident::new(&"SelF1", method_name.span());
-    let tramp_args = quote! { a0: puredata_sys::t_float };
-    let wrapped_params = quote! { a0 };
+    let mut variant = "SelFS"; //XXX actually build up arg
+    let variant = Ident::new(&variant, method_name.span());
+
+    let tramp_args: Vec<proc_macro2::TokenStream> = args
+        .iter()
+        .map(|it| {
+            let ident = it.0;
+            let typ = it.1;
+            quote! { #ident: #typ }
+        })
+        .collect();
+    let wrapped_params: Vec<Ident> = args.iter().map(|it| it.0.clone()).collect();
 
     Ok((
         quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name, #defaults)},
         quote! {
-            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #tramp_args) {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #(#tramp_args),*) {
                 let x = &mut *x;
-                x.wrapped().#method_name(#wrapped_params);
+                x.wrapped().#method_name(#(#wrapped_params),*);
             }
         },
     ))
