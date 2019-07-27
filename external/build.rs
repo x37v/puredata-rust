@@ -6,7 +6,30 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-fn append_perms(types: &Vec<&'static str>, perms: &mut Vec<Vec<&'static str>>, recurse: usize) {
+#[derive(Clone, Copy, Debug)]
+enum Arg {
+    Float,
+    Symbol,
+}
+
+impl Arg {
+    pub fn to_string(&self) -> String {
+        match self {
+            Arg::Float => "F",
+            Arg::Symbol => "S",
+        }
+        .to_string()
+    }
+
+    pub fn to_sig(&self) -> proc_macro2::TokenStream {
+        match self {
+            Arg::Float => quote! { puredata_sys::t_float },
+            Arg::Symbol => quote! { *mut puredata_sys::t_symbol },
+        }
+    }
+}
+
+fn append_perms(types: &Vec<Arg>, perms: &mut Vec<Vec<Arg>>, recurse: usize) {
     if recurse == 0 {
         return;
     }
@@ -14,7 +37,7 @@ fn append_perms(types: &Vec<&'static str>, perms: &mut Vec<Vec<&'static str>>, r
     for t in types {
         for p in perms.iter() {
             let mut n = p.clone();
-            n.push(t);
+            n.push(*t);
             append.push(n);
         }
     }
@@ -30,31 +53,34 @@ fn main() -> Result<(), Box<std::error::Error>> {
     let mut f = File::create(&dest_path)?;
 
     //build types
-    /*
-    let types = vec![
-        (&"F", quote! { puredata_sys::t_float }),
-        (&"S", quote! {*mut puredata_sys::t_symbol}),
-    ];
-    */
 
-    let mut perms = vec![vec!["F"], vec!["S"]];
-    let types = vec!["F", "S"];
+    let mut perms = vec![vec![Arg::Float], vec![Arg::Symbol]];
+    let types = vec![Arg::Float, Arg::Symbol];
     append_perms(&types, &mut perms, 5);
 
     let mut variants = Vec::new();
     for p in perms.iter() {
-        let s = p.join("");
+        let s = p
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>()
+            .join("");
+        //build type alias
         let t = syn::Ident::new(&s, proc_macro2::Span::call_site());
+        //build method signature
+        let args: Vec<proc_macro2::TokenStream> = p.iter().map(Arg::to_sig).collect();
         f.write_all(
             quote! {
-                pub type #t<T> = unsafe extern "C" fn(*mut T, puredata_sys::t_float);
+                pub type #t<T> = unsafe extern "C" fn(*mut T, #(#args),*);
             }
             .to_string()
             .as_bytes(),
         )?;
         f.write_all(b"\n")?;
 
+        //build enum variant name
         let v = syn::Ident::new(&format!("Sel{}", s), proc_macro2::Span::call_site());
+        //TODO when we allow pointers, don't provide defaults if a pointer is at the end?
         variants.push(quote! {
             #v(std::ffi::CString, #t<T>, usize)
         });
