@@ -5,6 +5,7 @@ members = [
 	"macros",
 	"examples/hellodsp",
 	"examples/helloworld",
+	"examples/pan",
 ]
 
 [profile.release]

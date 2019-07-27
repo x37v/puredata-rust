@@ -1,0 +1,16 @@
+[package]
+name = "pan"
+version = "0.1.0"
+authors = ["Alex Norman <alex@x37v.info>"]
+edition = "2018"
+
+[lib]
+name = "pan"
+crate-type = ["cdylib"]
+
+[dependencies]
+puredata-sys = { path = "../../puredata-sys" }
+puredata-external = { path = "../../external" }
+puredata-external-macros = { path = "../../macros" }
+itertools = "0.8.0"
+num = "0.2.0"
