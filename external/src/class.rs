@@ -143,13 +143,14 @@ impl<T> Class<T> {
                 puredata_sys::t_atomtype::A_SYMBOL | puredata_sys::t_atomtype::A_DEFSYM => {
                     types[i] = puredata_sys::t_atomtype::A_DEFSYM
                 }
-                _ => (), //panic?
+                _ => panic!("type cannot be made default"),
             }
         }
 
         //register
         unsafe {
             match types.len() {
+                0 => (),
                 1 => {
                     assert!(defaults <= 1);
                     puredata_sys::class_addmethod(
@@ -240,38 +241,6 @@ impl<T> Class<T> {
         }
     }
 }
-
-/*
-impl<T> Class<T> {
-    pub fn add_method(&mut self, m: Method<T>) {
-        unsafe {
-            match m {
-                Method::Bang(f) => {
-                    puredata_sys::class_addbang(
-                        self.pd_class,
-                        Some(std::mem::transmute::<method::B<T>, PdMethod>(f)),
-                    );
-                }
-                Method::Float(f) => {
-                    puredata_sys::class_doaddfloat(
-                        self.pd_class,
-                        Some(std::mem::transmute::<method::F<T>, PdMethod>(f)),
-                    );
-                }
-                Method::SelF(sel, f, defaults) => {
-                    self.add_sel_method(
-                        sel,
-                        Some(std::mem::transmute::<method::F<T>, PdMethod>(f)),
-                        &mut [puredata_sys::t_atomtype::A_FLOAT],
-                        defaults,
-                    );
-                }
-                _ => unimplemented!(), //XXX TODO
-            }
-        }
-    }
-}
-*/
 
 include!(concat!(env!("OUT_DIR"), "/class-gen.rs"));
 
