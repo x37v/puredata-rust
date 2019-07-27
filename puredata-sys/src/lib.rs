@@ -36,9 +36,9 @@ impl crate::_symbol {
 
 impl std::cmp::PartialEq for crate::_symbol {
     fn eq(&self, other: &Self) -> bool {
-        let p = self as *const _;
+        let s = self as *const _;
         let o = other as *const _;
-        p == o
+        s == o
     }
 }
 
