@@ -17,9 +17,23 @@ external! {
         }
 
         #[sel(defaults=1)]
-        pub fn foo(&mut self, arg1: puredata_sys::t_float, arg2: *mut puredata_sys::t_symbol) {
+        pub fn foo(&mut self, arg1: puredata_sys::t_float, _arg2: *mut puredata_sys::t_symbol) {
             let m =
                 CString::new(format!("got foo {}", arg1).to_string()).expect("CString::new failed");
+            pd::post(m);
+        }
+
+        #[sel(defaults=1)]
+        pub fn bar(&mut self, arg1: puredata_sys::t_float) {
+            let m =
+                CString::new(format!("got bar {}", arg1).to_string()).expect("CString::new failed");
+            pd::post(m);
+        }
+
+        #[sel(defaults=1)]
+        pub fn baz(&mut self, _arg1: *mut puredata_sys::t_symbol) {
+            let m =
+                CString::new("got baz").expect("CString::new failed");
             pd::post(m);
         }
     }

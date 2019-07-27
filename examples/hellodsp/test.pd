@@ -1,4 +1,4 @@
-#N canvas 2 74 1916 1004 10;
+#N canvas 2 74 956 474 10;
 #X declare -path .;
 #X obj 755 36 declare -path .;
 #X obj 347 298 hellodsp~;
@@ -22,8 +22,10 @@
 #X msg 135 73 \; pd dsp 1;
 #X floatatom 559 135 5 0 0 0 - - -, f 5;
 #X obj 554 170 sig~;
-#X msg 346 124 foo 3234;
 #X msg 376 154 foo;
+#X msg 372 76 bar 3;
+#X msg 414 79 baz asdf;
+#X msg 346 124 foo 3234 asd;
 #X connect 1 0 4 0;
 #X connect 1 1 8 0;
 #X connect 1 2 10 0;
@@ -44,3 +46,5 @@
 #X connect 19 0 1 2;
 #X connect 20 0 1 0;
 #X connect 21 0 1 0;
+#X connect 22 0 1 0;
+#X connect 23 0 1 0;
