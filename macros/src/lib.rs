@@ -207,7 +207,7 @@ fn add_sel(
     //XXX assert that the first arg is SelfRef
 
     //extract the args
-    let args: syn::Result<Vec<(&Ident, &Type)>> = method
+    let args: syn::Result<Vec<(&Ident, &Type, String)>> = method
         .sig
         .decl
         .inputs
@@ -218,16 +218,14 @@ fn add_sel(
                 match (&a.pat, &a.ty) {
                     (Pat::Ident(i), Type::Path(p)) => {
                         if type_path_final_eq(&p, &"t_float") {
-                            println!("arg {:?} {:?}", i.ident, p.path);
-                            return Ok((&i.ident, &a.ty));
+                            return Ok((&i.ident, &a.ty, "F".to_string()));
                         }
                     }
                     (Pat::Ident(i), Type::Ptr(ptr)) => {
                         if let Type::Path(p) = ptr.elem.as_ref() {
                             if ptr.mutability.is_some() {
                                 if type_path_final_eq(&p, &"t_symbol") {
-                                    println!("arg {:?} {:?}", i.ident, p.path);
-                                    return Ok((&i.ident, &a.ty));
+                                    return Ok((&i.ident, &a.ty, "S".to_string()));
                                 }
                             }
                         }
@@ -244,7 +242,14 @@ fn add_sel(
         .collect();
     let args = args?;
 
-    let mut variant = "SelFS"; //XXX actually build up arg
+    //build variant
+    let variant = format!(
+        "Sel{}",
+        args.iter()
+            .map(|x| x.2.to_string())
+            .collect::<Vec<String>>()
+            .join("")
+    );
     let variant = Ident::new(&variant, method_name.span());
 
     let tramp_args: Vec<proc_macro2::TokenStream> = args
@@ -294,10 +299,9 @@ fn update_method_trampolines(
                     {
                         let a = m.attrs.remove(pos);
 
-                        //XXX tmp, only supports bang right now
                         let method_name = m.sig.ident.clone();
                         let trampoline_name = Ident::new(
-                            &(format!("{:}_{:}_trampoline", flat_name, method_name)),
+                            &(format!("{:}_method_{:}_trampoline", flat_name, method_name)),
                             m.sig.ident.span(),
                         );
                         let (pd_method, trampoline) =
