@@ -37,7 +37,7 @@ external! {
         }
 
         #[sel(name = "soda", defaults=1)]
-        pub fn sel2(&mut self, arg: puredata_sys::t_float) {
+        pub fn sel2(&mut self, arg: &mut puredata_sys::t_symbol) {
             let m =
                 CString::new(format!("got soda {}", arg).to_string()).expect("CString::new failed");
             pd::post(m);
