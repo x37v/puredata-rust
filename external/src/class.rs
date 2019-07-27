@@ -69,9 +69,10 @@ impl<T> Class<T> {
             };
             let flags = puredata_sys::CLASS_DEFAULT;
             let args = [0; 6];
+            let name: &mut puredata_sys::t_symbol = name.into();
             Self {
                 pd_class: puredata_sys::class_new(
-                    puredata_sys::gensym(name.as_ptr()),
+                    name.as_ptr(),
                     Some(creator),
                     destroyer,
                     std::mem::size_of::<T>(),
