@@ -1,26 +1,25 @@
-use std::slice;
 use std::mem::size_of;
-use puredata_sys::{getbytes, freebytes};
+use std::slice;
 
 ///A slice allocated and freed using puredata_sys
 #[repr(transparent)]
-pub struct Slice<T: 'static + Sized + Copy> (pub &'static mut [T]);
+pub struct Slice<T: 'static + Sized + Copy>(pub &'static mut [T]);
 
-impl<T> Slice<T>
-where T:'static + Copy {
-}
+impl<T> Slice<T> where T: 'static + Copy {}
 
 impl<T> Default for Slice<T>
-where T:'static + Sized + Copy {
+where
+    T: 'static + Sized + Copy,
+{
     fn default() -> Self {
-        unsafe {
-            Self (slice::from_raw_parts_mut(std::ptr::null_mut(), 0))
-        }
+        unsafe { Self(slice::from_raw_parts_mut(std::ptr::null_mut(), 0)) }
     }
 }
 
 impl<T> Slice<T>
-where T:'static + Sized + Copy + Default {
+where
+    T: 'static + Sized + Copy + Default,
+{
     /// Create a new slice.
     ///
     /// # Arguments
@@ -66,12 +65,16 @@ where T:'static + Sized + Copy + Default {
 }
 
 impl<T> Slice<T>
-where T:'static + Sized + Copy  {
+where
+    T: 'static + Sized + Copy,
+{
     fn cleanup(&mut self) {
         if self.0.len() > 0 {
             unsafe {
-                freebytes(self.0.as_mut_ptr() as *mut ::std::os::raw::c_void,
-                self.0.len() * size_of::<T>());
+                puredata_sys::freebytes(
+                    self.0.as_mut_ptr() as *mut ::std::os::raw::c_void,
+                    self.0.len() * size_of::<T>(),
+                );
                 self.0 = slice::from_raw_parts_mut(std::ptr::null_mut(), 0)
             }
         }
@@ -79,7 +82,9 @@ where T:'static + Sized + Copy  {
 }
 
 impl<T> Drop for Slice<T>
-where T:'static + Sized + Copy {
+where
+    T: 'static + Sized + Copy,
+{
     fn drop(&mut self) {
         self.cleanup();
     }
