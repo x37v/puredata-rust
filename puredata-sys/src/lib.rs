@@ -33,3 +33,13 @@ impl crate::_symbol {
         self as *mut crate::_symbol
     }
 }
+
+impl std::cmp::PartialEq for crate::_symbol {
+    fn eq(&self, other: &Self) -> bool {
+        let p = self as *const _;
+        let o = other as *const _;
+        p == o
+    }
+}
+
+impl std::cmp::Eq for crate::_symbol {}
