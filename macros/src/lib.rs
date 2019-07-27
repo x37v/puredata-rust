@@ -207,7 +207,8 @@ fn add_sel(
     //XXX assert that the first arg is SelfRef
 
     //extract the args
-    let args: syn::Result<Vec<(&Ident, &Type, String)>> = method
+    //arg name, arg type, string rep for Sel method, tramp arg type if different (*mut -> &mut)
+    let args: syn::Result<Vec<(&Ident, &Type, String, Option<proc_macro2::TokenStream>)>> = method
         .sig
         .decl
         .inputs
@@ -218,14 +219,20 @@ fn add_sel(
                 match (&a.pat, &a.ty) {
                     (Pat::Ident(i), Type::Path(p)) => {
                         if type_path_final_eq(&p, &"t_float") {
-                            return Ok((&i.ident, &a.ty, "F".to_string()));
+                            return Ok((&i.ident, &a.ty, "F".to_string(), None));
                         }
                     }
-                    (Pat::Ident(i), Type::Ptr(ptr)) => {
-                        if let Type::Path(p) = ptr.elem.as_ref() {
-                            if ptr.mutability.is_some() {
+                    (Pat::Ident(i), Type::Reference(r)) => {
+                        if let Type::Path(p) = r.elem.as_ref() {
+                            if r.mutability.is_some() {
                                 if type_path_final_eq(&p, &"t_symbol") {
-                                    return Ok((&i.ident, &a.ty, "S".to_string()));
+                                    //trampoline will be a *mut but method will be &mut
+                                    return Ok((
+                                        &i.ident,
+                                        &a.ty,
+                                        "S".to_string(),
+                                        Some(quote! { *mut #p }),
+                                    ));
                                 }
                             }
                         }
@@ -252,21 +259,27 @@ fn add_sel(
     );
     let variant = Ident::new(&variant, method_name.span());
 
-    let tramp_args: Vec<proc_macro2::TokenStream> = args
-        .iter()
-        .map(|it| {
-            let ident = it.0;
-            let typ = it.1;
-            quote! { #ident: #typ }
-        })
-        .collect();
-    let wrapped_params: Vec<Ident> = args.iter().map(|it| it.0.clone()).collect();
+    let mut tramp_args: Vec<proc_macro2::TokenStream> = Vec::new();
+    let mut wrapped_params: Vec<Ident> = Vec::new();
+    //*mut -> &mut
+    let mut wrapped_refs = vec![quote! { let x = &mut *x; }];
+    for a in args {
+        let ident = a.0;
+        let typ = a.1;
+        if let Some(t) = a.3 {
+            wrapped_refs.push(quote! { let #ident = &mut *#ident; });
+            tramp_args.push(quote! { #ident: #t });
+        } else {
+            tramp_args.push(quote! { #ident: #typ });
+        }
+        wrapped_params.push(a.0.clone());
+    }
 
     Ok((
         quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name, #defaults)},
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #(#tramp_args),*) {
-                let x = &mut *x;
+                #(#wrapped_refs)*;
                 x.wrapped().#method_name(#(#wrapped_params),*);
             }
         },
