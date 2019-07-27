@@ -3,7 +3,6 @@ use crate::external::*;
 use crate::inlet::InletSignal;
 use crate::method::PdDspPerform;
 use crate::obj::AsObject;
-use crate::outlet::{OutletSignal, SignalOutlet};
 use field_offset::offset_of;
 use std::rc::Rc;
 use std::slice;
@@ -188,7 +187,7 @@ where
         let input_slice = self.inlet_buffer.as_slice();
         unsafe {
             //the Slice newtype is transparent so we can just treat it as if it were the inner type
-            let input_slice = std::mem::transmute::<_,_>(input_slice);
+            let input_slice = std::mem::transmute::<_, _>(input_slice);
             //XXX can we cast input_slice to not be mut internally?
             self.wrapped.process(nframes, input_slice, output_slice);
         }
