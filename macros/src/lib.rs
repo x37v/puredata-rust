@@ -403,7 +403,6 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
                             argc as usize
                         })
                     };
-                println!("args {}", argc);
                 let args = std::slice::from_raw_parts(argv, argc);
                 let name = if name.is_null() {
                     None 
