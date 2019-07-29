@@ -51,7 +51,6 @@ external! {
             self.count = v as isize;
         }
 
-        //XXX broken, passing `defaults
         #[sel]
         pub fn reset(&mut self) {
             self.count = self.range.0;
