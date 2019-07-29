@@ -1,6 +1,5 @@
 use crate::method;
 use crate::method::{Method, PdDspMethod, PdMethod};
-use puredata_sys::{t_atom, t_floatarg, t_symbol};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::os::raw::c_int;
@@ -13,44 +12,6 @@ pub struct Class<T> {
 pub enum SignalClassType<T> {
     NoInput(PdDspMethod<T>),
     WithInput(PdDspMethod<T>, usize), //method, byte offset of translation float field in struct T
-}
-
-pub type CVoidPtr = *mut ::std::os::raw::c_void;
-pub type SymPtr = *mut t_symbol;
-
-pub enum ClassNewMethod {
-    NoArgs(unsafe extern "C" fn() -> CVoidPtr),
-    VarArgs(unsafe extern "C" fn(SymPtr, c_int, *const t_atom) -> CVoidPtr),
-    F1(unsafe extern "C" fn(t_floatarg) -> CVoidPtr),
-    F2(unsafe extern "C" fn(t_floatarg, t_floatarg) -> CVoidPtr),
-    F3(unsafe extern "C" fn(t_floatarg, t_floatarg, t_floatarg) -> CVoidPtr),
-    F4(unsafe extern "C" fn(t_floatarg, t_floatarg, t_floatarg, t_floatarg) -> CVoidPtr),
-    F5(
-        unsafe extern "C" fn(
-            t_floatarg,
-            t_floatarg,
-            t_floatarg,
-            t_floatarg,
-            t_floatarg,
-        ) -> CVoidPtr,
-    ),
-    F6(
-        unsafe extern "C" fn(
-            t_floatarg,
-            t_floatarg,
-            t_floatarg,
-            t_floatarg,
-            t_floatarg,
-            t_floatarg,
-        ) -> CVoidPtr,
-    ),
-    S1(unsafe extern "C" fn(SymPtr) -> CVoidPtr),
-    S2(unsafe extern "C" fn(SymPtr, SymPtr) -> CVoidPtr),
-    S3(unsafe extern "C" fn(SymPtr, SymPtr, SymPtr) -> CVoidPtr),
-    S4(unsafe extern "C" fn(SymPtr, SymPtr, SymPtr, SymPtr) -> CVoidPtr),
-    S5(unsafe extern "C" fn(SymPtr, SymPtr, SymPtr, SymPtr, SymPtr) -> CVoidPtr),
-    S6(unsafe extern "C" fn(SymPtr, SymPtr, SymPtr, SymPtr, SymPtr, SymPtr) -> CVoidPtr),
-    //TODO all combinations of F and S up to 6 args total
 }
 
 impl<T> Class<T> {

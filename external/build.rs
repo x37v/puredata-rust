@@ -23,7 +23,7 @@ impl Arg {
 
     pub fn to_sig(&self) -> proc_macro2::TokenStream {
         match self {
-            Arg::Float => quote! { puredata_sys::t_float },
+            Arg::Float => quote! { puredata_sys::t_floatarg },
             Arg::Symbol => quote! { *mut puredata_sys::t_symbol },
         }
     }
@@ -59,6 +59,10 @@ fn type_alias_name(perm: &Vec<Arg>) -> String {
         .map(Arg::to_string)
         .collect::<Vec<String>>()
         .join("")
+}
+
+fn classnew_variant_name(type_alias: &String) -> syn::Ident {
+    syn::Ident::new(type_alias, proc_macro2::Span::call_site())
 }
 
 fn sel_variant_name(type_alias: &String) -> syn::Ident {
@@ -114,14 +118,40 @@ fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
         .as_bytes(),
     )?;
 
+    //class new enumeration
+    let cvoidptr = quote! { *mut ::std::os::raw::c_void };
+    let mut variants = vec![
+        quote! { NoArgs(unsafe extern "C" fn() -> #cvoidptr) },
+        quote! { VarArgs(unsafe extern "C" fn(*mut puredata_sys::t_symbol, std::os::raw::c_int, *const puredata_sys::t_atom) -> #cvoidptr) },
+    ];
+    //XXX TODO, filter out pointers when we get them
+    for p in perms.iter() {
+        //build type alias
+        let alias = type_alias_name(&p);
+        let v = classnew_variant_name(&alias);
+        let args = p.iter().map(Arg::to_sig);
+        variants.push(quote! { #v(unsafe extern "C" fn(#(#args),*) -> #cvoidptr) });
+    }
+
+    f.write_all(
+        quote! {
+            pub enum ClassNewMethod {
+                #(#variants),*
+            }
+        }
+        .to_string()
+        .as_bytes(),
+    )?;
+
     Ok(())
 }
 
-fn gen_class_addmethod(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
+fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
     let out_dir = env::var("OUT_DIR")?;
     let dest_path = Path::new(&out_dir).join("class-gen.rs");
     let mut f = File::create(&dest_path)?;
 
+    //implementation that adds methods to class
     let mut matches = vec![
         quote! {
             Method::Bang(f) => {
@@ -199,7 +229,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
     append_perms(&types, &mut perms, 5);
 
     gen_method(&perms)?;
-    gen_class_addmethod(&perms)?;
+    gen_class(&perms)?;
 
     Ok(())
 }
