@@ -392,15 +392,25 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
     trampolines.push(
         quote! {
             pub unsafe extern "C" fn #new_method_name (name: *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) -> *mut ::std::os::raw::c_void {
-                let argv = std::mem::transmute::<_,*const puredata_external::atom::Atom>(argv);
-                let argc = if argc < 0 as std::os::raw::c_int {
-                    0usize
-                } else {
-                    argc as usize
-                };
+                let (argv, argc) = 
+                    if argv.is_null() {
+                        (std::ptr::null(), 0)
+                    } else {
+                        (std::mem::transmute::<_,*const puredata_external::atom::Atom>(argv),
+                        if argc < 0 as std::os::raw::c_int {
+                            0usize
+                        } else {
+                            argc as usize
+                        })
+                    };
+                println!("args {}", argc);
                 let args = std::slice::from_raw_parts(argv, argc);
-                let name = &mut *name;
-                Wrapped::new(#class_static.expect("class not initialized"), &args, Some(name))
+                let name = if name.is_null() {
+                    None 
+                } else { 
+                    Some(&mut *name)
+                };
+                Wrapped::new(#class_static.expect("class not initialized"), &args, name)
             }
         });
 
