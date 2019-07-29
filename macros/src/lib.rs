@@ -145,7 +145,7 @@ fn add_dsp(
     quote! {
         puredata_external::class::Class::<Wrapped>::register_dsp_new(
             name,
-            puredata_external::Method::ClassNewMethod::VarArgs(#new_method_name),
+            puredata_external::method::ClassNewMethod::VarArgs(#new_method_name),
             puredata_external::class::SignalClassType::WithInput( #dsp_method, Wrapped::float_convert_field_offset(),),
             Some(#free_method),);
     }
