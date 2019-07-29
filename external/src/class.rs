@@ -121,14 +121,22 @@ impl<T> Class<T> {
 
         //register
         unsafe {
+            let sym = puredata_sys::gensym(sel.as_ptr());
             match types.len() {
-                0 => (),
+                0 => {
+                    puredata_sys::class_addmethod(
+                        self.pd_class,
+                        m,
+                        sym,
+                        0,
+                    );
+                },
                 1 => {
                     assert!(defaults <= 1);
                     puredata_sys::class_addmethod(
                         self.pd_class,
                         m,
-                        puredata_sys::gensym(sel.as_ptr()),
+                        sym,
                         types[0],
                         0,
                     );
@@ -138,7 +146,7 @@ impl<T> Class<T> {
                     puredata_sys::class_addmethod(
                         self.pd_class,
                         m,
-                        puredata_sys::gensym(sel.as_ptr()),
+                        sym,
                         types[0],
                         types[1],
                         0,
@@ -149,7 +157,7 @@ impl<T> Class<T> {
                     puredata_sys::class_addmethod(
                         self.pd_class,
                         m,
-                        puredata_sys::gensym(sel.as_ptr()),
+                        sym,
                         types[0],
                         types[1],
                         types[2],
@@ -161,7 +169,7 @@ impl<T> Class<T> {
                     puredata_sys::class_addmethod(
                         self.pd_class,
                         m,
-                        puredata_sys::gensym(sel.as_ptr()),
+                        sym,
                         types[0],
                         types[1],
                         types[2],
@@ -174,7 +182,7 @@ impl<T> Class<T> {
                     puredata_sys::class_addmethod(
                         self.pd_class,
                         m,
-                        puredata_sys::gensym(sel.as_ptr()),
+                        sym,
                         types[0],
                         types[1],
                         types[2],
@@ -188,7 +196,7 @@ impl<T> Class<T> {
                     puredata_sys::class_addmethod(
                         self.pd_class,
                         m,
-                        puredata_sys::gensym(sel.as_ptr()),
+                        sym,
                         types[0],
                         types[1],
                         types[2],
