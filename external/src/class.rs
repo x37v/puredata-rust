@@ -21,11 +21,15 @@ impl<T> Class<T> {
         destroyer: Option<unsafe extern "C" fn(*mut T)>,
     ) -> Self {
         unsafe {
+            let mut args = [0; 6];
             let creator = std::mem::transmute::<
                 _,
                 unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
             >(match creator {
-                ClassNewMethod::VarArgs(m) => m,
+                ClassNewMethod::VarArgs(m) => {
+                    args[0] = puredata_sys::t_atomtype::A_GIMME;
+                    m
+                }
                 _ => unimplemented!(),
             });
             let destroyer = match destroyer {
@@ -36,7 +40,6 @@ impl<T> Class<T> {
                 >(d)),
             };
             let flags = puredata_sys::CLASS_DEFAULT;
-            let args = [0; 6];
             let name: &mut puredata_sys::t_symbol = name.into();
             Self {
                 pd_class: puredata_sys::class_new(
