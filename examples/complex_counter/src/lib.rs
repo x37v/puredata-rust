@@ -16,20 +16,24 @@ external! {
 
     impl ControlExternal for Counter {
         fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
-            let mut args = builder.creation_args().iter();
 
+            //parse the args
             let mut step = 1;
             let mut range = (0, 1);
+            let mut args = builder.creation_args().iter();
             if let Some(atom) = args.next() {
                 range.0 = atom.get_int().unwrap_or(0) as isize;
+                if let Some(atom) = args.next() {
+                    range.1 = atom.get_int().unwrap_or(1) as isize;
+                    if let Some(atom) = args.next() {
+                        step = atom.get_int().unwrap_or(1) as isize;
+                    }
+                }
             }
 
-            if let Some(atom) = args.next() {
-                range.1 = atom.get_int().unwrap_or(1) as isize;
-            }
-
-            if let Some(atom) = args.next() {
-                step = atom.get_int().unwrap_or(1) as isize;
+            //reorder if needed
+            if range.0 > range.1 {
+                range = (range.1, range.0);
             }
 
             let count_outlet = builder.new_message_outlet(OutletType::Float);
