@@ -264,10 +264,10 @@ fn add_sel(
     let mut wrapped_params: Vec<Ident> = Vec::new();
     //*mut -> &mut
     let mut wrapped_refs = vec![quote! { let x = &mut *x; }];
-    for a in args {
+    for a in args.iter() {
         let ident = a.0;
         let typ = a.1;
-        if let Some(t) = a.3 {
+        if let Some(t) = &a.3 {
             wrapped_refs.push(quote! { let #ident = &mut *#ident; });
             tramp_args.push(quote! { #ident: #t });
         } else {
@@ -276,8 +276,14 @@ fn add_sel(
         wrapped_params.push(a.0.clone());
     }
 
+    let call = if args.len() == 0 {
+        quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name)}
+    } else {
+        quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name, #defaults)}
+    };
+
     Ok((
-        quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name, #defaults)},
+        call,
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #(#tramp_args),*) {
                 #(#wrapped_refs)*;
