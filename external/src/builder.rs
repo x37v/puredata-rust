@@ -19,6 +19,8 @@ pub type IntoBuiltProcessor<T> = (
 );
 
 pub trait ControlExternalBuilder<T> {
+    fn instance_name(&self) -> &Option<&mut puredata_sys::t_symbol>;
+    fn creation_args(&self) -> &[Atom];
     fn new_passive_float_inlet(
         &mut self,
         initial_value: puredata_sys::t_float,
@@ -38,6 +40,7 @@ pub trait SignalProcessorExternalBuilder<T>: SignalGeneratorExternalBuilder<T> {
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
     args: &'a [Atom],
+    name: Option<&'a mut puredata_sys::t_symbol>,
     signal_inlets: Vec<RcInletSignal>,
     signal_outlets: Vec<RcOutletSignal>,
     float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
@@ -47,10 +50,11 @@ impl<'a, T> Builder<'a, T> {
     pub fn new(
         obj: &'a mut dyn AsObject,
         args: &'a [Atom],
-        name: Option<&mut puredata_sys::t_symbol>,
+        name: Option<&'a mut puredata_sys::t_symbol>,
     ) -> Self {
         Self {
             obj,
+            name,
             args,
             signal_inlets: Vec::new(),
             signal_outlets: Vec::new(),
@@ -86,6 +90,14 @@ impl<'a, T> Into<IntoBuiltProcessor<T>> for Builder<'a, T> {
 }
 
 impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
+    fn instance_name(&self) -> &Option<&mut puredata_sys::t_symbol> {
+        &self.name
+    }
+
+    fn creation_args(&self) -> &[Atom] {
+        &self.args
+    }
+
     fn new_passive_float_inlet(
         &mut self,
         initial_value: puredata_sys::t_float,
