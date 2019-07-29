@@ -26,5 +26,5 @@ See the [examples](examples/) for implementations based on the
 
 ## Links
 
-* [kmtr pd_ext_rust](https://github.com/kmtr/pd_ext_rust) Another Pure Data External solution for rust, requires C.
+* [kmtr pd_ext_rust](https://github.com/kmtr/pd_ext_rust): another Pure Data External solution for rust, requires C.
 * [RustAudio](https://github.com/RustAudio)
