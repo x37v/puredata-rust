@@ -125,6 +125,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "complex_counter"
+version = "0.1.0"
+dependencies = [
+ "puredata-external 0.1.0",
+ "puredata-external-macros 0.1.0",
+ "puredata-sys 0.1.0",
+]
+
+[[package]]
 name = "counter"
 version = "0.1.0"
 dependencies = [

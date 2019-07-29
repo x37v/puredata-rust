@@ -1,0 +1,14 @@
+[package]
+name = "complex_counter"
+version = "0.1.0"
+authors = ["Alex Norman <alex@x37v.info>"]
+edition = "2018"
+
+[lib]
+name = "complex_counter"
+crate-type = ["cdylib"]
+
+[dependencies]
+puredata-sys = { path = "../../puredata-sys" }
+puredata-external = { path = "../../external" }
+puredata-external-macros = { path = "../../macros" }
