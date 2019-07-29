@@ -2,7 +2,8 @@
 
 Does not require any C, builds entirely with Cargo.
 
-See the [examples](examples/).
+See the [examples](examples/) for implementations based on the 
+[HOWTO](https://github.com/pure-data/externals-howto) examples.
 
 ## Requirements
 
