@@ -6,6 +6,7 @@ members = [
 	"examples/hellodsp",
 	"examples/helloworld",
 	"examples/pan",
+	"examples/counter",
 ]
 
 [profile.release]

@@ -125,6 +125,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "counter"
+version = "0.1.0"
+dependencies = [
+ "puredata-external 0.1.0",
+ "puredata-external-macros 0.1.0",
+ "puredata-sys 0.1.0",
+]
+
+[[package]]
 name = "either"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
