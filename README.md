@@ -1,12 +1,22 @@
 # Pure Data Externals in Pure Rust
 
-Does not require any C.
-Build entirely with Cargo.
+Does not require any C, builds entirely with Cargo.
+
+See the [examples](examples/).
 
 ## Requirements
 
 * [Rust and Cargo](https://www.rust-lang.org/tools/install)
 * [Pure Data](https://puredata.info), to run, not to build.
+
+## TODO
+
+* Documentation
+* Build scripts to create `.pd_linux`, `.pd_darwin` from the `.so`, `.dynlib` etc.
+* Expose pointer methods
+* Support more creation argument configurations
+* Clean up macros
+* [crates.io](https://crates.io/) release
 
 ## References
 
