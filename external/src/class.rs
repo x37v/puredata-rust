@@ -1,5 +1,5 @@
 use crate::method;
-use crate::method::{Method, PdDspMethod, PdMethod};
+use crate::method::{ClassNewMethod, Method, PdDspMethod, PdMethod};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::os::raw::c_int;
@@ -17,10 +17,17 @@ pub enum SignalClassType<T> {
 impl<T> Class<T> {
     pub fn register_new(
         name: CString,
-        creator: unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
+        creator: ClassNewMethod,
         destroyer: Option<unsafe extern "C" fn(*mut T)>,
     ) -> Self {
         unsafe {
+            let creator = std::mem::transmute::<
+                _,
+                unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
+            >(match creator {
+                ClassNewMethod::VarArgs(m) => m,
+                _ => unimplemented!(),
+            });
             let destroyer = match destroyer {
                 None => None,
                 Some(d) => Some(std::mem::transmute::<
@@ -68,7 +75,7 @@ impl<T> Class<T> {
 
     pub fn register_dsp_new(
         name: CString,
-        creator: unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
+        creator: ClassNewMethod,
         dsp_method: SignalClassType<T>,
         destroyer: Option<unsafe extern "C" fn(*mut T)>,
     ) -> Self {
