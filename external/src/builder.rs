@@ -1,3 +1,4 @@
+use crate::atom::Atom;
 use crate::inlet::passive::FloatInlet;
 use crate::inlet::*;
 use crate::obj::AsObject;
@@ -36,15 +37,21 @@ pub trait SignalProcessorExternalBuilder<T>: SignalGeneratorExternalBuilder<T> {
 
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
+    args: &'a [Atom],
     signal_inlets: Vec<RcInletSignal>,
     signal_outlets: Vec<RcOutletSignal>,
     float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
 }
 
 impl<'a, T> Builder<'a, T> {
-    pub fn new(obj: &'a mut dyn AsObject) -> Self {
+    pub fn new(
+        obj: &'a mut dyn AsObject,
+        args: &'a [Atom],
+        name: Option<&mut puredata_sys::t_symbol>,
+    ) -> Self {
         Self {
             obj,
+            args,
             signal_inlets: Vec::new(),
             signal_outlets: Vec::new(),
             float_inlets: Vec::new(),

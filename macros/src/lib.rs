@@ -1,3 +1,4 @@
+#![recursion_limit = "128"]
 extern crate proc_macro;
 
 use proc_macro2::Span;
@@ -104,16 +105,16 @@ fn get_type(
 }
 
 //return the class initialization item
-fn add_control(new_method: &Ident, free_method: &Ident) -> proc_macro2::TokenStream {
+fn add_control(new_method_name: &Ident, free_method: &Ident) -> proc_macro2::TokenStream {
     quote! {
-        puredata_external::class::Class::<Wrapped>::register_new(name, #new_method, Some(#free_method));
+        puredata_external::class::Class::<Wrapped>::register_new(name, puredata_external::method::ClassNewMethod::VarArgs(#new_method_name), Some(#free_method));
     }
 }
 
 //return the class initialization item
 fn add_dsp(
     trampolines: &mut Vec<proc_macro2::TokenStream>,
-    new_method: &Ident,
+    new_method_name: &Ident,
     free_method: &Ident,
     flat_name: &String,
     name_span: Span,
@@ -144,7 +145,7 @@ fn add_dsp(
     quote! {
         puredata_external::class::Class::<Wrapped>::register_dsp_new(
             name,
-            #new_method,
+            puredata_external::Method::ClassNewMethod::VarArgs(#new_method_name),
             puredata_external::class::SignalClassType::WithInput( #dsp_method, Wrapped::float_convert_field_offset(),),
             Some(#free_method),);
     }
@@ -376,7 +377,7 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
     let class_name = LitStr::new(&(class_name), name_ident.span());
     let class_static = Ident::new(&(format!("{:}_CLASS", upper_name)), name_ident.span());
     let class_inst = Ident::new("c", name_ident.span());
-    let new_method = Ident::new(&(format!("{:}_new", flat_name)), name_ident.span());
+    let new_method_name = Ident::new(&(format!("{:}_new", flat_name)), name_ident.span());
     let free_method = Ident::new(&(format!("{:}_free", flat_name)), name_ident.span());
     let setup_method = Ident::new(&(format!("{:}_setup", flat_name)), name_ident.span());
     let wrapper_type = Ident::new(&(format!("{:}Wrapper", extern_impl)), name_ident.span());
@@ -387,13 +388,24 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
         static mut #class_static: Option<*mut puredata_sys::_class> = None;
     };
 
-    trampolines.push(quote! {
-        //new trampoline
-        pub unsafe extern "C" fn #new_method () -> *mut ::std::os::raw::c_void {
-            Wrapped::new(#class_static.expect("class not initialized"))
-        }
+    //new trampoline
+    trampolines.push(
+        quote! {
+            pub unsafe extern "C" fn #new_method_name (name: *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) -> *mut ::std::os::raw::c_void {
+                let argv = std::mem::transmute::<_,*const puredata_external::atom::Atom>(argv);
+                let argc = if argc < 0 as std::os::raw::c_int {
+                    0usize
+                } else {
+                    argc as usize
+                };
+                let args = std::slice::from_raw_parts(argv, argc);
+                let name = &mut *name;
+                Wrapped::new(#class_static.expect("class not initialized"), &args, Some(name))
+            }
+        });
 
-        //free trampoline
+    //free trampoline
+    trampolines.push(quote! {
         pub unsafe extern "C" fn #free_method (x: *mut Wrapped) {
             let x = &mut *x;
             x.free();
@@ -428,12 +440,12 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
     let class_new_method = match etype {
         ExternalType::Signal => add_dsp(
             &mut trampolines,
-            &new_method,
+            &new_method_name,
             &free_method,
             &flat_name,
             name_ident.span(),
         ),
-        ExternalType::Control => add_control(&new_method, &free_method),
+        ExternalType::Control => add_control(&new_method_name, &free_method),
     };
 
     trampolines.push(quote! {

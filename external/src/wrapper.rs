@@ -198,16 +198,20 @@ impl<T> ControlExternalWrapper<T>
 where
     T: ControlExternal,
 {
-    pub unsafe fn new(pd_class: *mut puredata_sys::_class) -> *mut ::std::os::raw::c_void {
+    pub unsafe fn new(
+        pd_class: *mut puredata_sys::_class,
+        args: &[crate::atom::Atom],
+        name: Option<&mut puredata_sys::t_symbol>,
+    ) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
             pd_class,
         ));
-        obj.init();
+        obj.init(args, name);
         obj as *mut Self as *mut ::std::os::raw::c_void
     }
 
-    fn init(&mut self) {
-        let mut builder = Builder::new(self);
+    fn init(&mut self, args: &[crate::atom::Atom], name: Option<&mut puredata_sys::t_symbol>) {
+        let mut builder = Builder::new(self, args, name);
         let e = ControlExternal::new(&mut builder);
         self.wrapped = Some(ControlExternalWrapperInternal::new(e, builder));
     }
@@ -228,15 +232,23 @@ impl<T> SignalGeneratorExternalWrapper<T>
 where
     T: SignalGeneratorExternal,
 {
-    pub unsafe fn new(pd_class: *mut puredata_sys::_class) -> *mut ::std::os::raw::c_void {
+    pub unsafe fn new(
+        pd_class: *mut puredata_sys::_class,
+        args: &[crate::atom::Atom],
+        name: Option<&mut puredata_sys::t_symbol>,
+    ) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
             pd_class,
         ));
-        obj.init()
+        obj.init(args, name)
     }
 
-    fn init(&mut self) -> *mut ::std::os::raw::c_void {
-        let mut builder = Builder::new(self);
+    fn init(
+        &mut self,
+        args: &[crate::atom::Atom],
+        name: Option<&mut puredata_sys::t_symbol>,
+    ) -> *mut ::std::os::raw::c_void {
+        let mut builder = Builder::new(self, args, name);
         let e = SignalGeneratorExternal::new(&mut builder);
         //make sure we have some output
         let r = if builder.signal_outlets() == 0 {
@@ -289,17 +301,20 @@ impl<T> SignalProcessorExternalWrapper<T>
 where
     T: SignalProcessorExternal,
 {
-    pub unsafe fn new(pd_class: *mut puredata_sys::_class) -> *mut ::std::os::raw::c_void {
+    pub unsafe fn new(
+        pd_class: *mut puredata_sys::_class,
+        args: &[crate::atom::Atom],
+        name: Option<&mut puredata_sys::t_symbol>,
+    ) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
             pd_class,
         ));
-        obj.init();
-
+        obj.init(args, name);
         obj as *mut Self as *mut ::std::os::raw::c_void
     }
 
-    fn init(&mut self) {
-        let mut builder = Builder::new(self);
+    fn init(&mut self, args: &[crate::atom::Atom], name: Option<&mut puredata_sys::t_symbol>) {
+        let mut builder = Builder::new(self, args, name);
         let e = SignalProcessorExternal::new(&mut builder);
         self.wrapped = Some(SignalProcessorExternalWrapperInternal::new(e, builder));
     }
