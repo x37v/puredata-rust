@@ -4,10 +4,13 @@
 #X obj 89 62 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X floatatom 89 113 5 0 0 0 - - -, f 5;
-#X obj 89 90 counter 3;
 #X msg 122 49 set 23;
 #X msg 174 47 reset;
-#X connect 1 0 3 0;
-#X connect 3 0 2 0;
-#X connect 4 0 3 0;
-#X connect 5 0 3 0;
+#X obj 149 121 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 89 90 counter 0 3 -1;
+#X connect 1 0 6 0;
+#X connect 3 0 6 0;
+#X connect 4 0 6 0;
+#X connect 6 0 2 0;
+#X connect 6 1 5 0;
