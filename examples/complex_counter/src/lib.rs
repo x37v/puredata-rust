@@ -46,7 +46,24 @@ external! {
         #[bang]
         pub fn bang(&mut self) {
             let f = self.count as puredata_sys::t_float;
-            self.count = self.count.wrapping_add(1);
+            self.count = self.count.wrapping_add(self.step);
+
+            if self.range.0 != self.range.1 {
+                //if we're stepping up
+                if self.step > 0 {
+                    //and count has exceeded the upper range
+                    if  self.count > self.range.1 {
+                        self.count = self.range.0; //set to lower
+                        self.wrap_outlet.send_bang();
+                    }
+                } else {
+                    if  self.count < self.range.0 {
+                        self.count = self.range.1; //set to upper
+                        self.wrap_outlet.send_bang();
+                    }
+                }
+            }
+
             self.count_outlet.send_float(f);
         }
 
