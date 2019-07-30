@@ -21,6 +21,10 @@ Does not require any C, builds entirely with Cargo.
 * [complex_counter](examples/complex_counter/src/lib.rs) based on the HOWTO [a complex external: counter](https://github.com/pure-data/externals-howto#a-complex-external-counter) example
 * [xfade](examples/xfade/src/lib.rs) based on the, misnamed, HOWTO [a signal-external pan~](https://github.com/pure-data/externals-howto#a-signal-external-pan) example
 
+```
+cd examples/helloworld && cargo build
+```
+
 If you want to see what code the macro actually produces, use `cargo-expand`.
 
 ## TODO
