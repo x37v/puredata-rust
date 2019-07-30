@@ -4,8 +4,17 @@ At this point there is one macro `external!` that can wrap a `struct` and its `i
 If the `struct` implements one of the external `trait`s from `puredata-external`, you should
 have automatically generated trampolines and setup for your pure data external.
 
+Look at the [external traits](../external/src/external.rs) for details on what
+kind of externals you can generate.
+
 Currently, the puredata class is named after a lower case version the wrapped
 `struct`'s name, so the example below will generate a class called *counter*.
+
+BTW, the wrapper that the `external!` macro uses removes any need to manage
+signal setup; the `dsp` and `perform` methods are managed for you, you just need
+to implement the `generate` or `process` method from the appropriate `trait`
+to be able to use signals.  See [wrapper](../external/src/wrapper.rs) if you
+want to see how that is done.
 
 ```rust
 external! {
