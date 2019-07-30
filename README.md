@@ -2,13 +2,17 @@
 
 Does not require any C, builds entirely with Cargo.
 
-See the [examples](examples/) for implementations based on the 
-[HOWTO](https://github.com/pure-data/externals-howto) examples.
-
 ## Requirements
 
 * [Rust and Cargo](https://www.rust-lang.org/tools/install)
 * [Pure Data](https://puredata.info), to run, not to build.
+
+## Examples
+
+* [helloworld](examples/helloworld) based on the HOWTO [my first external: helloworld](https://github.com/pure-data/externals-howto#my-first-external-helloworld) example
+* [counter](examples/counter) based on the HOWTO [a simple external: counter](https://github.com/pure-data/externals-howto#a-simple-external-counter) example
+* [complex_counter](examples/complex_counter) based on the HOWTO [a complex external: counter](https://github.com/pure-data/externals-howto#a-complex-external-counter) example
+* [xfade](examples/xfade) based on the, misnamed, HOWTO [a signal-external pan~](https://github.com/pure-data/externals-howto#a-signal-external-pan) example
 
 ## TODO
 
