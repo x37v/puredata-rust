@@ -10,18 +10,18 @@ Currently, the puredata class is named after a lower case version the wrapped
 ```rust
 external! {
     pub struct Counter {
-			...
+      ...
     }
 
     impl ControlExternal for Counter {
         fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
 ...
-				}
-		}
+        }
+    }
 }
 ```
 
-	
+  
 ## Atrributes
 
 At this point there a few attributes you can add to an `impl` block to register methods
@@ -32,15 +32,15 @@ in the puredata space.
 ```rust
 external! {
     pub struct Counter {
-		}
-		...
+    }
+    ...
 
     impl Counter {
         #[bang]
         pub fn bang(&mut self) {
-				}
-		...
-		}
+        }
+    ...
+    }
 }
 ```
 
@@ -56,12 +56,12 @@ signature.
 There are 2 optional parameters:
 
 1. `name="value"`
-		This will ignore the name of the `rust` method and use the selector `value` to
-		trigger this method.
+    This will ignore the name of the `rust` method and use the selector `value` to
+    trigger this method.
 
 2. `defaults=number`
-		This will identify that `number` of the arguments, starting from the back
-		should be filled in with default values if the argument isn't provided.
+    This will identify that `number` of the arguments, starting from the back
+    should be filled in with default values if the argument isn't provided.
 
 The example below shows 2 bound selector methods:
 
@@ -72,8 +72,8 @@ The example below shows 2 bound selector methods:
 ```rust
 external! {
     pub struct Counter {
-		}
-		...
+    }
+    ...
 
     impl Counter {
         #[sel]
@@ -85,8 +85,8 @@ external! {
         pub fn foo(&mut self, v: puredata_sys::t_float) {
             self.count = v as isize;
         }
-		...
-		}
+    ...
+    }
 }
 ```
 
