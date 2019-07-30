@@ -27,12 +27,7 @@ external! {
         }
 
         //compute the audio
-        fn process(
-            &mut self,
-            _frames: usize,
-            inputs: &[&mut [puredata_sys::t_float]],
-            outputs: &mut [&mut [puredata_sys::t_float]],
-            ) {
+        fn process(&mut self, _frames: usize, inputs: &[&mut [puredata_sys::t_float]], outputs: &mut [&mut [puredata_sys::t_float]],) {
             //read the value of our position setting
             let pos = num::clamp(**self.pos, 0f32.into(), 1f32.into());
 
