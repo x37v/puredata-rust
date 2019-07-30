@@ -2,7 +2,7 @@
 #X declare -path .;
 #X obj 755 36 declare -path .;
 #X msg 135 73 \; pd dsp 1;
-#X obj 352 171 pan~, f 12;
+#X obj 352 171 xfade~, f 12;
 #X obj 356 99 osc~ 400;
 #X obj 439 89 osc~ 702;
 #X obj 462 133 hsl 128 15 0 1 0 0 empty empty empty -2 -8 0 10 -262144

@@ -330,17 +330,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pan"
-version = "0.1.0"
-dependencies = [
- "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "num 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "puredata-external 0.1.0",
- "puredata-external-macros 0.1.0",
- "puredata-sys 0.1.0",
-]
-
-[[package]]
 name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -535,6 +524,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "winapi 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi-util 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "xfade"
+version = "0.1.0"
+dependencies = [
+ "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "puredata-external 0.1.0",
+ "puredata-external-macros 0.1.0",
+ "puredata-sys 0.1.0",
 ]
 
 [metadata]

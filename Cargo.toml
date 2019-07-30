@@ -5,7 +5,7 @@ members = [
 	"macros",
 	"examples/hellodsp",
 	"examples/helloworld",
-	"examples/pan",
+	"examples/xfade",
 	"examples/counter",
 	"examples/complex_counter",
 ]

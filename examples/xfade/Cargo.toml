@@ -1,11 +1,11 @@
 [package]
-name = "pan"
+name = "xfade"
 version = "0.1.0"
 authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
 
 [lib]
-name = "pan"
+name = "xfade"
 crate-type = ["cdylib"]
 
 [dependencies]
