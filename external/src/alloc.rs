@@ -1,4 +1,5 @@
 use std::mem::size_of;
+use std::ops::{Deref, DerefMut};
 use std::slice;
 
 ///A slice allocated and freed using puredata_sys
@@ -61,6 +62,26 @@ where
         for i in self.0.iter_mut() {
             *i = Default::default();
         }
+    }
+}
+
+impl<T> Deref for Slice<T>
+where
+    T: 'static + Sized + Copy,
+{
+    type Target = [T];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for Slice<T>
+where
+    T: 'static + Sized + Copy,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
