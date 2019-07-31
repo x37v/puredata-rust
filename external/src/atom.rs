@@ -45,3 +45,17 @@ impl Atom {
         }
     }
 }
+
+impl Default for Atom {
+    fn default() -> Self {
+        let a = puredata_sys::_atom {
+            a_type: puredata_sys::t_atomtype::A_FLOAT,
+            a_w: {
+                puredata_sys::word {
+                    w_float: 0f32.into(),
+                }
+            },
+        };
+        Self(a)
+    }
+}
