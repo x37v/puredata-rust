@@ -3,6 +3,7 @@ use crate::obj::AsObject;
 pub trait OutletSend {
     fn send_bang(&self);
     fn send_float(&self, f: puredata_sys::t_float);
+    fn send_list(&self, l: &mut dyn std::ops::DerefMut<Target = [crate::atom::Atom]>);
 }
 
 //marker traits
@@ -65,9 +66,17 @@ impl OutletSend for Outlet {
         }
     }
 
-    fn send_float(&self, f: f32) {
+    fn send_float(&self, f: puredata_sys::t_float) {
         unsafe {
-            puredata_sys::outlet_float(self.ptr, f as puredata_sys::t_float);
+            puredata_sys::outlet_float(self.ptr, f);
+        }
+    }
+
+    fn send_list(&self, l: &mut dyn std::ops::DerefMut<Target = [crate::atom::Atom]>) {
+        unsafe {
+            let argc = l.len() as std::os::raw::c_int;
+            let argv = l.deref_mut().as_mut_ptr() as *mut puredata_sys::t_atom;
+            puredata_sys::outlet_list(self.ptr, &mut puredata_sys::s_list, argc, argv);
         }
     }
 }
@@ -106,6 +115,7 @@ mod tests {
     use super::*;
     impl OutletSend for () {
         fn send_bang(&self) {}
-        fn send_float(&self, _f: f32) {}
+        fn send_float(&self, _f: puredata_sys::t_float) {}
+        fn send_list(&self, l: &mut dyn std::ops::DerefMut<Target = [crate::atom::Atom]>) {}
     }
 }
