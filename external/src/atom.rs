@@ -1,5 +1,5 @@
 #[repr(transparent)]
-pub struct Atom(puredata_sys::t_atom);
+pub struct Atom(pub puredata_sys::t_atom);
 
 impl Atom {
     pub fn as_ptr(&self) -> *const puredata_sys::t_atom {
