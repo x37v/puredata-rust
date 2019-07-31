@@ -44,6 +44,41 @@ impl Atom {
             }
         }
     }
+
+    pub fn set_semi(&mut self) {
+        self.0.a_type = puredata_sys::t_atomtype::A_SEMI;
+        self.0.a_w.w_index = 0;
+    }
+
+    pub fn set_comma(&mut self) {
+        self.0.a_type = puredata_sys::t_atomtype::A_COMMA;
+        self.0.a_w.w_index = 0;
+    }
+
+    pub fn set_pointer(&mut self, v: &mut puredata_sys::t_gpointer) {
+        self.0.a_type = puredata_sys::t_atomtype::A_POINTER;
+        self.0.a_w.w_gpointer = v as *mut puredata_sys::t_gpointer;
+    }
+
+    pub fn set_float(&mut self, v: puredata_sys::t_float) {
+        self.0.a_type = puredata_sys::t_atomtype::A_FLOAT;
+        self.0.a_w.w_float = v;
+    }
+
+    pub fn set_symbol(&mut self, v: &mut puredata_sys::t_symbol) {
+        self.0.a_type = puredata_sys::t_atomtype::A_SYMBOL;
+        self.0.a_w.w_symbol = v as *mut puredata_sys::t_symbol;
+    }
+
+    pub fn set_dollar(&mut self, v: std::os::raw::c_int) {
+        self.0.a_type = puredata_sys::t_atomtype::A_DOLLAR;
+        self.0.a_w.w_index = v;
+    }
+
+    pub fn set_dollarsym(&mut self, v: &mut puredata_sys::t_symbol) {
+        self.0.a_type = puredata_sys::t_atomtype::A_DOLLSYM;
+        self.0.a_w.w_symbol = v as *mut puredata_sys::t_symbol;
+    }
 }
 
 impl Default for Atom {
