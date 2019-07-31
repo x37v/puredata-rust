@@ -81,6 +81,17 @@ impl Atom {
     }
 }
 
+impl Copy for Atom {}
+impl Clone for Atom {
+    fn clone(&self) -> Self {
+        let a = puredata_sys::_atom {
+            a_type: self.0.a_type,
+            a_w: self.0.a_w,
+        };
+        Self(a)
+    }
+}
+
 impl Default for Atom {
     fn default() -> Self {
         let a = puredata_sys::_atom {
