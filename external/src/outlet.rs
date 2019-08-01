@@ -3,7 +3,7 @@ use crate::obj::AsObject;
 pub trait OutletSend {
     fn send_bang(&self);
     fn send_float(&self, f: puredata_sys::t_float);
-    fn send_list(&self, l: &mut dyn std::ops::DerefMut<Target = [crate::atom::Atom]>);
+    fn send_list(&self, l: &dyn std::ops::Deref<Target = [crate::atom::Atom]>);
 }
 
 //marker traits
@@ -17,6 +17,7 @@ pub enum OutletType {
     Pointer,
     List,
     Message,
+    Any,
 }
 
 pub struct Outlet {
@@ -47,7 +48,7 @@ impl Outlet {
                 OutletType::List => {
                     puredata_sys::outlet_new(owner.as_obj(), &mut puredata_sys::s_list)
                 }
-                OutletType::Message => puredata_sys::outlet_new(
+                OutletType::Message | OutletType::Any => puredata_sys::outlet_new(
                     owner.as_obj(),
                     std::ptr::null_mut() as *mut puredata_sys::t_symbol,
                 ),
@@ -72,10 +73,12 @@ impl OutletSend for Outlet {
         }
     }
 
-    fn send_list(&self, l: &mut dyn std::ops::DerefMut<Target = [crate::atom::Atom]>) {
+    fn send_list(&self, l: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {
         unsafe {
             let argc = l.len() as std::os::raw::c_int;
-            let argv = l.deref_mut().as_mut_ptr() as *mut puredata_sys::t_atom;
+            let argv = l.deref().as_ptr() as *const puredata_sys::t_atom;
+            //XXX pd doesn't indicate const or mut but shouldn't be modifying
+            let argv = std::mem::transmute::<_, *mut puredata_sys::t_atom>(argv);
             puredata_sys::outlet_list(self.ptr, &mut puredata_sys::s_list, argc, argv);
         }
     }
@@ -116,6 +119,6 @@ mod tests {
     impl OutletSend for () {
         fn send_bang(&self) {}
         fn send_float(&self, _f: puredata_sys::t_float) {}
-        fn send_list(&self, l: &mut dyn std::ops::DerefMut<Target = [crate::atom::Atom]>) {}
+        fn send_list(&self, l: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {}
     }
 }
