@@ -2,6 +2,27 @@
 pub struct Atom(pub puredata_sys::t_atom);
 
 impl Atom {
+    pub fn slice_from_raw_parts(
+        argv: *const puredata_sys::t_atom,
+        argc: std::os::raw::c_int,
+    ) -> &'static [Atom] {
+        unsafe {
+            let (argv, argc) = if argv.is_null() {
+                (std::ptr::null(), 0)
+            } else {
+                (
+                    std::mem::transmute::<_, *const crate::atom::Atom>(argv),
+                    if argc < 0 as std::os::raw::c_int {
+                        0usize
+                    } else {
+                        argc as usize
+                    },
+                )
+            };
+            std::slice::from_raw_parts(argv, argc)
+        }
+    }
+
     pub fn as_ptr(&self) -> *const puredata_sys::t_atom {
         &self.0 as *const puredata_sys::t_atom
     }
