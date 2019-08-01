@@ -117,6 +117,8 @@ fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
             Bang(B<T>),
             Float(F<T>),
             Symbol(S<T>),
+            List(SelList<T>),
+            Anything(SelList<T>),
             Sel(CString, B<T>),
             #(#variants),*
         }
@@ -181,6 +183,22 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
                 puredata_sys::class_addsymbol(
                     self.pd_class,
                     Some(std::mem::transmute::<method::S<T>, PdMethod>(f)),
+                    );
+            }
+        },
+        quote! {
+            Method::List(f) => {
+                puredata_sys::class_addlist(
+                    self.pd_class,
+                    Some(std::mem::transmute::<method::SelList<T>, PdMethod>(f)),
+                    );
+            }
+        },
+        quote! {
+            Method::Anything(f) => {
+                puredata_sys::class_addanything(
+                    self.pd_class,
+                    Some(std::mem::transmute::<method::SelList<T>, PdMethod>(f)),
                     );
             }
         },
