@@ -24,7 +24,7 @@ external! {
             pd::post(CString::new("Hello world !!").unwrap());
         }
 
-        #[list] //indicates that a bang in Pd should call this
+        #[list] //indicates that a list in Pd should call this
         pub fn list(&mut self, list: &[puredata_external::atom::Atom]) {
             self.outlet.send_list(&list);
         }
