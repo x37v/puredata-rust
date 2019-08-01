@@ -3,6 +3,7 @@
 members = [
 	"external",
 	"macros",
+	"examples/helloall",
 	"examples/hellodsp",
 	"examples/helloworld",
 	"examples/xfade",
