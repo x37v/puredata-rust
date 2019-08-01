@@ -176,6 +176,25 @@ fn add_bang(
     ))
 }
 
+fn add_list(
+    trampoline_name: &Ident,
+    method_name: &Ident,
+    _method: &ImplItemMethod,
+    _attr: &Attribute,
+) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
+    //TODO validate arguments
+    Ok((
+        quote! { puredata_external::method::Method::List(#trampoline_name) },
+        quote! {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, _sel: /*ignored, always &s_list*/ *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) {
+                let x = &mut *x;
+                let args = puredata_external::atom::Atom::slice_from_raw_parts(argv, argc);
+                x.wrapped().#method_name(args);
+            }
+        },
+    ))
+}
+
 fn type_path_final_eq(p: &TypePath, ident: &str) -> bool {
     p.path.segments.last().unwrap().value().ident == ident
 }
@@ -294,7 +313,7 @@ fn add_sel(
 }
 
 static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] =
-    &[(&"bang", add_bang), (&"sel", add_sel)];
+    &[(&"bang", add_bang), (&"sel", add_sel), (&"list", add_list)];
 
 //extract annotated methods and build trampolines
 fn update_method_trampolines(
@@ -398,18 +417,7 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
     trampolines.push(
         quote! {
             pub unsafe extern "C" fn #new_method_name (name: *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) -> *mut ::std::os::raw::c_void {
-                let (argv, argc) = 
-                    if argv.is_null() {
-                        (std::ptr::null(), 0)
-                    } else {
-                        (std::mem::transmute::<_,*const puredata_external::atom::Atom>(argv),
-                        if argc < 0 as std::os::raw::c_int {
-                            0usize
-                        } else {
-                            argc as usize
-                        })
-                    };
-                let args = std::slice::from_raw_parts(argv, argc);
+                let args = puredata_external::atom::Atom::slice_from_raw_parts(argv, argc);
                 let name = if name.is_null() {
                     None 
                 } else { 
