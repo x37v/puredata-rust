@@ -195,6 +195,26 @@ fn add_list(
     ))
 }
 
+fn add_anything(
+    trampoline_name: &Ident,
+    method_name: &Ident,
+    _method: &ImplItemMethod,
+    _attr: &Attribute,
+) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
+    //TODO validate arguments
+    Ok((
+        quote! { puredata_external::method::Method::AnyThing(#trampoline_name) },
+        quote! {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, sel: *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) {
+                let x = &mut *x;
+                let sel = &*sel;
+                let args = puredata_external::atom::Atom::slice_from_raw_parts(argv, argc);
+                x.wrapped().#method_name(sel, args);
+            }
+        },
+    ))
+}
+
 fn type_path_final_eq(p: &TypePath, ident: &str) -> bool {
     p.path.segments.last().unwrap().value().ident == ident
 }
@@ -312,8 +332,12 @@ fn add_sel(
     ))
 }
 
-static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] =
-    &[(&"bang", add_bang), (&"sel", add_sel), (&"list", add_list)];
+static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] = &[
+    (&"bang", add_bang),
+    (&"sel", add_sel),
+    (&"list", add_list),
+    (&"anything", add_anything),
+];
 
 //extract annotated methods and build trampolines
 fn update_method_trampolines(

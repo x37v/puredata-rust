@@ -118,7 +118,7 @@ fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
             Float(F<T>),
             Symbol(S<T>),
             List(SelList<T>),
-            Anything(SelList<T>),
+            AnyThing(SelList<T>),
             Sel(CString, B<T>),
             #(#variants),*
         }
@@ -195,7 +195,7 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
             }
         },
         quote! {
-            Method::Anything(f) => {
+            Method::AnyThing(f) => {
                 puredata_sys::class_addanything(
                     self.pd_class,
                     Some(std::mem::transmute::<method::SelList<T>, PdMethod>(f)),
