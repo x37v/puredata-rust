@@ -28,6 +28,15 @@ impl std::convert::From<std::ffi::CString> for &mut crate::_symbol {
     }
 }
 
+impl std::convert::From<std::ffi::CString> for &crate::_symbol {
+    fn from(s: std::ffi::CString) -> Self {
+        unsafe {
+            let s = crate::gensym(s.as_ptr());
+            &*s
+        }
+    }
+}
+
 impl crate::_symbol {
     pub fn as_ptr(&mut self) -> *mut crate::_symbol {
         self as *mut crate::_symbol
