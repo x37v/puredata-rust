@@ -2,8 +2,14 @@ use crate::obj::AsObject;
 
 pub trait OutletSend {
     fn send_bang(&self);
-    fn send_float(&self, f: puredata_sys::t_float);
-    fn send_list(&self, l: &dyn std::ops::Deref<Target = [crate::atom::Atom]>);
+    fn send_float(&self, v: puredata_sys::t_float);
+    fn send_symbol(&self, v: &puredata_sys::t_symbol);
+    fn send_list(&self, v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>);
+    fn send_anything(
+        &self,
+        sel: &puredata_sys::t_symbol,
+        v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>,
+    );
 }
 
 //marker traits
@@ -16,8 +22,7 @@ pub enum OutletType {
     Symbol,
     Pointer,
     List,
-    Message,
-    Any,
+    AnyThing,
 }
 
 pub struct Outlet {
@@ -48,7 +53,7 @@ impl Outlet {
                 OutletType::List => {
                     puredata_sys::outlet_new(owner.as_obj(), &mut puredata_sys::s_list)
                 }
-                OutletType::Message | OutletType::Any => puredata_sys::outlet_new(
+                OutletType::AnyThing => puredata_sys::outlet_new(
                     owner.as_obj(),
                     std::ptr::null_mut() as *mut puredata_sys::t_symbol,
                 ),
@@ -67,19 +72,41 @@ impl OutletSend for Outlet {
         }
     }
 
-    fn send_float(&self, f: puredata_sys::t_float) {
+    fn send_float(&self, v: puredata_sys::t_float) {
         unsafe {
-            puredata_sys::outlet_float(self.ptr, f);
+            puredata_sys::outlet_float(self.ptr, v);
         }
     }
 
-    fn send_list(&self, l: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {
+    fn send_symbol(&self, v: &puredata_sys::t_symbol) {
         unsafe {
-            let argc = l.len() as std::os::raw::c_int;
-            let argv = l.deref().as_ptr() as *const puredata_sys::t_atom;
+            let v = std::mem::transmute::<_, *mut puredata_sys::t_symbol>(v);
+            puredata_sys::outlet_symbol(self.ptr, v);
+        }
+    }
+
+    fn send_list(&self, v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {
+        unsafe {
+            let argc = v.len() as std::os::raw::c_int;
+            let argv = v.deref().as_ptr() as *const puredata_sys::t_atom;
             //XXX pd doesn't indicate const or mut but shouldn't be modifying
             let argv = std::mem::transmute::<_, *mut puredata_sys::t_atom>(argv);
             puredata_sys::outlet_list(self.ptr, &mut puredata_sys::s_list, argc, argv);
+        }
+    }
+
+    fn send_anything(
+        &self,
+        sel: &puredata_sys::t_symbol,
+        v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>,
+    ) {
+        unsafe {
+            let sel = std::mem::transmute::<_, *mut puredata_sys::t_symbol>(sel);
+            let argc = v.len() as std::os::raw::c_int;
+            let argv = v.deref().as_ptr() as *const puredata_sys::t_atom;
+            //XXX pd doesn't indicate const or mut but shouldn't be modifying
+            let argv = std::mem::transmute::<_, *mut puredata_sys::t_atom>(argv);
+            puredata_sys::outlet_anything(self.ptr, sel, argc, argv);
         }
     }
 }
@@ -118,7 +145,14 @@ mod tests {
     use super::*;
     impl OutletSend for () {
         fn send_bang(&self) {}
-        fn send_float(&self, _f: puredata_sys::t_float) {}
-        fn send_list(&self, l: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {}
+        fn send_float(&self, _v: puredata_sys::t_float) {}
+        fn send_symbol(&self, _v: &puredata_sys::t_symbol) {}
+        fn send_list(&self, _v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {}
+        fn send_anything(
+            &self,
+            sel: &puredata_sys::t_symbol,
+            _v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>,
+        ) {
+        }
     }
 }
