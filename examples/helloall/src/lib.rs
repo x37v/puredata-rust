@@ -13,7 +13,7 @@ external! {
 
     impl ControlExternal for HelloAll {
         fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
-            let outlet = builder.new_message_outlet(OutletType::Any);
+            let outlet = builder.new_message_outlet(OutletType::AnyThing);
             Self { outlet }
         }
     }
@@ -26,7 +26,9 @@ external! {
 
         #[list] //indicates that a list in Pd should call this
         pub fn list(&mut self, list: &[puredata_external::atom::Atom]) {
-            self.outlet.send_list(&list);
+            let s = CString::new("toast").unwrap().into();
+            self.outlet.send_anything(s, &list);
+            self.outlet.send_symbol(s);
         }
     }
 }
