@@ -30,5 +30,11 @@ external! {
             self.outlet.send_anything(s, &list);
             self.outlet.send_symbol(s);
         }
+
+        #[anything]
+        pub fn anything(&mut self, sel: &puredata_sys::t_symbol, list: &[puredata_external::atom::Atom]) {
+            self.outlet.send_symbol(sel);
+            self.outlet.send_list(&list);
+        }
     }
 }
