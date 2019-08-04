@@ -3,7 +3,22 @@ use std::fmt;
 #[repr(transparent)]
 pub struct Symbol(*mut puredata_sys::t_symbol);
 
-impl Symbol {}
+impl Symbol {
+    pub fn inner(&self) -> *mut puredata_sys::t_symbol {
+        self.0
+    }
+}
+
+impl std::convert::TryFrom<*mut puredata_sys::t_symbol> for Symbol {
+    type Error = &'static str;
+    fn try_from(s: *mut puredata_sys::t_symbol) -> Result<Self, Self::Error> {
+        if s.is_null() {
+            Err("null ptr")
+        } else {
+            Ok(Self(s))
+        }
+    }
+}
 
 impl std::convert::From<std::ffi::CString> for Symbol {
     fn from(s: std::ffi::CString) -> Self {
