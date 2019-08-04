@@ -442,11 +442,6 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
         quote! {
             pub unsafe extern "C" fn #new_method_name (name: *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) -> *mut ::std::os::raw::c_void {
                 let args = puredata_external::atom::Atom::slice_from_raw_parts(argv, argc);
-                let name = if name.is_null() {
-                    None 
-                } else { 
-                    Some(&mut *name)
-                };
                 Wrapped::new(#class_static.expect("class not initialized"), &args, name)
             }
         });
