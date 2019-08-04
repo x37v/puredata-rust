@@ -9,7 +9,7 @@ Does not require any C, builds entirely with Cargo.
 
 ## Crates/Subdirs
 
-* [puredata-sys](puredata-sys) The basic generated bindings to `m_pd.h`, all you need to roll your own interface to puredata.
+* [pd-sys](pd-sys) The basic generated bindings to `m_pd.h`, all you need to roll your own interface to puredata.
 * [external](external) The Rust specific wrappers and ease of use methods for creating externals.
 * [macros](macros) The macros that generate all the guts for externals you don't want to have to deal with yourself, used the examples.
 * [examples](examples) See below.
