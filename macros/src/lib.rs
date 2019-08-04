@@ -207,9 +207,8 @@ fn add_anything(
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, sel: *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) {
                 let x = &mut *x;
-                let sel = &*sel;
                 let args = puredata_external::atom::Atom::slice_from_raw_parts(argv, argc);
-                x.wrapped().#method_name(sel, args);
+                x.wrapped().#method_name(puredata_external::symbol::Symbol::try_from(sel).unwrap(), args);
             }
         },
     ))
@@ -260,21 +259,13 @@ fn add_sel(
                     (Pat::Ident(i), Type::Path(p)) => {
                         if type_path_final_eq(&p, &"t_float") {
                             return Ok((&i.ident, &a.ty, "F".to_string(), None));
-                        }
-                    }
-                    (Pat::Ident(i), Type::Reference(r)) => {
-                        if let Type::Path(p) = r.elem.as_ref() {
-                            if r.mutability.is_some() {
-                                if type_path_final_eq(&p, &"t_symbol") {
-                                    //trampoline will be a *mut but method will be &mut
-                                    return Ok((
-                                        &i.ident,
-                                        &a.ty,
-                                        "S".to_string(),
-                                        Some(quote! { *mut #p }),
-                                    ));
-                                }
-                            }
+                        } else if type_path_final_eq(&p, &"Symbol") {
+                            return Ok((
+                                &i.ident,
+                                &a.ty,
+                                "S".to_string(),
+                                Some(quote! { *mut puredata_sys::t_symbol }),
+                            ));
                         }
                     }
                     _ => (),
@@ -307,7 +298,9 @@ fn add_sel(
         let ident = a.0;
         let typ = a.1;
         if let Some(t) = &a.3 {
-            wrapped_refs.push(quote! { let #ident = &mut *#ident; });
+            //TODO allow more types other than symbol
+            let call_type = quote! { puredata_external::symbol::Symbol };
+            wrapped_refs.push(quote! { let #ident = #call_type::try_from(#ident).unwrap(); });
             tramp_args.push(quote! { #ident: #t });
         } else {
             tramp_args.push(quote! { #ident: #typ });
@@ -502,7 +495,10 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
         }
     });
 
+    //how do we not get dupes of TryFrom if it is already included
     let expanded = quote! {
+        use std::convert::TryFrom;
+
         #the_struct
 
         #(#impls)*
