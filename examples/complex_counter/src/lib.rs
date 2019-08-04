@@ -1,7 +1,7 @@
-use puredata_external::builder::ControlExternalBuilder;
-use puredata_external::external::ControlExternal;
-use puredata_external::outlet::{OutletSend, OutletType};
-use puredata_external_macros::external;
+use pd_ext::builder::ControlExternalBuilder;
+use pd_ext::external::ControlExternal;
+use pd_ext::outlet::{OutletSend, OutletType};
+use pd_ext_macros::external;
 use std::rc::Rc;
 
 //https://github.com/pure-data/externals-howto#a-complex-external-counter
@@ -45,7 +45,7 @@ external! {
     impl Counter {
         #[bang]
         pub fn bang(&mut self) {
-            let f = self.count as puredata_sys::t_float;
+            let f = self.count as pd_sys::t_float;
             self.count = self.count.wrapping_add(self.step);
 
             if self.range.0 != self.range.1 {
@@ -68,7 +68,7 @@ external! {
         }
 
         #[sel(defaults=1)]
-        pub fn set(&mut self, v: puredata_sys::t_float) {
+        pub fn set(&mut self, v: pd_sys::t_float) {
             self.count = v as isize;
         }
 
@@ -78,7 +78,7 @@ external! {
         }
 
         #[sel(defaults=2)]
-        pub fn bound(&mut self, bottom: puredata_sys::t_float, top: puredata_sys::t_float) {
+        pub fn bound(&mut self, bottom: pd_sys::t_float, top: pd_sys::t_float) {
             self.range =
             if bottom > top {
                 (top as isize, bottom as isize)

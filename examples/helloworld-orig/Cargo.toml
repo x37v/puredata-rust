@@ -9,7 +9,7 @@ name = "helloworld"
 crate-type = ["cdylib"]
 
 [dependencies]
-puredata-sys = { path = "../../puredata-sys" }
+pd-sys = { path = "../../pd-sys" }
 
 [profile.release]
 lto = true

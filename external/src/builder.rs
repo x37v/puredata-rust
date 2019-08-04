@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 pub type RcInletSignal = Rc<dyn InletSignal>;
 pub type RcOutletSignal = Rc<dyn OutletSignal>;
-pub type BoxFloatInlet<T> = Box<Fn(&mut T, puredata_sys::t_float)>;
+pub type BoxFloatInlet<T> = Box<Fn(&mut T, pd_sys::t_float)>;
 
 pub type IntoBuiltControl<T> = (Vec<BoxFloatInlet<T>>);
 pub type IntoBuiltGenerator<T> = (Vec<BoxFloatInlet<T>>, Vec<RcOutletSignal>);
@@ -24,9 +24,9 @@ pub trait ControlExternalBuilder<T> {
     fn creation_args(&self) -> &[Atom];
     fn new_passive_float_inlet(
         &mut self,
-        initial_value: puredata_sys::t_float,
-    ) -> Rc<dyn Deref<Target = puredata_sys::t_float>>;
-    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>);
+        initial_value: pd_sys::t_float,
+    ) -> Rc<dyn Deref<Target = pd_sys::t_float>>;
+    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, pd_sys::t_float)>);
     fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend>;
 }
 
@@ -44,7 +44,7 @@ pub struct Builder<'a, T> {
     name: Option<Symbol>,
     signal_inlets: Vec<RcInletSignal>,
     signal_outlets: Vec<RcOutletSignal>,
-    float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
+    float_inlets: Vec<Box<Fn(&mut T, pd_sys::t_float)>>,
 }
 
 impl<'a, T> Builder<'a, T> {
@@ -97,12 +97,12 @@ impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
 
     fn new_passive_float_inlet(
         &mut self,
-        initial_value: puredata_sys::t_float,
-    ) -> Rc<dyn Deref<Target = puredata_sys::t_float>> {
+        initial_value: pd_sys::t_float,
+    ) -> Rc<dyn Deref<Target = pd_sys::t_float>> {
         Rc::new(FloatInlet::new(self.obj, initial_value))
     }
 
-    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>) {
+    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, pd_sys::t_float)>) {
         self.float_inlets.push(func);
     }
 
@@ -135,11 +135,11 @@ mod tests {
     where
         T: Sized,
     {
-        float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
+        float_inlets: Vec<Box<Fn(&mut T, pd_sys::t_float)>>,
     }
 
     impl A {
-        pub fn print_float(&mut self, f: puredata_sys::t_float) {
+        pub fn print_float(&mut self, f: pd_sys::t_float) {
             println!("{}", f);
         }
     }
@@ -148,7 +148,7 @@ mod tests {
     where
         T: Sized,
     {
-        pub fn call_floats<'a>(&mut self, a: &'a mut T, f: puredata_sys::t_float) {
+        pub fn call_floats<'a>(&mut self, a: &'a mut T, f: pd_sys::t_float) {
             for cb in &self.float_inlets {
                 (cb)(a, f);
             }
@@ -164,12 +164,12 @@ mod tests {
     impl<T> ExternalBuilder<T> for TestBuilder<T> {
         fn new_passive_float_inlet(
             &mut self,
-            initial_value: puredata_sys::t_float,
-        ) -> Rc<dyn Deref<Target = puredata_sys::t_float>> {
+            initial_value: pd_sys::t_float,
+        ) -> Rc<dyn Deref<Target = pd_sys::t_float>> {
             Rc::new(Box::new(initial_value))
         }
 
-        fn new_float_inlet(&mut self, func: Box<Fn(&mut T, puredata_sys::t_float)>) {
+        fn new_float_inlet(&mut self, func: Box<Fn(&mut T, pd_sys::t_float)>) {
             self.float_inlets.push(func);
         }
 
@@ -183,7 +183,7 @@ mod tests {
         let mut a = A;
         let mut builder = TestBuilder::new();
 
-        builder.new_float_inlet(Box::new(|a: &mut A, f: puredata_sys::t_float| {
+        builder.new_float_inlet(Box::new(|a: &mut A, f: pd_sys::t_float| {
             a.print_float(f);
         }));
         builder.call_floats(&mut a, 4f32);

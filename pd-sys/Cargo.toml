@@ -1,5 +1,5 @@
 [package]
-name = "puredata-sys"
+name = "pd-sys"
 version = "0.1.0"
 authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"

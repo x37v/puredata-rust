@@ -1,7 +1,7 @@
-use puredata_external::builder::ControlExternalBuilder;
-use puredata_external::external::ControlExternal;
-use puredata_external::outlet::{OutletSend, OutletType};
-use puredata_external_macros::external;
+use pd_ext::builder::ControlExternalBuilder;
+use pd_ext::external::ControlExternal;
+use pd_ext::outlet::{OutletSend, OutletType};
+use pd_ext_macros::external;
 use std::rc::Rc;
 
 //based on https://github.com/pure-data/externals-howto#a-simple-external-counter
@@ -26,7 +26,7 @@ external! {
     impl Counter {
         #[bang]
         pub fn bang(&mut self) {
-            let f = self.count as puredata_sys::t_float;
+            let f = self.count as pd_sys::t_float;
             self.count = self.count.wrapping_add(1);
             self.outlet.send_float(f);
         }

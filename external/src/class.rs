@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use std::os::raw::c_int;
 
 pub struct Class<T> {
-    pd_class: *mut puredata_sys::_class,
+    pd_class: *mut pd_sys::_class,
     phantom: PhantomData<T>,
 }
 
@@ -27,7 +27,7 @@ impl<T> Class<T> {
                 unsafe extern "C" fn() -> *mut ::std::os::raw::c_void,
             >(match creator {
                 ClassNewMethod::VarArgs(m) => {
-                    args[0] = puredata_sys::t_atomtype::A_GIMME;
+                    args[0] = pd_sys::t_atomtype::A_GIMME;
                     m
                 }
                 _ => unimplemented!(),
@@ -39,10 +39,10 @@ impl<T> Class<T> {
                     unsafe extern "C" fn(),
                 >(d)),
             };
-            let flags = puredata_sys::CLASS_DEFAULT;
-            let name: &mut puredata_sys::t_symbol = name.into();
+            let flags = pd_sys::CLASS_DEFAULT;
+            let name: &mut pd_sys::t_symbol = name.into();
             Self {
-                pd_class: puredata_sys::class_new(
+                pd_class: pd_sys::class_new(
                     name.as_ptr(),
                     Some(creator),
                     destroyer,
@@ -64,13 +64,13 @@ impl<T> Class<T> {
     fn register_dsp(&mut self, dsp_method: PdDspMethod<T>) {
         let dsp = CString::new("dsp").expect("failed to allocate 'dsp' cstring");
         unsafe {
-            puredata_sys::class_addmethod(
+            pd_sys::class_addmethod(
                 self.pd_class,
                 Some(std::mem::transmute::<method::PdDspMethod<T>, PdMethod>(
                     dsp_method,
                 )),
-                puredata_sys::gensym(dsp.as_ptr()),
-                puredata_sys::t_atomtype::A_CANT,
+                pd_sys::gensym(dsp.as_ptr()),
+                pd_sys::t_atomtype::A_CANT,
                 0,
             );
         }
@@ -90,7 +90,7 @@ impl<T> Class<T> {
             SignalClassType::WithInput(m, onset) => {
                 s.register_dsp(m);
                 unsafe {
-                    puredata_sys::class_domainsignalin(s.pd_class, onset as c_int);
+                    pd_sys::class_domainsignalin(s.pd_class, onset as c_int);
                 }
             }
         }
@@ -100,8 +100,8 @@ impl<T> Class<T> {
     fn add_sel_method(
         &self,
         sel: CString,
-        m: puredata_sys::t_method,
-        types: &mut [puredata_sys::t_atomtype::Type],
+        m: pd_sys::t_method,
+        types: &mut [pd_sys::t_atomtype::Type],
         defaults: usize,
     ) {
         //fill in defaults
@@ -109,11 +109,11 @@ impl<T> Class<T> {
         assert!(l >= defaults);
         for i in l - defaults..l {
             match types[i] {
-                puredata_sys::t_atomtype::A_FLOAT | puredata_sys::t_atomtype::A_DEFFLOAT => {
-                    types[i] = puredata_sys::t_atomtype::A_DEFFLOAT
+                pd_sys::t_atomtype::A_FLOAT | pd_sys::t_atomtype::A_DEFFLOAT => {
+                    types[i] = pd_sys::t_atomtype::A_DEFFLOAT
                 }
-                puredata_sys::t_atomtype::A_SYMBOL | puredata_sys::t_atomtype::A_DEFSYM => {
-                    types[i] = puredata_sys::t_atomtype::A_DEFSYM
+                pd_sys::t_atomtype::A_SYMBOL | pd_sys::t_atomtype::A_DEFSYM => {
+                    types[i] = pd_sys::t_atomtype::A_DEFSYM
                 }
                 _ => panic!("type cannot be made default"),
             }
@@ -121,52 +121,26 @@ impl<T> Class<T> {
 
         //register
         unsafe {
-            let sym = puredata_sys::gensym(sel.as_ptr());
+            let sym = pd_sys::gensym(sel.as_ptr());
             match types.len() {
                 0 => {
-                    puredata_sys::class_addmethod(
-                        self.pd_class,
-                        m,
-                        sym,
-                        0,
-                    );
-                },
+                    pd_sys::class_addmethod(self.pd_class, m, sym, 0);
+                }
                 1 => {
                     assert!(defaults <= 1);
-                    puredata_sys::class_addmethod(
-                        self.pd_class,
-                        m,
-                        sym,
-                        types[0],
-                        0,
-                    );
+                    pd_sys::class_addmethod(self.pd_class, m, sym, types[0], 0);
                 }
                 2 => {
                     assert!(defaults <= 2);
-                    puredata_sys::class_addmethod(
-                        self.pd_class,
-                        m,
-                        sym,
-                        types[0],
-                        types[1],
-                        0,
-                    );
+                    pd_sys::class_addmethod(self.pd_class, m, sym, types[0], types[1], 0);
                 }
                 3 => {
                     assert!(defaults <= 3);
-                    puredata_sys::class_addmethod(
-                        self.pd_class,
-                        m,
-                        sym,
-                        types[0],
-                        types[1],
-                        types[2],
-                        0,
-                    );
+                    pd_sys::class_addmethod(self.pd_class, m, sym, types[0], types[1], types[2], 0);
                 }
                 4 => {
                     assert!(defaults <= 4);
-                    puredata_sys::class_addmethod(
+                    pd_sys::class_addmethod(
                         self.pd_class,
                         m,
                         sym,
@@ -179,7 +153,7 @@ impl<T> Class<T> {
                 }
                 5 => {
                     assert!(defaults <= 5);
-                    puredata_sys::class_addmethod(
+                    pd_sys::class_addmethod(
                         self.pd_class,
                         m,
                         sym,
@@ -193,7 +167,7 @@ impl<T> Class<T> {
                 }
                 6 => {
                     assert!(defaults <= 6);
-                    puredata_sys::class_addmethod(
+                    pd_sys::class_addmethod(
                         self.pd_class,
                         m,
                         sym,
@@ -213,9 +187,8 @@ impl<T> Class<T> {
 
     pub fn new_instance(&mut self) -> *mut ::std::os::raw::c_void {
         unsafe {
-            let obj = std::mem::transmute::<*mut puredata_sys::t_pd, *mut Self>(
-                puredata_sys::pd_new(self.pd_class),
-            );
+            let obj =
+                std::mem::transmute::<*mut pd_sys::t_pd, *mut Self>(pd_sys::pd_new(self.pd_class));
             //XXX run init?
             obj as *mut ::std::os::raw::c_void
         }
@@ -224,8 +197,8 @@ impl<T> Class<T> {
 
 include!(concat!(env!("OUT_DIR"), "/class-gen.rs"));
 
-impl<T> Into<*mut puredata_sys::_class> for Class<T> {
-    fn into(self) -> *mut puredata_sys::_class {
+impl<T> Into<*mut pd_sys::_class> for Class<T> {
+    fn into(self) -> *mut pd_sys::_class {
         self.pd_class
     }
 }

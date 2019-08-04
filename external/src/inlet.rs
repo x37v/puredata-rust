@@ -3,7 +3,7 @@ use crate::obj::AsObject;
 pub trait InletSignal {}
 
 pub struct SignalInlet {
-    ptr: *mut puredata_sys::_inlet,
+    ptr: *mut pd_sys::_inlet,
 }
 
 pub mod passive {
@@ -12,16 +12,16 @@ pub mod passive {
     use std::ops::Deref;
 
     pub struct FloatInlet {
-        value: Box<puredata_sys::t_float>,
-        inlet: *mut puredata_sys::_inlet,
+        value: Box<pd_sys::t_float>,
+        inlet: *mut pd_sys::_inlet,
     }
 
     impl FloatInlet {
-        pub fn new(owner: &mut dyn AsObject, initial_value: puredata_sys::t_float) -> Self {
+        pub fn new(owner: &mut dyn AsObject, initial_value: pd_sys::t_float) -> Self {
             let value = Box::new(initial_value);
             unsafe {
                 let value = Box::into_raw(value);
-                let inlet = puredata_sys::floatinlet_new(owner.as_obj(), value);
+                let inlet = pd_sys::floatinlet_new(owner.as_obj(), value);
                 let value = Box::from_raw(value);
                 Self { inlet, value }
             }
@@ -29,9 +29,9 @@ pub mod passive {
     }
 
     impl Deref for FloatInlet {
-        type Target = puredata_sys::t_float;
+        type Target = pd_sys::t_float;
 
-        fn deref(&self) -> &puredata_sys::t_float {
+        fn deref(&self) -> &pd_sys::t_float {
             self.value.deref()
         }
     }
@@ -39,7 +39,7 @@ pub mod passive {
     impl Drop for FloatInlet {
         fn drop(&mut self) {
             unsafe {
-                puredata_sys::inlet_free(self.inlet);
+                pd_sys::inlet_free(self.inlet);
             }
         }
     }
@@ -50,11 +50,11 @@ impl SignalInlet {
         unsafe {
             let obj = owner.as_obj();
             Self {
-                ptr: puredata_sys::inlet_new(
+                ptr: pd_sys::inlet_new(
                     obj,
                     &mut (*obj).te_g.g_pd,
-                    &mut puredata_sys::s_signal,
-                    &mut puredata_sys::s_signal,
+                    &mut pd_sys::s_signal,
+                    &mut pd_sys::s_signal,
                 ),
             }
         }
@@ -64,7 +64,7 @@ impl SignalInlet {
 impl Drop for SignalInlet {
     fn drop(&mut self) {
         unsafe {
-            puredata_sys::inlet_free(self.ptr);
+            pd_sys::inlet_free(self.ptr);
         }
     }
 }

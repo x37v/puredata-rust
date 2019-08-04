@@ -1,7 +1,7 @@
 use itertools::izip;
-use puredata_external::builder::SignalProcessorExternalBuilder;
-use puredata_external::external::SignalProcessorExternal;
-use puredata_external_macros::external;
+use pd_ext::builder::SignalProcessorExternalBuilder;
+use pd_ext::external::SignalProcessorExternal;
+use pd_ext_macros::external;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -9,7 +9,7 @@ external! {
     //based on pan~ from: https://github.com/pure-data/externals-howto#a-signal-external-pan
     pub struct XFade {
         //a passive float input, the xfade position
-        pos: Rc<dyn Deref<Target = puredata_sys::t_float>>,
+        pos: Rc<dyn Deref<Target = pd_sys::t_float>>,
     }
 
     impl SignalProcessorExternal for XFade {
@@ -27,7 +27,7 @@ external! {
         }
 
         //compute the audio
-        fn process(&mut self, _frames: usize, inputs: &[&mut [puredata_sys::t_float]], outputs: &mut [&mut [puredata_sys::t_float]],) {
+        fn process(&mut self, _frames: usize, inputs: &[&mut [pd_sys::t_float]], outputs: &mut [&mut [pd_sys::t_float]],) {
             //read the value of our position setting
             let pos = num::clamp(**self.pos, 0f32.into(), 1f32.into());
 

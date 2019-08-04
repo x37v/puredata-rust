@@ -1,9 +1,9 @@
-use puredata_external::builder::ControlExternalBuilder;
-use puredata_external::external::ControlExternal;
-use puredata_external::outlet::{OutletSend, OutletType};
-use puredata_external::pd;
-use puredata_external::symbol::Symbol;
-use puredata_external_macros::external;
+use pd_ext::builder::ControlExternalBuilder;
+use pd_ext::external::ControlExternal;
+use pd_ext::outlet::{OutletSend, OutletType};
+use pd_ext::pd;
+use pd_ext::symbol::Symbol;
+use pd_ext_macros::external;
 use std::ffi::CString;
 use std::rc::Rc;
 
@@ -26,14 +26,14 @@ external! {
         }
 
         #[list] //indicates that a list in Pd should call this
-        pub fn list(&mut self, list: &[puredata_external::atom::Atom]) {
+        pub fn list(&mut self, list: &[pd_ext::atom::Atom]) {
             let s = CString::new("toast").unwrap().into();
             self.outlet.send_anything(s, &list);
             self.outlet.send_symbol(s);
         }
 
         #[anything]
-        pub fn foo(&mut self, sel: Symbol, list: &[puredata_external::atom::Atom]) {
+        pub fn foo(&mut self, sel: Symbol, list: &[pd_ext::atom::Atom]) {
             self.outlet.send_symbol(sel);
             self.outlet.send_list(&list);
         }

@@ -2,7 +2,7 @@ use std::mem::size_of;
 use std::ops::{Deref, DerefMut};
 use std::slice;
 
-///A slice allocated and freed using puredata_sys
+///A slice allocated and freed using pd_sys
 #[repr(transparent)]
 pub struct Slice<T: 'static + Sized + Copy>(pub &'static mut [T]);
 
@@ -55,7 +55,7 @@ where
 
     fn alloc(&mut self, len: usize) {
         unsafe {
-            let bytes = puredata_sys::getbytes(len * size_of::<T>());
+            let bytes = pd_sys::getbytes(len * size_of::<T>());
             let bytes = std::mem::transmute::<_, *mut T>(bytes);
             self.0 = slice::from_raw_parts_mut(bytes, len);
         }
@@ -92,7 +92,7 @@ where
     fn cleanup(&mut self) {
         if self.0.len() > 0 {
             unsafe {
-                puredata_sys::freebytes(
+                pd_sys::freebytes(
                     self.0.as_mut_ptr() as *mut ::std::os::raw::c_void,
                     self.0.len() * size_of::<T>(),
                 );

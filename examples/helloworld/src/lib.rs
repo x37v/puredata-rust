@@ -1,7 +1,7 @@
-use puredata_external::builder::ControlExternalBuilder;
-use puredata_external::external::ControlExternal;
-use puredata_external::pd;
-use puredata_external_macros::external;
+use pd_ext::builder::ControlExternalBuilder;
+use pd_ext::external::ControlExternal;
+use pd_ext::pd;
+use pd_ext_macros::external;
 use std::ffi::CString;
 
 //based on https://github.com/pure-data/externals-howto#my-first-external-helloworld

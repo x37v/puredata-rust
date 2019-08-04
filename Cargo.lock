@@ -128,18 +128,18 @@ dependencies = [
 name = "complex_counter"
 version = "0.1.0"
 dependencies = [
- "puredata-external 0.1.0",
- "puredata-external-macros 0.1.0",
- "puredata-sys 0.1.0",
+ "pd-ext 0.1.0",
+ "pd-ext-macros 0.1.0",
+ "pd-sys 0.1.0",
 ]
 
 [[package]]
 name = "counter"
 version = "0.1.0"
 dependencies = [
- "puredata-external 0.1.0",
- "puredata-external-macros 0.1.0",
- "puredata-sys 0.1.0",
+ "pd-ext 0.1.0",
+ "pd-ext-macros 0.1.0",
+ "pd-sys 0.1.0",
 ]
 
 [[package]]
@@ -189,27 +189,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "helloall"
 version = "0.1.0"
 dependencies = [
- "puredata-external 0.1.0",
- "puredata-external-macros 0.1.0",
- "puredata-sys 0.1.0",
+ "pd-ext 0.1.0",
+ "pd-ext-macros 0.1.0",
+ "pd-sys 0.1.0",
 ]
 
 [[package]]
 name = "hellodsp"
 version = "0.1.0"
 dependencies = [
- "puredata-external 0.1.0",
- "puredata-external-macros 0.1.0",
- "puredata-sys 0.1.0",
+ "pd-ext 0.1.0",
+ "pd-ext-macros 0.1.0",
+ "pd-sys 0.1.0",
 ]
 
 [[package]]
 name = "helloworld"
 version = "0.1.0"
 dependencies = [
- "puredata-external 0.1.0",
- "puredata-external-macros 0.1.0",
- "puredata-sys 0.1.0",
+ "pd-ext 0.1.0",
+ "pd-ext-macros 0.1.0",
+ "pd-sys 0.1.0",
 ]
 
 [[package]]
@@ -339,6 +339,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "pd-ext"
+version = "0.1.0"
+dependencies = [
+ "field-offset 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pd-sys 0.1.0",
+ "proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 0.15.42 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pd-ext-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 0.15.42 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pd-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.49.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -349,33 +376,6 @@ version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "unicode-xid 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "puredata-external"
-version = "0.1.0"
-dependencies = [
- "field-offset 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)",
- "puredata-sys 0.1.0",
- "quote 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn 0.15.42 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "puredata-external-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)",
- "quote 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn 0.15.42 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "puredata-sys"
-version = "0.1.0"
-dependencies = [
- "bindgen 0.49.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -541,9 +541,9 @@ version = "0.1.0"
 dependencies = [
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "puredata-external 0.1.0",
- "puredata-external-macros 0.1.0",
- "puredata-sys 0.1.0",
+ "pd-ext 0.1.0",
+ "pd-ext-macros 0.1.0",
+ "pd-sys 0.1.0",
 ]
 
 [metadata]

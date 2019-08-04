@@ -1,4 +1,4 @@
-# puredata-external-macros
+# pd-ext-macros
 
 At this point there is one macro `external!` that can wrap a `struct` and its `impl` blocks.
 If the `struct` implements one of the external `trait`s from `puredata-external`, you should

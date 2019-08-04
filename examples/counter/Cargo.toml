@@ -9,6 +9,6 @@ name = "counter"
 crate-type = ["cdylib"]
 
 [dependencies]
-puredata-sys = { path = "../../puredata-sys" }
-puredata-external = { path = "../../external" }
-puredata-external-macros = { path = "../../macros" }
+pd-sys = { path = "../../pd-sys" }
+pd-ext = { path = "../../external" }
+pd-ext-macros = { path = "../../macros" }

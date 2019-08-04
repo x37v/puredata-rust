@@ -14,7 +14,7 @@ pub struct ControlExternalWrapper<T>
 where
     T: ControlExternal,
 {
-    x_obj: puredata_sys::t_object,
+    x_obj: pd_sys::t_object,
     wrapped: Option<ControlExternalWrapperInternal<T>>,
 }
 
@@ -23,7 +23,7 @@ pub struct SignalGeneratorExternalWrapper<T>
 where
     T: SignalGeneratorExternal,
 {
-    x_obj: puredata_sys::t_object,
+    x_obj: pd_sys::t_object,
     wrapped: Option<SignalGeneratorExternalWrapperInternal<T>>,
 }
 
@@ -32,8 +32,8 @@ pub struct SignalProcessorExternalWrapper<T>
 where
     T: SignalProcessorExternal,
 {
-    x_obj: puredata_sys::t_object,
-    convert: puredata_sys::t_float,
+    x_obj: pd_sys::t_object,
+    convert: pd_sys::t_float,
     wrapped: Option<SignalProcessorExternalWrapperInternal<T>>,
 }
 
@@ -50,7 +50,7 @@ where
 {
     wrapped: T,
     signal_outlets: Vec<RcOutletSignal>,
-    outlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
+    outlet_buffer: Vec<&'static mut [pd_sys::t_float]>,
 }
 
 struct SignalProcessorExternalWrapperInternal<T>
@@ -60,8 +60,8 @@ where
     wrapped: T,
     signal_outlets: Vec<RcOutletSignal>,
     signal_inlets: Vec<RcInletSignal>,
-    outlet_buffer: Vec<&'static mut [puredata_sys::t_float]>,
-    inlet_buffer: Vec<crate::alloc::Slice<puredata_sys::t_float>>,
+    outlet_buffer: Vec<&'static mut [pd_sys::t_float]>,
+    inlet_buffer: Vec<crate::alloc::Slice<pd_sys::t_float>>,
 }
 
 impl<T> ControlExternalWrapperInternal<T>
@@ -105,13 +105,13 @@ where
         self.signal_outlets.len()
     }
 
-    pub fn generate(&mut self, nframes: usize, buffer: *mut puredata_sys::t_int) {
+    pub fn generate(&mut self, nframes: usize, buffer: *mut pd_sys::t_int) {
         //assign the slices
         unsafe {
             let outlets = self.outlet_buffer.len();
             let buffer = slice::from_raw_parts(buffer, outlets);
             for i in 0..outlets {
-                let output = std::mem::transmute::<_, *mut puredata_sys::t_sample>(buffer[i]);
+                let output = std::mem::transmute::<_, *mut pd_sys::t_sample>(buffer[i]);
                 let output = slice::from_raw_parts_mut(output, nframes);
                 self.outlet_buffer[i] = output;
             }
@@ -164,7 +164,7 @@ where
         }
     }
 
-    pub fn process(&mut self, nframes: usize, buffer: *mut puredata_sys::t_int) {
+    pub fn process(&mut self, nframes: usize, buffer: *mut pd_sys::t_int) {
         let inlets = self.inlet_buffer.len();
         let outlets = self.outlet_buffer.len();
         //assign the slices
@@ -172,15 +172,14 @@ where
         unsafe {
             let buffer = slice::from_raw_parts(buffer, inlets + outlets);
             for i in 0..inlets {
-                let input = std::mem::transmute::<_, *const puredata_sys::t_sample>(buffer[i]);
+                let input = std::mem::transmute::<_, *const pd_sys::t_sample>(buffer[i]);
                 let input = slice::from_raw_parts(input, nframes);
                 self.inlet_buffer[i].0.copy_from_slice(input);
             }
 
             let offset = inlets;
             for i in 0..outlets {
-                let output =
-                    std::mem::transmute::<_, *mut puredata_sys::t_sample>(buffer[i + offset]);
+                let output = std::mem::transmute::<_, *mut pd_sys::t_sample>(buffer[i + offset]);
                 let output = slice::from_raw_parts_mut(output, nframes);
                 self.outlet_buffer[i] = output;
             }
@@ -201,13 +200,11 @@ where
     T: ControlExternal,
 {
     pub unsafe fn new(
-        pd_class: *mut puredata_sys::_class,
+        pd_class: *mut pd_sys::_class,
         args: &[crate::atom::Atom],
-        name: *mut puredata_sys::t_symbol,
+        name: *mut pd_sys::t_symbol,
     ) -> *mut ::std::os::raw::c_void {
-        let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
-            pd_class,
-        ));
+        let obj = std::mem::transmute::<*mut pd_sys::t_pd, &mut Self>(pd_sys::pd_new(pd_class));
         obj.init(args, name.try_into().ok());
         obj as *mut Self as *mut ::std::os::raw::c_void
     }
@@ -235,13 +232,11 @@ where
     T: SignalGeneratorExternal,
 {
     pub unsafe fn new(
-        pd_class: *mut puredata_sys::_class,
+        pd_class: *mut pd_sys::_class,
         args: &[crate::atom::Atom],
-        name: *mut puredata_sys::t_symbol,
+        name: *mut pd_sys::t_symbol,
     ) -> *mut ::std::os::raw::c_void {
-        let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
-            pd_class,
-        ));
+        let obj = std::mem::transmute::<*mut pd_sys::t_pd, &mut Self>(pd_sys::pd_new(pd_class));
         obj.init(args, name.try_into().ok())
     }
 
@@ -281,12 +276,12 @@ where
             .signal_iolets()
     }
 
-    pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
+    pub fn dsp(&mut self, sv: *mut *mut pd_sys::t_signal, trampoline: PdDspPerform) {
         let iolets = self.signal_iolets();
         let _ = setup_dsp(self, iolets, sv, trampoline);
     }
 
-    pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
+    pub fn perform(&mut self, w: *mut pd_sys::t_int) -> *mut pd_sys::t_int {
         unsafe {
             let iolets = self.signal_iolets();
             let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
@@ -304,13 +299,11 @@ where
     T: SignalProcessorExternal,
 {
     pub unsafe fn new(
-        pd_class: *mut puredata_sys::_class,
+        pd_class: *mut pd_sys::_class,
         args: &[crate::atom::Atom],
-        name: *mut puredata_sys::t_symbol,
+        name: *mut pd_sys::t_symbol,
     ) -> *mut ::std::os::raw::c_void {
-        let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
-            pd_class,
-        ));
+        let obj = std::mem::transmute::<*mut pd_sys::t_pd, &mut Self>(pd_sys::pd_new(pd_class));
         obj.init(args, name.try_into().ok());
         obj as *mut Self as *mut ::std::os::raw::c_void
     }
@@ -343,7 +336,7 @@ where
         offset_of!(Self => convert).get_byte_offset()
     }
 
-    pub fn dsp(&mut self, sv: *mut *mut puredata_sys::t_signal, trampoline: PdDspPerform) {
+    pub fn dsp(&mut self, sv: *mut *mut pd_sys::t_signal, trampoline: PdDspPerform) {
         let iolets = self.signal_iolets();
         let frames = setup_dsp(self, iolets, sv, trampoline);
 
@@ -354,7 +347,7 @@ where
             .allocate_inlet_buffers(frames);
     }
 
-    pub fn perform(&mut self, w: *mut puredata_sys::t_int) -> *mut puredata_sys::t_int {
+    pub fn perform(&mut self, w: *mut pd_sys::t_int) -> *mut pd_sys::t_int {
         unsafe {
             let iolets = self.signal_iolets();
             let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
@@ -370,7 +363,7 @@ where
 fn setup_dsp<T>(
     obj: &mut T,
     iolets: usize,
-    sv: *mut *mut puredata_sys::t_signal,
+    sv: *mut *mut pd_sys::t_signal,
     trampoline: PdDspPerform,
 ) -> usize {
     unsafe {
@@ -379,12 +372,12 @@ fn setup_dsp<T>(
 
         //ptr to self, nframes, inputs, outputs
         let vecsize = 2 + iolets;
-        let vecnbytes = vecsize * std::mem::size_of::<*mut puredata_sys::t_int>();
-        let vecp = puredata_sys::getbytes(vecnbytes);
-        let vec = std::mem::transmute::<_, *mut *mut puredata_sys::t_int>(vecp);
-        assert!(!vecp.is_null(), "null pointer from puredata_sys::getbytes",);
+        let vecnbytes = vecsize * std::mem::size_of::<*mut pd_sys::t_int>();
+        let vecp = pd_sys::getbytes(vecnbytes);
+        let vec = std::mem::transmute::<_, *mut *mut pd_sys::t_int>(vecp);
+        assert!(!vecp.is_null(), "null pointer from pd_sys::getbytes",);
 
-        let vec: &mut [*mut puredata_sys::t_int] = slice::from_raw_parts_mut(vec, vecsize);
+        let vec: &mut [*mut pd_sys::t_int] = slice::from_raw_parts_mut(vec, vecsize);
         vec[1] = std::mem::transmute::<_, _>(len);
         for i in 0..iolets {
             vec[2 + i] = std::mem::transmute::<_, _>((*sv[i]).s_vec);
@@ -392,12 +385,12 @@ fn setup_dsp<T>(
 
         vec[0] = std::mem::transmute::<_, _>(obj);
 
-        puredata_sys::dsp_addv(
+        pd_sys::dsp_addv(
             Some(trampoline),
             vecsize as std::os::raw::c_int,
-            std::mem::transmute::<_, *mut puredata_sys::t_int>(vecp),
+            std::mem::transmute::<_, *mut pd_sys::t_int>(vecp),
         );
-        puredata_sys::freebytes(vecp, vecnbytes);
+        pd_sys::freebytes(vecp, vecnbytes);
         len
     }
 }
@@ -406,7 +399,7 @@ impl<T> AsObject for ControlExternalWrapper<T>
 where
     T: ControlExternal,
 {
-    fn as_obj(&mut self) -> *mut puredata_sys::t_object {
+    fn as_obj(&mut self) -> *mut pd_sys::t_object {
         &mut self.x_obj
     }
 }
@@ -415,7 +408,7 @@ impl<T> AsObject for SignalGeneratorExternalWrapper<T>
 where
     T: SignalGeneratorExternal,
 {
-    fn as_obj(&mut self) -> *mut puredata_sys::t_object {
+    fn as_obj(&mut self) -> *mut pd_sys::t_object {
         &mut self.x_obj
     }
 }
@@ -424,7 +417,7 @@ impl<T> AsObject for SignalProcessorExternalWrapper<T>
 where
     T: SignalProcessorExternal,
 {
-    fn as_obj(&mut self) -> *mut puredata_sys::t_object {
+    fn as_obj(&mut self) -> *mut pd_sys::t_object {
         &mut self.x_obj
     }
 }

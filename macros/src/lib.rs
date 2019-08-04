@@ -107,7 +107,7 @@ fn get_type(
 //return the class initialization item
 fn add_control(new_method_name: &Ident, free_method: &Ident) -> proc_macro2::TokenStream {
     quote! {
-        puredata_external::class::Class::<Wrapped>::register_new(name, puredata_external::method::ClassNewMethod::VarArgs(#new_method_name), Some(#free_method));
+        pd_ext::class::Class::<Wrapped>::register_new(name, pd_ext::method::ClassNewMethod::VarArgs(#new_method_name), Some(#free_method));
     }
 }
 
@@ -125,15 +125,15 @@ fn add_dsp(
     trampolines.push(quote! {
         pub unsafe extern "C" fn #dsp_method(
             x: *mut Wrapped,
-            sp: *mut *mut puredata_sys::t_signal,
+            sp: *mut *mut pd_sys::t_signal,
             ) {
             let x = &mut *x;
             x.dsp(sp, #perform_method);
         }
 
         pub unsafe extern "C" fn #perform_method(
-            w: *mut puredata_sys::t_int,
-            ) -> *mut puredata_sys::t_int {
+            w: *mut pd_sys::t_int,
+            ) -> *mut pd_sys::t_int {
             //actually longer than 2 but .offset(1) didn't seem to work correctly
             //but slice does
             let x = std::slice::from_raw_parts(w, 2);
@@ -143,10 +143,10 @@ fn add_dsp(
     });
 
     quote! {
-        puredata_external::class::Class::<Wrapped>::register_dsp_new(
+        pd_ext::class::Class::<Wrapped>::register_dsp_new(
             name,
-            puredata_external::method::ClassNewMethod::VarArgs(#new_method_name),
-            puredata_external::class::SignalClassType::WithInput( #dsp_method, Wrapped::float_convert_field_offset(),),
+            pd_ext::method::ClassNewMethod::VarArgs(#new_method_name),
+            pd_ext::class::SignalClassType::WithInput( #dsp_method, Wrapped::float_convert_field_offset(),),
             Some(#free_method),);
     }
 }
@@ -166,7 +166,7 @@ fn add_bang(
     _attr: &Attribute,
 ) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
     Ok((
-        quote! { puredata_external::method::Method::Bang(#trampoline_name) },
+        quote! { pd_ext::method::Method::Bang(#trampoline_name) },
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped) {
                 let x = &mut *x;
@@ -184,11 +184,11 @@ fn add_list(
 ) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
     //TODO validate arguments
     Ok((
-        quote! { puredata_external::method::Method::List(#trampoline_name) },
+        quote! { pd_ext::method::Method::List(#trampoline_name) },
         quote! {
-            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, _sel: /*ignored, always &s_list*/ *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, _sel: /*ignored, always &s_list*/ *mut pd_sys::t_symbol, argc: std::os::raw::c_int, argv: *const pd_sys::t_atom) {
                 let x = &mut *x;
-                let args = puredata_external::atom::Atom::slice_from_raw_parts(argv, argc);
+                let args = pd_ext::atom::Atom::slice_from_raw_parts(argv, argc);
                 x.wrapped().#method_name(args);
             }
         },
@@ -203,12 +203,12 @@ fn add_anything(
 ) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
     //TODO validate arguments
     Ok((
-        quote! { puredata_external::method::Method::AnyThing(#trampoline_name) },
+        quote! { pd_ext::method::Method::AnyThing(#trampoline_name) },
         quote! {
-            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, sel: *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, sel: *mut pd_sys::t_symbol, argc: std::os::raw::c_int, argv: *const pd_sys::t_atom) {
                 let x = &mut *x;
-                let args = puredata_external::atom::Atom::slice_from_raw_parts(argv, argc);
-                x.wrapped().#method_name(puredata_external::symbol::Symbol::try_from(sel).unwrap(), args);
+                let args = pd_ext::atom::Atom::slice_from_raw_parts(argv, argc);
+                x.wrapped().#method_name(pd_ext::symbol::Symbol::try_from(sel).unwrap(), args);
             }
         },
     ))
@@ -264,7 +264,7 @@ fn add_sel(
                                 &i.ident,
                                 &a.ty,
                                 "S".to_string(),
-                                Some(quote! { *mut puredata_sys::t_symbol }),
+                                Some(quote! { *mut pd_sys::t_symbol }),
                             ));
                         }
                     }
@@ -299,7 +299,7 @@ fn add_sel(
         let typ = a.1;
         if let Some(t) = &a.3 {
             //TODO allow more types other than symbol
-            let call_type = quote! { puredata_external::symbol::Symbol };
+            let call_type = quote! { pd_ext::symbol::Symbol };
             wrapped_refs.push(quote! { let #ident = #call_type::try_from(#ident).unwrap(); });
             tramp_args.push(quote! { #ident: #t });
         } else {
@@ -309,9 +309,9 @@ fn add_sel(
     }
 
     let call = if args.len() == 0 {
-        quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name)}
+        quote! { pd_ext::method::Method::#variant(#sel_name, #trampoline_name)}
     } else {
-        quote! { puredata_external::method::Method::#variant(#sel_name, #trampoline_name, #defaults)}
+        quote! { pd_ext::method::Method::#variant(#sel_name, #trampoline_name, #defaults)}
     };
 
     Ok((
@@ -426,15 +426,15 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
 
     let wrapped_class = quote! {
         //generated
-        type Wrapped = puredata_external::wrapper::#wrapper_type<#struct_name>;
-        static mut #class_static: Option<*mut puredata_sys::_class> = None;
+        type Wrapped = pd_ext::wrapper::#wrapper_type<#struct_name>;
+        static mut #class_static: Option<*mut pd_sys::_class> = None;
     };
 
     //new trampoline
     trampolines.push(
         quote! {
-            pub unsafe extern "C" fn #new_method_name (name: *mut puredata_sys::t_symbol, argc: std::os::raw::c_int, argv: *const puredata_sys::t_atom) -> *mut ::std::os::raw::c_void {
-                let args = puredata_external::atom::Atom::slice_from_raw_parts(argv, argc);
+            pub unsafe extern "C" fn #new_method_name (name: *mut pd_sys::t_symbol, argc: std::os::raw::c_int, argv: *const pd_sys::t_atom) -> *mut ::std::os::raw::c_void {
+                let args = pd_ext::atom::Atom::slice_from_raw_parts(argv, argc);
                 Wrapped::new(#class_static.expect("class not initialized"), &args, name)
             }
         });

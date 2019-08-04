@@ -23,22 +23,22 @@ impl Arg {
 
     pub fn to_sig(&self) -> proc_macro2::TokenStream {
         match self {
-            Arg::Float => quote! { puredata_sys::t_floatarg },
-            Arg::Symbol => quote! { *mut puredata_sys::t_symbol },
+            Arg::Float => quote! { pd_sys::t_floatarg },
+            Arg::Symbol => quote! { *mut pd_sys::t_symbol },
         }
     }
 
     pub fn to_arg(&self) -> proc_macro2::TokenStream {
         match self {
-            Arg::Float => quote! { puredata_sys::t_atomtype::A_FLOAT },
-            Arg::Symbol => quote! { puredata_sys::t_atomtype::A_SYMBOL },
+            Arg::Float => quote! { pd_sys::t_atomtype::A_FLOAT },
+            Arg::Symbol => quote! { pd_sys::t_atomtype::A_SYMBOL },
         }
     }
 
     pub fn to_classnewarg(&self) -> proc_macro2::TokenStream {
         match self {
-            Arg::Float => quote! { puredata_sys::t_atomtype::A_DEFFLOAT },
-            Arg::Symbol => quote! { puredata_sys::t_atomtype::A_DEFSYMBOL },
+            Arg::Float => quote! { pd_sys::t_atomtype::A_DEFFLOAT },
+            Arg::Symbol => quote! { pd_sys::t_atomtype::A_DEFSYMBOL },
         }
     }
 }
@@ -131,7 +131,7 @@ fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
     let cvoidptr = quote! { *mut ::std::os::raw::c_void };
     let mut variants = vec![
         quote! { NoArgs(unsafe extern "C" fn() -> #cvoidptr) },
-        quote! { VarArgs(unsafe extern "C" fn(*mut puredata_sys::t_symbol, std::os::raw::c_int, *const puredata_sys::t_atom) -> #cvoidptr) },
+        quote! { VarArgs(unsafe extern "C" fn(*mut pd_sys::t_symbol, std::os::raw::c_int, *const pd_sys::t_atom) -> #cvoidptr) },
     ];
     //XXX TODO, filter out pointers when we get them
     for p in perms.iter() {
@@ -164,7 +164,7 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
     let mut matches = vec![
         quote! {
             Method::Bang(f) => {
-                puredata_sys::class_addbang(
+                pd_sys::class_addbang(
                     self.pd_class,
                     Some(std::mem::transmute::<method::B<T>, PdMethod>(f)),
                     );
@@ -172,7 +172,7 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
         },
         quote! {
             Method::Float(f) => {
-                puredata_sys::class_doaddfloat(
+                pd_sys::class_doaddfloat(
                     self.pd_class,
                     Some(std::mem::transmute::<method::F<T>, PdMethod>(f)),
                     );
@@ -180,7 +180,7 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
         },
         quote! {
             Method::Symbol(f) => {
-                puredata_sys::class_addsymbol(
+                pd_sys::class_addsymbol(
                     self.pd_class,
                     Some(std::mem::transmute::<method::S<T>, PdMethod>(f)),
                     );
@@ -188,7 +188,7 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
         },
         quote! {
             Method::List(f) => {
-                puredata_sys::class_addlist(
+                pd_sys::class_addlist(
                     self.pd_class,
                     Some(std::mem::transmute::<method::SelList<T>, PdMethod>(f)),
                     );
@@ -196,7 +196,7 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
         },
         quote! {
             Method::AnyThing(f) => {
-                puredata_sys::class_addanything(
+                pd_sys::class_addanything(
                     self.pd_class,
                     Some(std::mem::transmute::<method::SelList<T>, PdMethod>(f)),
                     );
