@@ -3,6 +3,7 @@ use crate::inlet::passive::FloatInlet;
 use crate::inlet::*;
 use crate::obj::AsObject;
 use crate::outlet::{Outlet, OutletSend, OutletSignal, OutletType, SignalOutlet};
+use crate::symbol::Symbol;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -19,7 +20,7 @@ pub type IntoBuiltProcessor<T> = (
 );
 
 pub trait ControlExternalBuilder<T> {
-    fn instance_name(&self) -> &Option<&mut puredata_sys::t_symbol>;
+    fn instance_name(&self) -> &Option<Symbol>;
     fn creation_args(&self) -> &[Atom];
     fn new_passive_float_inlet(
         &mut self,
@@ -40,18 +41,14 @@ pub trait SignalProcessorExternalBuilder<T>: SignalGeneratorExternalBuilder<T> {
 pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
     args: &'a [Atom],
-    name: Option<&'a mut puredata_sys::t_symbol>,
+    name: Option<Symbol>,
     signal_inlets: Vec<RcInletSignal>,
     signal_outlets: Vec<RcOutletSignal>,
     float_inlets: Vec<Box<Fn(&mut T, puredata_sys::t_float)>>,
 }
 
 impl<'a, T> Builder<'a, T> {
-    pub fn new(
-        obj: &'a mut dyn AsObject,
-        args: &'a [Atom],
-        name: Option<&'a mut puredata_sys::t_symbol>,
-    ) -> Self {
+    pub fn new(obj: &'a mut dyn AsObject, args: &'a [Atom], name: Option<Symbol>) -> Self {
         Self {
             obj,
             name,
@@ -90,7 +87,7 @@ impl<'a, T> Into<IntoBuiltProcessor<T>> for Builder<'a, T> {
 }
 
 impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
-    fn instance_name(&self) -> &Option<&mut puredata_sys::t_symbol> {
+    fn instance_name(&self) -> &Option<Symbol> {
         &self.name
     }
 

@@ -3,7 +3,9 @@ use crate::external::*;
 use crate::inlet::InletSignal;
 use crate::method::PdDspPerform;
 use crate::obj::AsObject;
+use crate::symbol::Symbol;
 use field_offset::offset_of;
+use std::convert::TryInto;
 use std::rc::Rc;
 use std::slice;
 
@@ -201,16 +203,16 @@ where
     pub unsafe fn new(
         pd_class: *mut puredata_sys::_class,
         args: &[crate::atom::Atom],
-        name: Option<&mut puredata_sys::t_symbol>,
+        name: *mut puredata_sys::t_symbol,
     ) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
             pd_class,
         ));
-        obj.init(args, name);
+        obj.init(args, name.try_into().ok());
         obj as *mut Self as *mut ::std::os::raw::c_void
     }
 
-    fn init(&mut self, args: &[crate::atom::Atom], name: Option<&mut puredata_sys::t_symbol>) {
+    fn init(&mut self, args: &[crate::atom::Atom], name: Option<Symbol>) {
         let mut builder = Builder::new(self, args, name);
         let e = ControlExternal::new(&mut builder);
         self.wrapped = Some(ControlExternalWrapperInternal::new(e, builder));
@@ -235,18 +237,18 @@ where
     pub unsafe fn new(
         pd_class: *mut puredata_sys::_class,
         args: &[crate::atom::Atom],
-        name: Option<&mut puredata_sys::t_symbol>,
+        name: *mut puredata_sys::t_symbol,
     ) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
             pd_class,
         ));
-        obj.init(args, name)
+        obj.init(args, name.try_into().ok())
     }
 
     fn init(
         &mut self,
         args: &[crate::atom::Atom],
-        name: Option<&mut puredata_sys::t_symbol>,
+        name: Option<Symbol>,
     ) -> *mut ::std::os::raw::c_void {
         let mut builder = Builder::new(self, args, name);
         let e = SignalGeneratorExternal::new(&mut builder);
@@ -304,16 +306,16 @@ where
     pub unsafe fn new(
         pd_class: *mut puredata_sys::_class,
         args: &[crate::atom::Atom],
-        name: Option<&mut puredata_sys::t_symbol>,
+        name: *mut puredata_sys::t_symbol,
     ) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut puredata_sys::t_pd, &mut Self>(puredata_sys::pd_new(
             pd_class,
         ));
-        obj.init(args, name);
+        obj.init(args, name.try_into().ok());
         obj as *mut Self as *mut ::std::os::raw::c_void
     }
 
-    fn init(&mut self, args: &[crate::atom::Atom], name: Option<&mut puredata_sys::t_symbol>) {
+    fn init(&mut self, args: &[crate::atom::Atom], name: Option<Symbol>) {
         let mut builder = Builder::new(self, args, name);
         let e = SignalProcessorExternal::new(&mut builder);
         self.wrapped = Some(SignalProcessorExternalWrapperInternal::new(e, builder));
