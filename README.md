@@ -4,7 +4,7 @@ Does not require any C, builds entirely with Cargo.
 
 ## Requirements
 
-* [Rust and Cargo](https://www.rust-lang.org/tools/install)
+* [Rust and Cargo](https://www.rust-lang.org/tools/install), at least rust 1.34
 * [Pure Data](https://puredata.info), to run, not to build.
 
 ## Crates/Subdirs
