@@ -77,8 +77,7 @@ impl OutletSend for Outlet {
 
     fn send_symbol(&self, v: Symbol) {
         unsafe {
-            let v = std::mem::transmute::<_, *mut puredata_sys::t_symbol>(v.inner());
-            puredata_sys::outlet_symbol(self.ptr, v);
+            puredata_sys::outlet_symbol(self.ptr, v.inner());
         }
     }
 
@@ -94,12 +93,11 @@ impl OutletSend for Outlet {
 
     fn send_anything(&self, sel: Symbol, v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {
         unsafe {
-            let sel = std::mem::transmute::<_, *mut puredata_sys::t_symbol>(sel.inner());
             let argc = v.len() as std::os::raw::c_int;
             let argv = v.deref().as_ptr() as *const puredata_sys::t_atom;
             //XXX pd doesn't indicate const or mut but shouldn't be modifying
             let argv = std::mem::transmute::<_, *mut puredata_sys::t_atom>(argv);
-            puredata_sys::outlet_anything(self.ptr, sel, argc, argv);
+            puredata_sys::outlet_anything(self.ptr, sel.inner(), argc, argv);
         }
     }
 }
