@@ -17,7 +17,7 @@ external! {
         }
 
         #[sel(defaults=1)]
-        pub fn foo(&mut self, arg1: puredata_sys::t_float, arg2: &mut puredata_sys::t_symbol) {
+        pub fn foo(&mut self, arg1: puredata_sys::t_float, arg2: puredata_external::symbol::Symbol) {
             let m =
                 CString::new(format!("got foo {} {}", arg1, arg2).to_string()).expect("CString::new failed");
             pd::post(m);
@@ -31,7 +31,7 @@ external! {
         }
 
         #[sel(defaults=1)]
-        pub fn baz(&mut self, arg1: &mut puredata_sys::t_symbol) {
+        pub fn baz(&mut self, arg1: puredata_external::symbol::Symbol) {
             let m =
                 CString::new(format!("got baz {}", arg1)).expect("CString::new failed");
             pd::post(m);
