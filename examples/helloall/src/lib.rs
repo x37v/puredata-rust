@@ -2,6 +2,7 @@ use puredata_external::builder::ControlExternalBuilder;
 use puredata_external::external::ControlExternal;
 use puredata_external::outlet::{OutletSend, OutletType};
 use puredata_external::pd;
+use puredata_external::symbol::Symbol;
 use puredata_external_macros::external;
 use std::ffi::CString;
 use std::rc::Rc;
@@ -32,9 +33,14 @@ external! {
         }
 
         #[anything]
-        pub fn anything(&mut self, sel: &puredata_sys::t_symbol, list: &[puredata_external::atom::Atom]) {
+        pub fn foo(&mut self, sel: Symbol, list: &[puredata_external::atom::Atom]) {
             self.outlet.send_symbol(sel);
             self.outlet.send_list(&list);
+        }
+
+        #[sel]
+        pub fn bar(&mut self, s: Symbol) {
+            self.outlet.send_symbol(s);
         }
     }
 }
