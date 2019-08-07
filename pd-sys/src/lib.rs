@@ -2,7 +2,14 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+#[cfg(all(feature = "doubleprecision", feature = "instance"))]
+include!("./ffi-instance-doubleprecision.rs");
+#[cfg(all(feature = "doubleprecision", not(feature = "instance")))]
+include!("./ffi-doubleprecision.rs");
+#[cfg(all(not(feature = "doubleprecision"), feature = "instance"))]
+include!("./ffi-instance.rs");
+#[cfg(not(any(feature = "doubleprecision", feature = "instance")))]
+include!("./ffi.rs");
 
 use std::fmt;
 

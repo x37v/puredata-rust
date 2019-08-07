@@ -1,4 +1,3 @@
-use std::env;
 use std::path::PathBuf;
 
 fn main() {
@@ -57,19 +56,33 @@ fn main() {
     ];
     let types = ["t_atomtype", "t_symbol", "t_signal", "t_floatarg"];
 
-    let mut builder = bindgen::Builder::default()
-        .header("wrapper.h")
-        .constified_enum_module("t_atomtype")
-        .rustfmt_bindings(true);
+    let variants = [
+        None,
+        Some("doubleprecision"),
+        Some("instance"),
+        Some("instance-doubleprecision"),
+    ];
 
-    builder = vars.iter().fold(builder, |b, i| b.whitelist_var(i));
-    builder = funcs.iter().fold(builder, |b, i| b.whitelist_function(i));
-    builder = types.iter().fold(builder, |b, i| b.whitelist_type(i));
+    for v in variants.iter() {
+        let (header, filename) = match v {
+            Some(s) => (format!("wrapper-{}.h", s), format!("ffi-{}.rs", s)),
+            None => ("wrapper.h".to_string(), "ffi.rs".to_string()),
+        };
+        let mut builder = bindgen::Builder::default()
+            .header(format!("wrappers/{}", header))
+            .constified_enum_module("t_atomtype")
+            .rustfmt_bindings(true);
 
-    let bindings = builder.generate().expect("Unable to generate bindings");
+        builder = vars.iter().fold(builder, |b, i| b.whitelist_var(i));
+        builder = funcs.iter().fold(builder, |b, i| b.whitelist_function(i));
+        builder = types.iter().fold(builder, |b, i| b.whitelist_type(i));
 
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    bindings
-        .write_to_file(out_path.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
+        let bindings = builder.generate().expect("Unable to generate bindings");
+
+        //let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+        let out_path = PathBuf::from("src");
+        bindings
+            .write_to_file(out_path.join(filename))
+            .expect("Couldn't write bindings!");
+    }
 }
