@@ -1,3 +1,4 @@
+//used to rebuild the ffi, disabled by default
 use std::path::PathBuf;
 
 fn main() {
