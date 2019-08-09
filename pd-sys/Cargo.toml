@@ -5,6 +5,12 @@ authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
 license-file = "LICENSE.txt"
 homepage = "https://github.com/x37v/puredata-rust"
+include = [
+	"src/*.rs",
+	"Cargo.toml",
+	"README.md",
+	"LICENSE.txt"
+]
 build = false #disable to rebuild
 
 #[build-dependencies]
