@@ -4,9 +4,12 @@ version = "0.1.0"
 authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
 license-file = "LICENSE.txt"
+license = "BSD-3-Clause"
+readme = "README.md"
 homepage = "https://github.com/x37v/puredata-rust"
-description = "FFI bindings for the Pure Data multi-media programming language"
+description = "FFI bindings for the Pure Data (Pd) multi-media programming language"
 keywords = ["audio", "signal-processing", "sound", "music", "puredata", "multi-media"]:w
+categories = ["multimedia::audio", "multimedia::video", "multimedia::images"]
 include = [
 	"src/*.rs",
 	"Cargo.toml",
