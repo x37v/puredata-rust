@@ -6,6 +6,7 @@ edition = "2018"
 license-file = "LICENSE.txt"
 homepage = "https://github.com/x37v/puredata-rust"
 description = "FFI bindings for the Pure Data multi-media programming language"
+keywords = ["audio", "signal-processing", "sound", "music", "puredata", "multi-media"]:w
 include = [
 	"src/*.rs",
 	"Cargo.toml",
@@ -19,6 +20,10 @@ build = false #disable to rebuild
 
 [features]
 default = []
+
+#use double precision, experimental
 doubleprecision = []
+
+#expose the instance interface, likely only useful from libpd?
 instance = []
 
