@@ -3,10 +3,12 @@ name = "pd-sys"
 version = "0.1.0"
 authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
+license-file = "LICENSE.txt"
+homepage = "https://github.com/x37v/puredata-rust"
 build = false #disable to rebuild
 
-[build-dependencies]
-bindgen = "0.49.0"
+#[build-dependencies]
+#bindgen = "0.49.0"
 
 [features]
 default = []
