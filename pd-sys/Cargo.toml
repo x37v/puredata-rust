@@ -7,8 +7,8 @@ license-file = "LICENSE.txt"
 license = "BSD-3-Clause"
 readme = "README.md"
 homepage = "https://github.com/x37v/puredata-rust"
-description = "FFI bindings for the Pure Data (Pd) multi-media programming language"
-keywords = ["audio", "signal-processing", "sound", "music", "puredata", "multi-media"]
+description = "FFI bindings for the Pure Data (Pd) multimedia programming language"
+keywords = ["audio", "sound", "music", "puredata", "multimedia"]
 categories = ["multimedia::audio", "multimedia::video", "multimedia::images"]
 include = [
 	"src/*.rs",
