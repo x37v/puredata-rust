@@ -5,6 +5,7 @@ authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
 license-file = "LICENSE.txt"
 homepage = "https://github.com/x37v/puredata-rust"
+description = "FFI bindings for the Pure Data multi-media programming language"
 include = [
 	"src/*.rs",
 	"Cargo.toml",
