@@ -12,14 +12,14 @@ Does not require any C, builds entirely with Cargo.
 * [pd-sys](pd-sys) The basic generated bindings to `m_pd.h`, all you need to roll your own interface to puredata.
 * [external](external) The Rust specific wrappers and ease of use methods for creating externals.
 * [macros](macros) The macros that generate all the guts for externals you don't want to have to deal with yourself, used the examples.
-* [examples](examples) See below.
+* [macros/examples](macros/examples) See below.
 
 ## Examples
 
-* [helloworld](examples/helloworld/src/lib.rs) based on the HOWTO [my first external: helloworld](https://github.com/pure-data/externals-howto#my-first-external-helloworld) example
-* [counter](examples/counter/src/lib.rs) based on the HOWTO [a simple external: counter](https://github.com/pure-data/externals-howto#a-simple-external-counter) example
-* [complex_counter](examples/complex_counter/src/lib.rs) based on the HOWTO [a complex external: counter](https://github.com/pure-data/externals-howto#a-complex-external-counter) example
-* [xfade](examples/xfade/src/lib.rs) based on the, misnamed, HOWTO [a signal-external pan~](https://github.com/pure-data/externals-howto#a-signal-external-pan) example
+* [helloworld](macros/examples/helloworld/src/lib.rs) based on the HOWTO [my first external: helloworld](https://github.com/pure-data/externals-howto#my-first-external-helloworld) example
+* [counter](macros/examples/counter/src/lib.rs) based on the HOWTO [a simple external: counter](https://github.com/pure-data/externals-howto#a-simple-external-counter) example
+* [complex_counter](macros/examples/complex_counter/src/lib.rs) based on the HOWTO [a complex external: counter](https://github.com/pure-data/externals-howto#a-complex-external-counter) example
+* [xfade](macros/examples/xfade/src/lib.rs) based on the, misnamed, HOWTO [a signal-external pan~](https://github.com/pure-data/externals-howto#a-signal-external-pan) example
 
 ```
 cd examples/helloworld && cargo build

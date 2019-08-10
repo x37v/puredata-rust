@@ -9,6 +9,6 @@ name = "complex_counter"
 crate-type = ["cdylib"]
 
 [dependencies]
-pd-sys = { path = "../../pd-sys" }
-pd-ext = { path = "../../external" }
-pd-ext-macros = { path = "../../macros" }
+pd-sys = { path = "../../../pd-sys/" }
+pd-ext = { path = "../../../external" }
+pd-ext-macros = { path = "../.." }
