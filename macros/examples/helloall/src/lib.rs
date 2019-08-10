@@ -2,7 +2,6 @@ use pd_ext::builder::ControlExternalBuilder;
 use pd_ext::external::ControlExternal;
 use pd_ext::outlet::{OutletSend, OutletType};
 use pd_ext::pd;
-use pd_ext::symbol::Symbol;
 use pd_ext_macros::external;
 use std::ffi::CString;
 use std::rc::Rc;
@@ -33,13 +32,13 @@ external! {
         }
 
         #[anything]
-        pub fn foo(&mut self, sel: Symbol, list: &[pd_ext::atom::Atom]) {
+        pub fn foo(&mut self, sel: pd_ext::symbol::Symbol, list: &[pd_ext::atom::Atom]) {
             self.outlet.send_symbol(sel);
             self.outlet.send_list(&list);
         }
 
         #[sel]
-        pub fn bar(&mut self, s: Symbol) {
+        pub fn bar(&mut self, s: pd_ext::symbol::Symbol) {
             self.outlet.send_symbol(s);
         }
     }
