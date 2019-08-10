@@ -3,7 +3,6 @@ name = "pd-sys"
 version = "0.1.0"
 authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
-license-file = "LICENSE.txt"
 license = "BSD-3-Clause"
 readme = "README.md"
 homepage = "https://github.com/x37v/puredata-rust"
