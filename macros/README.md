@@ -72,10 +72,11 @@ There are 2 optional parameters:
     This will identify that `number` of the arguments, starting from the back
     should be filled in with default values if the argument isn't provided.
 
-The example below shows 2 bound selector methods:
+The example below shows 3 bound selector methods:
 
 1. `|reset(` takes no arguments
-1. `|set v(` takes 0 or 1 argument, if no arguments are provided, `v` will be `0.0`
+1. `|set v(` takes 0 or 1 float argument, if no arguments are provided, `v` will be `0.0`
+1. `|bar v(` takes 1 argument, a symbol.
 
 
 ```rust
@@ -87,12 +88,14 @@ external! {
     impl Counter {
         #[sel]
         pub fn reset(&mut self) {
-            self.count = 0isize;
         }
 
         #[sel(defaults=1, name="set")]
         pub fn foo(&mut self, v: puredata_sys::t_float) {
-            self.count = v as isize;
+        }
+
+        #[sel]
+        pub fn bar(&mut self, s: pd_ext::symbol::Symbol) {
         }
     ...
     }
@@ -132,7 +135,7 @@ external! {
       ...
 
         #[anything]
-        pub fn foo(&mut self, sel: Symbol, list: &[pd_ext::atom::Atom]) {
+        pub fn foo(&mut self, sel: pd_ext::symbol::Symbol, list: &[pd_ext::atom::Atom]) {
         }
 
     }
