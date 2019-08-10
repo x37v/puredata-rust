@@ -7,7 +7,7 @@ license = "BSD-3-Clause"
 homepage = "https://github.com/x37v/puredata-rust"
 keywords = ["audio", "sound", "music", "puredata", "multimedia"]
 categories = ["multimedia::audio", "multimedia::video", "multimedia::images"]
-description = "Macros for building pure data externals with pd-ext and pd-sys"
+description = "Macros for building Pure Data Externals with pd-ext and pd-sys"
 
 [lib]
 proc-macro = true
