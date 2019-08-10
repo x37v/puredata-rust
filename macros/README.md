@@ -99,7 +99,7 @@ external! {
 }
 ```
 
-### [list]
+### #[list]
 
 A list method, a var-args list of atoms.
 
@@ -119,7 +119,7 @@ external! {
 }
 ```
 
-### [any]
+### #[any]
 
 A message method, a selector symbol and a var-args list of atoms.
 
