@@ -75,8 +75,8 @@ There are 2 optional parameters:
 The example below shows 3 bound selector methods:
 
 1. `|reset(` takes no arguments
-1. `|set v(` takes 0 or 1 float argument, if no arguments are provided, `v` will be `0.0`
-1. `|bar v(` takes 1 argument, a symbol.
+2. `|set v(` takes 0 or 1 float argument, if no arguments are provided, `v` will be `0.0`
+3. `|bar v(` takes 1 argument, a symbol.
 
 
 ```rust
