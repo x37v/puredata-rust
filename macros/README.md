@@ -119,7 +119,7 @@ external! {
 }
 ```
 
-### #[any]
+### #[anything]
 
 A message method, a selector symbol and a var-args list of atoms.
 
