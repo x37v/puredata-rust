@@ -3,6 +3,11 @@ name = "pd-ext-macros"
 version = "0.1.0"
 authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
+license = "BSD-3-Clause"
+homepage = "https://github.com/x37v/puredata-rust"
+keywords = ["audio", "sound", "music", "puredata", "multimedia"]
+categories = ["multimedia::audio", "multimedia::video", "multimedia::images"]
+description = "Macros for building pure data externals with pd-ext and pd-sys"
 
 [lib]
 proc-macro = true

@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Alex Norman <alex@x37v.info>"]
 edition = "2018"
 build = "build.rs"
+license = "BSD-3-Clause"
+homepage = "https://github.com/x37v/puredata-rust"
+keywords = ["audio", "sound", "music", "puredata", "multimedia"]
+categories = ["multimedia::audio", "multimedia::video", "multimedia::images"]
+description = "Rustified wrappers around and bindings for pd-sys for building Pure Data Externals"
 
 [dependencies]
 pd-sys = { path = "../pd-sys" }
