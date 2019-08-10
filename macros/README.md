@@ -1,7 +1,7 @@
 # pd-ext-macros
 
 At this point there is one macro `external!` that can wrap a `struct` and its `impl` blocks.
-If the `struct` implements one of the external `trait`s from `puredata-external`, you should
+If the `struct` implements one of the external `trait`s from `pd-ext`, you should
 have automatically generated trampolines and setup for your pure data external.
 
 Look at the [external traits](../external/src/external.rs) for details on what
@@ -99,9 +99,50 @@ external! {
 }
 ```
 
+### [list]
+
+A list method, a var-args list of atoms.
+
+```rust
+external! {
+    pub struct HelloAll {
+		...
+
+    impl HelloAll {
+			...
+
+        #[list] //indicates that a list in Pd should call this
+        pub fn list(&mut self, list: &[pd_ext::atom::Atom]) {
+        }
+
+    }
+}
+```
+
+### [any]
+
+A message method, a selector symbol and a var-args list of atoms.
+
+```rust
+external! {
+    pub struct HelloAll {
+		...
+
+    impl HelloAll {
+			...
+
+        #[anything]
+        pub fn foo(&mut self, sel: Symbol, list: &[pd_ext::atom::Atom]) {
+        }
+
+    }
+}
+```
+
 ## TODO
 
 * Libraries of externals
 * Allow explicit external naming
 * Bind other types of methods
+* More error checking during code generation
 
