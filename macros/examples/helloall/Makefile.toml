@@ -11,7 +11,12 @@ dependencies = ["move"]
 
 [tasks.clean-artifacts]
 script_runner = "@shell"
-script = [ "rm -f *.pd_*" ]
+script = [ "rm -rf ${CARGO_MAKE_CRATE_FS_NAME} *.dek*" ]
+
+[tasks.package]
+dependencies = ["move"]
+command = "deken"
+args = ["package", "-v", "${CARGO_MAKE_CRATE_VERSION}", "${CARGO_MAKE_CRATE_FS_NAME}"]
 
 [tasks.move.linux]
 env = { "PLATFORM_EXTERNAL_EXT" = "pd_linux", "PLATFORM_DYLIB_EXT" = "so" }
@@ -25,7 +30,10 @@ run_task = "actual-move"
 private = true
 dependencies = ["build"]
 script_runner = "@shell"
-script = [ "rsync -a target/release/lib${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_DYLIB_EXT} ${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_EXTERNAL_EXT}" ]
+script = [
+    "mkdir -p ${CARGO_MAKE_CRATE_FS_NAME}",
+    "rsync -a target/release/lib${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_DYLIB_EXT} ${CARGO_MAKE_CRATE_FS_NAME}/${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_EXTERNAL_EXT}"
+]
 
 [tasks.run.linux]
 dependencies = ["move"]
