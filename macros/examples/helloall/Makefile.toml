@@ -1,0 +1,37 @@
+[tasks.build]
+args = ["build", "--release"]
+
+[tasks.clean]
+dependencies = ["clean-artifacts"]
+command = "cargo"
+args = ["clean"]
+
+[tasks.post-build]
+dependencies = ["move"]
+
+[tasks.clean-artifacts]
+script_runner = "@shell"
+script = [ "rm -f *.pd_*" ]
+
+[tasks.move.linux]
+env = { "PLATFORM_EXTERNAL_EXT" = "pd_linux", "PLATFORM_DYLIB_EXT" = "so" }
+run_task = "actual-move"
+
+[tasks.move.mac]
+env = { "PLATFORM_EXTERNAL_EXT" = "pd_darwin", "PLATFORM_DYLIB_EXT" = "dylib" }
+run_task = "actual-move"
+
+[tasks.actual-move]
+dependencies = ["build"]
+script_runner = "@shell"
+script = [ "rsync -a target/release/lib${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_DYLIB_EXT} ${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_EXTERNAL_EXT}" ]
+
+[tasks.run.linux]
+dependencies = ["move"]
+command = "pd"
+args = ["test.pd"]
+
+[tasks.run.mac]
+dependencies = ["move"]
+command = "open"
+args = ["test.pd"]
