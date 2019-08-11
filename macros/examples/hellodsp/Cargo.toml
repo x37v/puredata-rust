@@ -9,6 +9,6 @@ name = "hellodsp"
 crate-type = ["cdylib"]
 
 [dependencies]
-pd-sys = { path = "../../../pd-sys/" }
+pd-sys = "0.1.0"
 pd-ext = { path = "../../../external" }
 pd-ext-macros = { path = "../.." }

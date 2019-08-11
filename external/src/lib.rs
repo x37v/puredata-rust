@@ -1,3 +1,4 @@
+pub extern crate pd_sys;
 pub mod alloc;
 pub mod atom;
 pub mod builder;
