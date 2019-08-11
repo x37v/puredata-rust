@@ -22,6 +22,7 @@ env = { "PLATFORM_EXTERNAL_EXT" = "pd_darwin", "PLATFORM_DYLIB_EXT" = "dylib" }
 run_task = "actual-move"
 
 [tasks.actual-move]
+private = true
 dependencies = ["build"]
 script_runner = "@shell"
 script = [ "rsync -a target/release/lib${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_DYLIB_EXT} ${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_EXTERNAL_EXT}" ]
