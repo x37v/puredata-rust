@@ -18,16 +18,16 @@ dependencies = ["move"]
 command = "deken"
 args = ["package", "-v", "${CARGO_MAKE_CRATE_VERSION}", "${CARGO_MAKE_CRATE_FS_NAME}"]
 
-[tasks.move-env.linux]
+[tasks.platform-env.linux]
 env = { "PLATFORM_EXTERNAL_EXT" = "pd_linux", "PLATFORM_DYLIB_EXT" = "so" }
 private = true
 
-[tasks.move-env.mac]
+[tasks.platform-env.mac]
 env = { "PLATFORM_EXTERNAL_EXT" = "pd_darwin", "PLATFORM_DYLIB_EXT" = "dylib" }
 private = true
 
 [tasks.name-env]
-dependencies = ["move-env"]
+dependencies = ["platform-env"]
 env = { "LIB_TILDE" = "target/release/lib${CARGO_MAKE_CRATE_FS_NAME}_tilde.${PLATFORM_DYLIB_EXT}", "LIB" = "target/release/lib${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_DYLIB_EXT}", "EXTERNAL_TILDE" = "${CARGO_MAKE_CRATE_FS_NAME}~.${PLATFORM_EXTERNAL_EXT}", "EXTERNAL" = "${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_EXTERNAL_EXT}" }
 private = true
 
