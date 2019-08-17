@@ -26,7 +26,13 @@ See [utils/README.md](utils/README.md) for more details on the `cargo-make` setu
 * [xfade](macros/examples/xfade/src/lib.rs) based on the, misnamed, HOWTO [a signal-external pan~](https://github.com/pure-data/externals-howto#a-signal-external-pan) example
 
 ```
-cd examples/helloworld && cargo build
+cd macros/examples/helloworld && cargo build
+```
+
+or
+
+```
+cd macros/examples/helloworld && cargo make run
 ```
 
 If you want to see what code the macro actually produces, use `cargo-expand`.
