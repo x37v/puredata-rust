@@ -1,3 +1,47 @@
+# vim: set ts=4 sw=4 expandtab:
+
+[tasks.init]
+script_runner = "@rust"
+script = [
+'''
+use std::env;
+fn main() -> std::result::Result<(), std::env::VarError> {
+    let os = env::var("CARGO_MAKE_RUST_TARGET_OS")?;
+    let arch = env::var("CARGO_MAKE_RUST_TARGET_ARCH")?;
+
+    let (prefix, dylib_suffix) = match os.as_ref() {
+        "linux" | "freebsd" => ("l", "so"),
+        "macos" => ("d", "dylib"),
+        "windows" => ("m", "dll"),
+        "openbsd" => ("o", "so"),
+        _ => panic!("unhandled os {}", os)
+    };
+
+    let suffix = match arch.as_ref() {
+        "x86" => "i386",
+        "x86_64" => "amd64",
+        "arm" => "arm",
+        "aarch64" => "arm64",
+        "powerpc" => "ppc",
+        _ => panic!("unhandled arch {}", arch)
+    };
+
+    env::set_var("PLATFORM_EXTERNAL_EXT", format!("{}_{}", prefix, suffix));
+    env::set_var("PLATFORM_DYLIB_EXT", dylib_suffix);
+
+    Ok(())
+}
+'''
+]
+
+[tasks.echo]
+script = [
+'''
+echo PLATFORM_DYLIB_EXT: ${PLATFORM_DYLIB_EXT}
+echo PLATFORM_EXTERNAL_EXT: ${PLATFORM_EXTERNAL_EXT}
+'''
+]
+
 [tasks.build]
 args = ["build", "--release"]
 
@@ -27,7 +71,6 @@ env = { "PLATFORM_EXTERNAL_EXT" = "pd_darwin", "PLATFORM_DYLIB_EXT" = "dylib" }
 private = true
 
 [tasks.name-env]
-dependencies = ["platform-env"]
 env = { "LIB_TILDE" = "target/release/lib${CARGO_MAKE_CRATE_FS_NAME}_tilde.${PLATFORM_DYLIB_EXT}", "LIB" = "target/release/lib${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_DYLIB_EXT}", "EXTERNAL_TILDE" = "${CARGO_MAKE_CRATE_FS_NAME}~.${PLATFORM_EXTERNAL_EXT}", "EXTERNAL" = "${CARGO_MAKE_CRATE_FS_NAME}.${PLATFORM_EXTERNAL_EXT}" }
 private = true
 
