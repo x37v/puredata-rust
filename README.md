@@ -40,7 +40,6 @@ If you want to see what code the macro actually produces, use `cargo-expand`.
 ## TODO
 
 * Documentation
-* Build scripts to create `.pd_linux`, `.pd_darwin` from the `.so`, `.dynlib` etc.
 * Expose pointer methods
 * Support more creation argument configurations
 * Clean up macros
