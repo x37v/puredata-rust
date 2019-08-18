@@ -1,5 +1,4 @@
 use std::fmt;
-use std::ops::Deref;
 
 #[repr(transparent)]
 pub struct Symbol(*mut pd_sys::t_symbol);
