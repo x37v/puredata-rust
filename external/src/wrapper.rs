@@ -1,13 +1,11 @@
 use crate::builder::*;
 use crate::external::*;
-use crate::inlet::InletSignal;
 use crate::method::PdDspPerform;
 use crate::obj::AsObject;
 use crate::symbol::Symbol;
 use field_offset::offset_of;
 use std::convert::TryInto;
 use std::mem::MaybeUninit;
-use std::rc::Rc;
 use std::slice;
 
 #[repr(C)]
@@ -50,7 +48,7 @@ where
     T: SignalGeneratorExternal,
 {
     wrapped: T,
-    signal_outlets: Vec<RcOutletSignal>,
+    signal_outlets: Vec<BoxOutletSignal>,
     outlet_buffer: Vec<&'static mut [pd_sys::t_float]>,
 }
 
@@ -59,8 +57,8 @@ where
     T: SignalProcessorExternal,
 {
     wrapped: T,
-    signal_outlets: Vec<RcOutletSignal>,
-    signal_inlets: Vec<RcInletSignal>,
+    _signal_outlets: Vec<BoxOutletSignal>,
+    _signal_inlets: Vec<BoxInletSignal>,
     outlet_buffer: Vec<&'static mut [pd_sys::t_float]>,
     inlet_buffer: Vec<crate::alloc::Slice<pd_sys::t_float>>,
 }
@@ -144,8 +142,8 @@ where
         }
         Self {
             wrapped,
-            signal_outlets: temp.1,
-            signal_inlets: temp.2,
+            _signal_outlets: temp.1,
+            _signal_inlets: temp.2,
             inlet_buffer,
             outlet_buffer,
         }
