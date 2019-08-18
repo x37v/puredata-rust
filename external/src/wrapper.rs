@@ -6,6 +6,7 @@ use crate::obj::AsObject;
 use crate::symbol::Symbol;
 use field_offset::offset_of;
 use std::convert::TryInto;
+use std::mem::MaybeUninit;
 use std::rc::Rc;
 use std::slice;
 
@@ -15,7 +16,7 @@ where
     T: ControlExternal,
 {
     x_obj: pd_sys::t_object,
-    wrapped: std::mem::MaybeUninit<ControlExternalWrapperInternal<T>>,
+    wrapped: MaybeUninit<ControlExternalWrapperInternal<T>>,
 }
 
 #[repr(C)]
@@ -24,7 +25,7 @@ where
     T: SignalGeneratorExternal,
 {
     x_obj: pd_sys::t_object,
-    wrapped: Option<SignalGeneratorExternalWrapperInternal<T>>,
+    wrapped: MaybeUninit<SignalGeneratorExternalWrapperInternal<T>>,
 }
 
 #[repr(C)]
@@ -34,7 +35,7 @@ where
 {
     x_obj: pd_sys::t_object,
     convert: pd_sys::t_float,
-    wrapped: Option<SignalProcessorExternalWrapperInternal<T>>,
+    wrapped: MaybeUninit<SignalProcessorExternalWrapperInternal<T>>,
 }
 
 struct ControlExternalWrapperInternal<T>
@@ -213,11 +214,11 @@ where
         let mut builder = Builder::new(self, args, name);
         let e = ControlExternal::new(&mut builder);
         let c = ControlExternalWrapperInternal::new(e, builder);
-        self.wrapped = std::mem::MaybeUninit::new(c);
+        self.wrapped = MaybeUninit::new(c);
     }
 
     pub fn free(&mut self) {
-        let mut wrapped = std::mem::MaybeUninit::uninit();
+        let mut wrapped = MaybeUninit::uninit();
         std::mem::swap(&mut self.wrapped, &mut wrapped);
         unsafe {
             std::mem::drop(wrapped.assume_init());
@@ -254,28 +255,35 @@ where
             //XXX indicate error
             std::ptr::null_mut::<Self>()
         } else {
-            self.wrapped = Some(SignalGeneratorExternalWrapperInternal::new(e, builder));
+            self.wrapped =
+                MaybeUninit::new(SignalGeneratorExternalWrapperInternal::new(e, builder));
             self as *mut Self
         };
         r as *mut ::std::os::raw::c_void
     }
 
     pub fn free(&mut self) {
-        self.wrapped = None;
+        let mut wrapped = MaybeUninit::uninit();
+        std::mem::swap(&mut self.wrapped, &mut wrapped);
+        unsafe {
+            std::mem::drop(wrapped.assume_init());
+        }
+    }
+
+    fn inner(&self) -> &SignalGeneratorExternalWrapperInternal<T> {
+        unsafe { (&(*self.wrapped.as_ptr())) }
+    }
+
+    fn inner_mut(&mut self) -> &mut SignalGeneratorExternalWrapperInternal<T> {
+        unsafe { (&mut (*self.wrapped.as_mut_ptr())) }
     }
 
     pub fn wrapped(&mut self) -> &mut T {
-        self.wrapped
-            .as_mut()
-            .expect("external not initialized")
-            .wrapped()
+        self.inner_mut().wrapped()
     }
 
     pub fn signal_iolets(&self) -> usize {
-        self.wrapped
-            .as_ref()
-            .expect("external not initialized")
-            .signal_iolets()
+        self.inner().signal_iolets()
     }
 
     pub fn dsp(&mut self, sv: *mut *mut pd_sys::t_signal, trampoline: PdDspPerform) {
@@ -287,10 +295,7 @@ where
         unsafe {
             let iolets = self.signal_iolets();
             let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
-            self.wrapped
-                .as_mut()
-                .expect("external not initialized")
-                .generate(nframes, w.offset(3));
+            self.inner_mut().generate(nframes, w.offset(3));
             w.offset((3 + iolets) as isize)
         }
     }
@@ -313,25 +318,31 @@ where
     fn init(&mut self, args: &[crate::atom::Atom], name: Option<Symbol>) {
         let mut builder = Builder::new(self, args, name);
         let e = SignalProcessorExternal::new(&mut builder);
-        self.wrapped = Some(SignalProcessorExternalWrapperInternal::new(e, builder));
+        self.wrapped = MaybeUninit::new(SignalProcessorExternalWrapperInternal::new(e, builder));
     }
 
     pub fn free(&mut self) {
-        self.wrapped = None;
+        let mut wrapped = MaybeUninit::uninit();
+        std::mem::swap(&mut self.wrapped, &mut wrapped);
+        unsafe {
+            std::mem::drop(wrapped.assume_init());
+        }
+    }
+
+    fn inner(&self) -> &SignalProcessorExternalWrapperInternal<T> {
+        unsafe { (&(*self.wrapped.as_ptr())) }
+    }
+
+    fn inner_mut(&mut self) -> &mut SignalProcessorExternalWrapperInternal<T> {
+        unsafe { (&mut (*self.wrapped.as_mut_ptr())) }
     }
 
     pub fn wrapped(&mut self) -> &mut T {
-        self.wrapped
-            .as_mut()
-            .expect("external not initialized")
-            .wrapped()
+        self.inner_mut().wrapped()
     }
 
     pub fn signal_iolets(&self) -> usize {
-        self.wrapped
-            .as_ref()
-            .expect("external not initialized")
-            .signal_iolets()
+        self.inner().signal_iolets()
     }
 
     pub fn float_convert_field_offset() -> usize {
@@ -343,20 +354,14 @@ where
         let frames = setup_dsp(self, iolets, sv, trampoline);
 
         //allocate buffers to copy input data so we don't trample it
-        self.wrapped
-            .as_mut()
-            .expect("external not initialized")
-            .allocate_inlet_buffers(frames);
+        self.inner_mut().allocate_inlet_buffers(frames);
     }
 
     pub fn perform(&mut self, w: *mut pd_sys::t_int) -> *mut pd_sys::t_int {
         unsafe {
             let iolets = self.signal_iolets();
             let nframes = *std::mem::transmute::<_, *const usize>(w.offset(2));
-            self.wrapped
-                .as_mut()
-                .expect("external not initialized")
-                .process(nframes, w.offset(3));
+            self.inner_mut().process(nframes, w.offset(3));
             w.offset((3 + iolets) as isize)
         }
     }
