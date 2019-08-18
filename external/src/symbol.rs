@@ -1,4 +1,5 @@
 use std::fmt;
+use std::ops::Deref;
 
 #[repr(transparent)]
 pub struct Symbol(*mut pd_sys::t_symbol);
@@ -23,6 +24,21 @@ impl std::convert::TryFrom<*mut pd_sys::t_symbol> for Symbol {
 impl std::convert::From<std::ffi::CString> for Symbol {
     fn from(s: std::ffi::CString) -> Self {
         unsafe { Self(pd_sys::gensym(s.as_ptr())) }
+    }
+}
+
+impl Into<&'static std::ffi::CStr> for Symbol {
+    fn into(self) -> &'static std::ffi::CStr {
+        unsafe { std::ffi::CStr::from_ptr((*self.0).s_name) }
+    }
+}
+
+impl Into<String> for Symbol {
+    fn into(self) -> String {
+        unsafe { std::ffi::CStr::from_ptr((*self.0).s_name) }
+            .to_str()
+            .unwrap()
+            .to_owned()
     }
 }
 
