@@ -35,12 +35,14 @@ impl Arg {
         }
     }
 
+    /*
     pub fn to_classnewarg(&self) -> proc_macro2::TokenStream {
         match self {
             Arg::Float => quote! { pd_sys::t_atomtype::A_DEFFLOAT },
             Arg::Symbol => quote! { pd_sys::t_atomtype::A_DEFSYMBOL },
         }
     }
+    */
 }
 
 fn append_perms(types: &Vec<Arg>, perms: &mut Vec<Vec<Arg>>, recurse: usize) {
