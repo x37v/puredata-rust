@@ -15,7 +15,7 @@ where
     T: ControlExternal,
 {
     x_obj: pd_sys::t_object,
-    wrapped: Option<ControlExternalWrapperInternal<T>>,
+    wrapped: std::mem::MaybeUninit<ControlExternalWrapperInternal<T>>,
 }
 
 #[repr(C)]
@@ -212,18 +212,20 @@ where
     fn init(&mut self, args: &[crate::atom::Atom], name: Option<Symbol>) {
         let mut builder = Builder::new(self, args, name);
         let e = ControlExternal::new(&mut builder);
-        self.wrapped = Some(ControlExternalWrapperInternal::new(e, builder));
+        let c = ControlExternalWrapperInternal::new(e, builder);
+        self.wrapped = std::mem::MaybeUninit::new(c);
     }
 
     pub fn free(&mut self) {
-        self.wrapped = None;
+        let mut wrapped = std::mem::MaybeUninit::uninit();
+        std::mem::swap(&mut self.wrapped, &mut wrapped);
+        unsafe {
+            std::mem::drop(wrapped.assume_init());
+        }
     }
 
     pub fn wrapped(&mut self) -> &mut T {
-        self.wrapped
-            .as_mut()
-            .expect("external not initialized")
-            .wrapped()
+        unsafe { (&mut (*self.wrapped.as_mut_ptr())).wrapped() }
     }
 }
 
