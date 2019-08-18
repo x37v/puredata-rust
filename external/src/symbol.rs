@@ -42,6 +42,13 @@ impl Into<String> for Symbol {
     }
 }
 
+impl std::convert::AsRef<std::path::Path> for Symbol {
+    fn as_ref(&self) -> &std::path::Path {
+        let c_str = unsafe { std::ffi::CStr::from_ptr((*self.0).s_name) };
+        c_str.to_str().unwrap().as_ref()
+    }
+}
+
 impl fmt::Display for Symbol {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         unsafe {
