@@ -2,7 +2,6 @@ use pd_ext::builder::ControlExternalBuilder;
 use pd_ext::external::ControlExternal;
 use pd_ext::outlet::{OutletSend, OutletType};
 use pd_ext_macros::external;
-use std::rc::Rc;
 
 //https://github.com/pure-data/externals-howto#a-complex-external-counter
 external! {
@@ -10,8 +9,8 @@ external! {
         count: isize,
         step: isize,
         range: (isize, isize),
-        count_outlet: Rc<dyn OutletSend>,
-        wrap_outlet: Rc<dyn OutletSend>,
+        count_outlet: Box<dyn OutletSend>,
+        wrap_outlet: Box<dyn OutletSend>,
     }
 
     impl ControlExternal for Counter {

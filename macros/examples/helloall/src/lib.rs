@@ -4,11 +4,10 @@ use pd_ext::outlet::{OutletSend, OutletType};
 use pd_ext::pd;
 use pd_ext_macros::external;
 use std::ffi::CString;
-use std::rc::Rc;
 
 external! {
     pub struct HelloAll {
-        outlet: Rc<dyn OutletSend>
+        outlet: Box<dyn OutletSend>
     }
 
     impl ControlExternal for HelloAll {
