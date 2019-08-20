@@ -1,3 +1,6 @@
 target/
-*.pd_linux
-*.pd_darwin
+*.l_*
+*.d_*
+*.m_*
+*.o_*
+*.pd_*
