@@ -1,38 +1,10 @@
 # vim: set ts=4 sw=4 expandtab:
 
-[tasks.init]
-script_runner = "@rust"
-script = [
-'''
-use std::env;
-fn main() -> std::result::Result<(), std::env::VarError> {
-    let os = env::var("CARGO_MAKE_RUST_TARGET_OS")?;
-    let arch = env::var("CARGO_MAKE_RUST_TARGET_ARCH")?;
-
-    let (prefix, dylib_suffix) = match os.as_ref() {
-        "linux" | "freebsd" => ("l", "so"),
-        "macos" => ("d", "dylib"),
-        "windows" => ("m", "dll"),
-        "openbsd" => ("o", "so"),
-        _ => panic!("unhandled os {}", os)
-    };
-
-    let suffix = match arch.as_ref() {
-        "x86" => "i386",
-        "x86_64" => "amd64",
-        "arm" => "arm",
-        "aarch64" => "arm64",
-        "powerpc" => "ppc",
-        _ => panic!("unhandled arch {}", arch)
-    };
-
-    env::set_var("PLATFORM_EXTERNAL_EXT", format!("{}_{}", prefix, suffix));
-    env::set_var("PLATFORM_DYLIB_EXT", dylib_suffix);
-
-    Ok(())
-}
-'''
-]
+[env]
+PLATFORM_DYLIB_EXT = { source = "${CARGO_MAKE_RUST_TARGET_OS}", default_value = "so", mapping = {"macos" = "dylib", "windows" = "dll" } }
+PLATFORM_EXTERNAL_PREFIX = { source = "${CARGO_MAKE_RUST_TARGET_OS}", default_value = "l", mapping = {"linux" = "l", "macos" = "d", "windows" = "m", "openbsd" = "o", "freebsd" = "l" } }
+PLATFORM_EXTERNAL_SUFFIX = { source = "${CARGO_MAKE_RUST_TARGET_ARCH}", default_value = "ERROR", mapping = {"x86" = "i386", "x86_64" = "amd64", "arm" = "arm", "aarch64" = "arm64", "powerpc" = "ppc" } }
+PLATFORM_EXTERNAL_EXT = "${PLATFORM_EXTERNAL_PREFIX}_${PLATFORM_EXTERNAL_SUFFIX}"
 
 [tasks.echo]
 script = [
