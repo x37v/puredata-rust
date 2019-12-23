@@ -8,9 +8,9 @@ use std::ops::Deref;
 
 pub type BoxInletSignal = Box<dyn InletSignal>;
 pub type BoxOutletSignal = Box<dyn OutletSignal>;
-pub type BoxFloatInlet<T> = Box<Fn(&mut T, pd_sys::t_float)>;
+pub type BoxFloatInlet<T> = Box<dyn Fn(&mut T, pd_sys::t_float)>;
 
-pub type IntoBuiltControl<T> = (Vec<BoxFloatInlet<T>>);
+pub type IntoBuiltControl<T> = Vec<BoxFloatInlet<T>>;
 pub type IntoBuiltGenerator<T> = (Vec<BoxFloatInlet<T>>, Vec<BoxOutletSignal>);
 pub type IntoBuiltProcessor<T> = (
     Vec<BoxFloatInlet<T>>,
@@ -25,7 +25,7 @@ pub trait ControlExternalBuilder<T> {
         &mut self,
         initial_value: pd_sys::t_float,
     ) -> Box<dyn Deref<Target = pd_sys::t_float>>;
-    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, pd_sys::t_float)>);
+    fn new_float_inlet(&mut self, func: Box<dyn Fn(&mut T, pd_sys::t_float)>);
     fn new_message_outlet(&mut self, t: OutletType) -> Box<dyn OutletSend>;
 }
 
@@ -43,7 +43,7 @@ pub struct Builder<'a, T> {
     name: Option<Symbol>,
     signal_inlets: Vec<BoxInletSignal>,
     signal_outlets: Vec<BoxOutletSignal>,
-    float_inlets: Vec<Box<Fn(&mut T, pd_sys::t_float)>>,
+    float_inlets: Vec<Box<dyn Fn(&mut T, pd_sys::t_float)>>,
 }
 
 impl<'a, T> Builder<'a, T> {
@@ -101,7 +101,7 @@ impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
         Box::new(FloatInlet::new(self.obj, initial_value))
     }
 
-    fn new_float_inlet(&mut self, func: Box<Fn(&mut T, pd_sys::t_float)>) {
+    fn new_float_inlet(&mut self, func: Box<dyn Fn(&mut T, pd_sys::t_float)>) {
         self.float_inlets.push(func);
     }
 
@@ -126,8 +126,8 @@ impl<'a, T> SignalProcessorExternalBuilder<T> for Builder<'a, T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::boxed::Box;
+    
+    
 
     /*
     pub struct A;
