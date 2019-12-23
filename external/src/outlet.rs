@@ -131,7 +131,7 @@ mod tests {
         fn send_list(&self, _v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {}
         fn send_anything(
             &self,
-            sel: Symbol,
+            _sel: Symbol,
             _v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>,
         ) {
         }

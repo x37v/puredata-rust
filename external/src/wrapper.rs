@@ -1,12 +1,12 @@
 use crate::builder::*;
 use crate::external::*;
-use crate::inlet::InletSignal;
+
 use crate::method::PdDspPerform;
 use crate::obj::AsObject;
 use crate::symbol::Symbol;
 use field_offset::offset_of;
 use std::convert::TryInto;
-use std::rc::Rc;
+
 use std::slice;
 
 #[repr(C)]

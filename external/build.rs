@@ -79,7 +79,7 @@ fn sel_variant_name(type_alias: &String) -> syn::Ident {
     )
 }
 
-fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
+fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = env::var("OUT_DIR")?;
     let dest_path = Path::new(&out_dir).join("method-gen.rs");
     let mut f = File::create(&dest_path)?;
@@ -155,7 +155,7 @@ fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
     Ok(())
 }
 
-fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
+fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = env::var("OUT_DIR")?;
     let dest_path = Path::new(&out_dir).join("class-gen.rs");
     let mut f = File::create(&dest_path)?;
@@ -248,7 +248,7 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<std::error::Error>> {
     Ok(())
 }
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut perms = vec![vec![Arg::Float], vec![Arg::Symbol]];
     let types = vec![Arg::Float, Arg::Symbol];
     append_perms(&types, &mut perms, 5);
