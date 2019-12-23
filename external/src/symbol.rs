@@ -57,6 +57,18 @@ impl<'a> std::convert::Into<&'a std::path::Path> for &Symbol {
     }
 }
 
+impl std::convert::AsRef<std::ffi::CStr> for Symbol {
+    fn as_ref(&self) -> &std::ffi::CStr {
+        self.into()
+    }
+}
+
+impl std::convert::AsRef<std::path::Path> for Symbol {
+    fn as_ref(&self) -> &std::path::Path {
+        self.into()
+    }
+}
+
 impl fmt::Display for Symbol {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         unsafe {
