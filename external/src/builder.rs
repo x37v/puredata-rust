@@ -5,18 +5,17 @@ use crate::obj::AsObject;
 use crate::outlet::{Outlet, OutletSend, OutletSignal, OutletType, SignalOutlet};
 use crate::symbol::Symbol;
 use std::ops::Deref;
-use std::rc::Rc;
 
-pub type RcInletSignal = Rc<dyn InletSignal>;
-pub type RcOutletSignal = Rc<dyn OutletSignal>;
+pub type BoxInletSignal = Box<dyn InletSignal>;
+pub type BoxOutletSignal = Box<dyn OutletSignal>;
 pub type BoxFloatInlet<T> = Box<dyn Fn(&mut T, pd_sys::t_float)>;
 
 pub type IntoBuiltControl<T> = Vec<BoxFloatInlet<T>>;
-pub type IntoBuiltGenerator<T> = (Vec<BoxFloatInlet<T>>, Vec<RcOutletSignal>);
+pub type IntoBuiltGenerator<T> = (Vec<BoxFloatInlet<T>>, Vec<BoxOutletSignal>);
 pub type IntoBuiltProcessor<T> = (
     Vec<BoxFloatInlet<T>>,
-    Vec<RcOutletSignal>,
-    Vec<RcInletSignal>,
+    Vec<BoxOutletSignal>,
+    Vec<BoxInletSignal>,
 );
 
 pub trait ControlExternalBuilder<T> {
@@ -25,9 +24,9 @@ pub trait ControlExternalBuilder<T> {
     fn new_passive_float_inlet(
         &mut self,
         initial_value: pd_sys::t_float,
-    ) -> Rc<dyn Deref<Target = pd_sys::t_float>>;
+    ) -> Box<dyn Deref<Target = pd_sys::t_float>>;
     fn new_float_inlet(&mut self, func: Box<dyn Fn(&mut T, pd_sys::t_float)>);
-    fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend>;
+    fn new_message_outlet(&mut self, t: OutletType) -> Box<dyn OutletSend>;
 }
 
 pub trait SignalGeneratorExternalBuilder<T>: ControlExternalBuilder<T> {
@@ -42,8 +41,8 @@ pub struct Builder<'a, T> {
     obj: &'a mut dyn AsObject,
     args: &'a [Atom],
     name: Option<Symbol>,
-    signal_inlets: Vec<RcInletSignal>,
-    signal_outlets: Vec<RcOutletSignal>,
+    signal_inlets: Vec<BoxInletSignal>,
+    signal_outlets: Vec<BoxOutletSignal>,
     float_inlets: Vec<Box<dyn Fn(&mut T, pd_sys::t_float)>>,
 }
 
@@ -98,36 +97,35 @@ impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
     fn new_passive_float_inlet(
         &mut self,
         initial_value: pd_sys::t_float,
-    ) -> Rc<dyn Deref<Target = pd_sys::t_float>> {
-        Rc::new(FloatInlet::new(self.obj, initial_value))
+    ) -> Box<dyn Deref<Target = pd_sys::t_float>> {
+        Box::new(FloatInlet::new(self.obj, initial_value))
     }
 
     fn new_float_inlet(&mut self, func: Box<dyn Fn(&mut T, pd_sys::t_float)>) {
         self.float_inlets.push(func);
     }
 
-    fn new_message_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend> {
-        Rc::new(Outlet::new(t, self.obj))
+    fn new_message_outlet(&mut self, t: OutletType) -> Box<dyn OutletSend> {
+        Box::new(Outlet::new(t, self.obj))
     }
 }
 
 impl<'a, T> SignalGeneratorExternalBuilder<T> for Builder<'a, T> {
     fn new_signal_outlet(&mut self) {
         self.signal_outlets
-            .push(Rc::new(SignalOutlet::new(self.obj)));
+            .push(Box::new(SignalOutlet::new(self.obj)));
     }
 }
 
 impl<'a, T> SignalProcessorExternalBuilder<T> for Builder<'a, T> {
     fn new_signal_inlet(&mut self) {
-        self.signal_inlets.push(Rc::new(SignalInlet::new(self.obj)));
+        self.signal_inlets
+            .push(Box::new(SignalInlet::new(self.obj)));
     }
 }
 
 #[cfg(test)]
 mod tests {
-    
-    
 
     /*
     pub struct A;
@@ -165,16 +163,16 @@ mod tests {
         fn new_passive_float_inlet(
             &mut self,
             initial_value: pd_sys::t_float,
-        ) -> Rc<dyn Deref<Target = pd_sys::t_float>> {
-            Rc::new(Box::new(initial_value))
+        ) -> Box<dyn Deref<Target = pd_sys::t_float>> {
+            Box::new(Box::new(initial_value))
         }
 
         fn new_float_inlet(&mut self, func: Box<Fn(&mut T, pd_sys::t_float)>) {
             self.float_inlets.push(func);
         }
 
-        fn new_outlet(&mut self, t: OutletType) -> Rc<dyn OutletSend> {
-            Rc::new(())
+        fn new_outlet(&mut self, t: OutletType) -> Box<dyn OutletSend> {
+            Box::new(())
         }
     }
 

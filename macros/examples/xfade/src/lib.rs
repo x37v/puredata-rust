@@ -3,13 +3,12 @@ use pd_ext::builder::SignalProcessorExternalBuilder;
 use pd_ext::external::SignalProcessorExternal;
 use pd_ext_macros::external;
 use std::ops::Deref;
-use std::rc::Rc;
 
 external! {
     //based on pan~ from: https://github.com/pure-data/externals-howto#a-signal-external-pan
     pub struct XFade {
         //a passive float input, the xfade position
-        pos: Rc<dyn Deref<Target = pd_sys::t_float>>,
+        pos: Box<dyn Deref<Target = pd_sys::t_float>>,
     }
 
     impl SignalProcessorExternal for XFade {

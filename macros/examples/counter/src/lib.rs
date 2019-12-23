@@ -2,13 +2,13 @@ use pd_ext::builder::ControlExternalBuilder;
 use pd_ext::external::ControlExternal;
 use pd_ext::outlet::{OutletSend, OutletType};
 use pd_ext_macros::external;
-use std::rc::Rc;
 
 //based on https://github.com/pure-data/externals-howto#a-simple-external-counter
 external! {
+    #[repr(packed)]
     pub struct Counter {
         count: isize,
-        outlet: Rc<dyn OutletSend>
+        outlet: Box<dyn OutletSend>
     }
 
     impl ControlExternal for Counter {

@@ -63,6 +63,15 @@ impl std::convert::AsRef<std::ffi::CStr> for Symbol {
     }
 }
 
+impl Into<String> for Symbol {
+    fn into(self) -> String {
+        unsafe { std::ffi::CStr::from_ptr((*self.0).s_name) }
+            .to_str()
+            .unwrap()
+            .to_owned()
+    }
+}
+
 impl std::convert::AsRef<std::path::Path> for Symbol {
     fn as_ref(&self) -> &std::path::Path {
         self.into()
