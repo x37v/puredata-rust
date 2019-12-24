@@ -25,6 +25,16 @@ impl std::convert::TryFrom<*mut pd_sys::t_symbol> for Symbol {
     }
 }
 
+impl std::convert::TryFrom<&'static str> for Symbol {
+    type Error = &'static str;
+    fn try_from(s: &'static str) -> Result<Self, Self::Error> {
+        match std::ffi::CString::new(s) {
+            Ok(i) => Ok(i.into()),
+            Err(_) => Err("fail"),
+        }
+    }
+}
+
 impl std::convert::From<std::ffi::CString> for Symbol {
     fn from(s: std::ffi::CString) -> Self {
         unsafe { Self(pd_sys::gensym(s.as_ptr())) }
