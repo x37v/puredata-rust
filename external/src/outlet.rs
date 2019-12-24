@@ -5,8 +5,8 @@ pub trait OutletSend {
     fn send_bang(&self);
     fn send_float(&self, v: pd_sys::t_float);
     fn send_symbol(&self, v: Symbol);
-    fn send_list(&self, v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>);
-    fn send_anything(&self, sel: Symbol, v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>);
+    fn send_list(&self, v: &[crate::atom::Atom]);
+    fn send_anything(&self, sel: Symbol, v: &[crate::atom::Atom]);
 }
 
 //marker traits
@@ -71,20 +71,20 @@ impl OutletSend for Outlet {
         }
     }
 
-    fn send_list(&self, v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {
+    fn send_list(&self, v: &[crate::atom::Atom]) {
         unsafe {
             let argc = v.len() as std::os::raw::c_int;
-            let argv = v.deref().as_ptr() as *const pd_sys::t_atom;
+            let argv = v.as_ptr() as *const pd_sys::t_atom;
             //XXX pd doesn't indicate const or mut but shouldn't be modifying
             let argv = std::mem::transmute::<_, *mut pd_sys::t_atom>(argv);
             pd_sys::outlet_list(self.ptr, &mut pd_sys::s_list, argc, argv);
         }
     }
 
-    fn send_anything(&self, sel: Symbol, v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {
+    fn send_anything(&self, sel: Symbol, v: &[crate::atom::Atom]) {
         unsafe {
             let argc = v.len() as std::os::raw::c_int;
-            let argv = v.deref().as_ptr() as *const pd_sys::t_atom;
+            let argv = v.as_ptr() as *const pd_sys::t_atom;
             //XXX pd doesn't indicate const or mut but shouldn't be modifying
             let argv = std::mem::transmute::<_, *mut pd_sys::t_atom>(argv);
             pd_sys::outlet_anything(self.ptr, sel.inner(), argc, argv);
@@ -128,12 +128,7 @@ mod tests {
         fn send_bang(&self) {}
         fn send_float(&self, _v: pd_sys::t_float) {}
         fn send_symbol(&self, _v: Symbol) {}
-        fn send_list(&self, _v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>) {}
-        fn send_anything(
-            &self,
-            _sel: Symbol,
-            _v: &dyn std::ops::Deref<Target = [crate::atom::Atom]>,
-        ) {
-        }
+        fn send_list(&self, _v: &[crate::atom::Atom]) {}
+        fn send_anything(&self, _sel: Symbol, _v: &[crate::atom::Atom]) {}
     }
 }
