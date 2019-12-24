@@ -117,3 +117,7 @@ impl Clone for Symbol {
         Self(self.0)
     }
 }
+
+//pd sends symbols between threads, must be thread safe
+unsafe impl Send for Symbol {}
+unsafe impl Sync for Symbol {}
