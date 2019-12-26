@@ -111,6 +111,14 @@ impl Clone for Atom {
     }
 }
 
+impl std::convert::From<usize> for Atom {
+    fn from(v: usize) -> Self {
+        let mut s = Self::default();
+        s.set_float(v as pd_sys::t_float);
+        s
+    }
+}
+
 impl std::convert::From<f64> for Atom {
     fn from(v: f64) -> Self {
         let mut s = Self::default();
