@@ -152,21 +152,39 @@ fn add_dsp(
 }
 
 //returns the method type token stream (for registering), and the trampoline implementation
-type MethodRegisterFn = fn(
+type MethodRegisterFn =
+    fn(
+        trampoline_name: &Ident,
+        method_name: &Ident,
+        _method: &ImplItemMethod,
+        attr: &Attribute,
+    ) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)>;
+
+fn add_trampoline(
     trampoline_name: &Ident,
     method_name: &Ident,
     _method: &ImplItemMethod,
-    attr: &Attribute,
-) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)>;
+    _attr: &Attribute,
+) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
+    Ok((
+        None,
+        quote! {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped) {
+                let x = &mut *x;
+                x.wrapped().#method_name();
+            }
+        },
+    ))
+}
 
 fn add_bang(
     trampoline_name: &Ident,
     method_name: &Ident,
     _method: &ImplItemMethod,
     _attr: &Attribute,
-) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
+) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
     Ok((
-        quote! { pd_ext::method::Method::Bang(#trampoline_name) },
+        Some(quote! { pd_ext::method::Method::Bang(#trampoline_name) }),
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped) {
                 let x = &mut *x;
@@ -181,10 +199,10 @@ fn add_list(
     method_name: &Ident,
     _method: &ImplItemMethod,
     _attr: &Attribute,
-) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
+) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
     //TODO validate arguments
     Ok((
-        quote! { pd_ext::method::Method::List(#trampoline_name) },
+        Some(quote! { pd_ext::method::Method::List(#trampoline_name) }),
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, _sel: /*ignored, always &s_list*/ *mut pd_sys::t_symbol, argc: std::os::raw::c_int, argv: *const pd_sys::t_atom) {
                 let x = &mut *x;
@@ -200,10 +218,10 @@ fn add_anything(
     method_name: &Ident,
     _method: &ImplItemMethod,
     _attr: &Attribute,
-) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
+) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
     //TODO validate arguments
     Ok((
-        quote! { pd_ext::method::Method::AnyThing(#trampoline_name) },
+        Some(quote! { pd_ext::method::Method::AnyThing(#trampoline_name) }),
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, sel: *mut pd_sys::t_symbol, argc: std::os::raw::c_int, argv: *const pd_sys::t_atom) {
                 let x = &mut *x;
@@ -223,7 +241,7 @@ fn add_sel(
     method_name: &Ident,
     method: &ImplItemMethod,
     attr: &Attribute,
-) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
+) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
     let mut sel_name = Lit::Str(LitStr::new(&method_name.to_string(), method_name.span()));
     let mut defaults = Lit::Int(LitInt::new(0, syn::IntSuffix::Usize, attr.span()));
 
@@ -315,7 +333,7 @@ fn add_sel(
     };
 
     Ok((
-        call,
+        Some(call),
         quote! {
             pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #(#tramp_args),*) {
                 #(#wrapped_refs)*;
@@ -326,6 +344,7 @@ fn add_sel(
 }
 
 static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] = &[
+    (&"tramp", add_trampoline),
     (&"bang", add_bang),
     (&"sel", add_sel),
     (&"list", add_list),
@@ -363,9 +382,11 @@ fn update_method_trampolines(
                         let (pd_method, trampoline) =
                             add_method(&trampoline_name, &method_name, &m, &a)?;
                         trampolines.push(trampoline);
-                        register_methods.push(quote! {
-                            #class_inst.add_method(#pd_method);
-                        });
+                        if let Some(m) = pd_method {
+                            register_methods.push(quote! {
+                                #class_inst.add_method(#m);
+                            });
+                        }
                     }
                 }
                 Ok(ImplItem::Method(m))
