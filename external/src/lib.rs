@@ -3,6 +3,7 @@ pub mod alloc;
 pub mod atom;
 pub mod builder;
 pub mod class;
+pub mod clock;
 pub mod external;
 pub mod inlet;
 pub mod method;
