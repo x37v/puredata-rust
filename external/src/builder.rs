@@ -19,6 +19,7 @@ pub type IntoBuiltProcessor<T> = (
 );
 
 pub trait ControlExternalBuilder<T> {
+    fn obj(&mut self) -> &mut dyn AsObject;
     fn instance_name(&self) -> &Option<Symbol>;
     fn creation_args(&self) -> &[Atom];
     fn new_passive_float_inlet(
@@ -86,6 +87,10 @@ impl<'a, T> Into<IntoBuiltProcessor<T>> for Builder<'a, T> {
 }
 
 impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
+    fn obj(&mut self) -> &mut dyn AsObject {
+        self.obj
+    }
+
     fn instance_name(&self) -> &Option<Symbol> {
         &self.name
     }
