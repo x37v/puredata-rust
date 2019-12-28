@@ -32,11 +32,11 @@ impl Clock {
         unsafe { pd_sys::clock_gettimesince(prev) }
     }
 
-    pub fn new(owner: &mut dyn AsObject, method: crate::method::PdMethod) -> Self {
+    pub fn new<T>(owner: &mut dyn AsObject, method: crate::method::PdCallbackMethod<T>) -> Self {
         unsafe {
             Self(pd_sys::clock_new(
                 std::mem::transmute::<_, _>(owner.as_obj()),
-                Some(method),
+                Some(std::mem::transmute::<_, _>(method)),
             ))
         }
     }
