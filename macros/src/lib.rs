@@ -376,7 +376,7 @@ fn update_method_trampolines(
 
                         let method_name = m.sig.ident.clone();
                         let trampoline_name = Ident::new(
-                            &(format!("{:}_method_{:}_trampoline", flat_name, method_name)),
+                            &(format!("{:}_{:}_trampoline", flat_name, method_name)),
                             m.sig.ident.span(),
                         );
                         let (pd_method, trampoline) =
