@@ -213,27 +213,6 @@ fn add_list(
     ))
 }
 
-fn add_sel_varg(
-    trampoline_name: &Ident,
-    method_name: &Ident,
-    _method: &ImplItemMethod,
-    _attr: &Attribute,
-) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
-    //TODO validate arguments
-    let sel_name = Lit::Str(LitStr::new(&method_name.to_string(), method_name.span()));
-    let sel_name = quote! { std::ffi::CString::new(#sel_name).unwrap() };
-    Ok((
-        Some(quote! { pd_ext::method::Method::SelVarArg(#sel_name, #trampoline_name) }),
-        quote! {
-            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, _sel: /*ignored, always &s_list*/ *mut pd_sys::t_symbol, argc: std::os::raw::c_int, argv: *const pd_sys::t_atom) {
-                let x = &mut *x;
-                let args = pd_ext::atom::Atom::slice_from_raw_parts(argv, argc);
-                x.wrapped().#method_name(args);
-            }
-        },
-    ))
-}
-
 fn add_anything(
     trampoline_name: &Ident,
     method_name: &Ident,
@@ -307,6 +286,10 @@ fn add_sel(
                             ));
                         }
                     }
+                    (Pat::Ident(i), Type::Reference(_)) => {
+                        //XXX do more validation
+                        return Ok((&i.ident, &a.ty, "VarArg".to_string(), None));
+                    }
                     _ => (),
                 };
             }
@@ -327,48 +310,60 @@ fn add_sel(
             .collect::<Vec<String>>()
             .join("")
     );
+    let vararg = variant == "SelVarArg";
     let variant = Ident::new(&variant, method_name.span());
 
-    let mut tramp_args: Vec<proc_macro2::TokenStream> = Vec::new();
-    let mut wrapped_params: Vec<Ident> = Vec::new();
-    //*mut -> &mut
-    let mut wrapped_refs = vec![quote! { let x = &mut *x; }];
-    for a in args.iter() {
-        let ident = a.0;
-        let typ = a.1;
-        if let Some(t) = &a.3 {
-            //TODO allow more types other than symbol
-            let call_type = quote! { pd_ext::symbol::Symbol };
-            wrapped_refs.push(quote! { let #ident = #call_type::try_from(#ident).unwrap(); });
-            tramp_args.push(quote! { #ident: #t });
-        } else {
-            tramp_args.push(quote! { #ident: #typ });
-        }
-        wrapped_params.push(a.0.clone());
-    }
-
-    let call = if args.len() == 0 {
+    let call = if args.len() == 0 || vararg {
         quote! { pd_ext::method::Method::#variant(#sel_name, #trampoline_name)}
     } else {
         quote! { pd_ext::method::Method::#variant(#sel_name, #trampoline_name, #defaults)}
     };
-
-    Ok((
-        Some(call),
-        quote! {
-            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #(#tramp_args),*) {
-                #(#wrapped_refs)*;
-                x.wrapped().#method_name(#(#wrapped_params),*);
+    if vararg {
+        Ok((
+            Some(call),
+            quote! {
+                pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, _sel: /*ignored*/ *mut pd_sys::t_symbol, argc: std::os::raw::c_int, argv: *const pd_sys::t_atom) {
+                    let x = &mut *x;
+                    let args = pd_ext::atom::Atom::slice_from_raw_parts(argv, argc);
+                    x.wrapped().#method_name(args);
+                }
+            },
+        ))
+    } else {
+        //*mut -> &mut
+        let mut tramp_args: Vec<proc_macro2::TokenStream> = Vec::new();
+        let mut wrapped_params: Vec<Ident> = Vec::new();
+        let mut wrapped_refs = vec![quote! { let x = &mut *x; }];
+        for a in args.iter() {
+            let ident = a.0;
+            let typ = a.1;
+            if let Some(t) = &a.3 {
+                //TODO allow more types other than symbol
+                let call_type = quote! { pd_ext::symbol::Symbol };
+                wrapped_refs.push(quote! { let #ident = #call_type::try_from(#ident).unwrap(); });
+                tramp_args.push(quote! { #ident: #t });
+            } else {
+                tramp_args.push(quote! { #ident: #typ });
             }
-        },
-    ))
+            wrapped_params.push(a.0.clone());
+        }
+
+        Ok((
+            Some(call),
+            quote! {
+                pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, #(#tramp_args),*) {
+                    #(#wrapped_refs)*;
+                    x.wrapped().#method_name(#(#wrapped_params),*);
+                }
+            },
+        ))
+    }
 }
 
 static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] = &[
     (&"tramp", add_trampoline),
     (&"bang", add_bang),
     (&"sel", add_sel),
-    (&"sel_varg", add_sel_varg),
     (&"list", add_list),
     (&"anything", add_anything),
 ];
