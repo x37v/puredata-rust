@@ -26,6 +26,14 @@ impl Atom {
         }
     }
 
+    pub fn get_type(&self) -> pd_sys::t_atomtype::Type {
+        self.0.a_type
+    }
+
+    pub fn is_type(&self, t: pd_sys::t_atomtype::Type) -> bool {
+        self.get_type() == t
+    }
+
     pub fn as_ptr(&self) -> *const pd_sys::t_atom {
         &self.0 as *const pd_sys::t_atom
     }
