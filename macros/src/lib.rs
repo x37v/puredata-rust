@@ -213,6 +213,27 @@ fn add_list(
     ))
 }
 
+fn add_sel_varg(
+    trampoline_name: &Ident,
+    method_name: &Ident,
+    _method: &ImplItemMethod,
+    _attr: &Attribute,
+) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
+    //TODO validate arguments
+    let sel_name = Lit::Str(LitStr::new(&method_name.to_string(), method_name.span()));
+    let sel_name = quote! { std::ffi::CString::new(#sel_name).unwrap() };
+    Ok((
+        Some(quote! { pd_ext::method::Method::SelVarArg(#sel_name, #trampoline_name) }),
+        quote! {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, _sel: /*ignored, always &s_list*/ *mut pd_sys::t_symbol, argc: std::os::raw::c_int, argv: *const pd_sys::t_atom) {
+                let x = &mut *x;
+                let args = pd_ext::atom::Atom::slice_from_raw_parts(argv, argc);
+                x.wrapped().#method_name(args);
+            }
+        },
+    ))
+}
+
 fn add_anything(
     trampoline_name: &Ident,
     method_name: &Ident,
@@ -347,6 +368,7 @@ static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] = &[
     (&"tramp", add_trampoline),
     (&"bang", add_bang),
     (&"sel", add_sel),
+    (&"sel_varg", add_sel_varg),
     (&"list", add_list),
     (&"anything", add_anything),
 ];
