@@ -122,6 +122,7 @@ fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<dyn std::error::Error>> {
             List(SelList<T>),
             AnyThing(SelList<T>),
             Sel(CString, B<T>),
+            SelVarArg(CString, SelList<T>),
             #(#variants),*
         }
         }
@@ -210,6 +211,16 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<dyn std::error::Error>> {
                     sel,
                     Some(std::mem::transmute::<method::B<T>, PdMethod>(f)),
                     &mut [],
+                    0,
+                );
+            }
+        },
+        quote! {
+            Method::SelVarArg(sel, f) => {
+                self.add_sel_method(
+                    sel,
+                    Some(std::mem::transmute::<method::SelList<T>, PdMethod>(f)),
+                    &mut [pd_sys::t_atomtype::A_GIMME],
                     0,
                 );
             }
