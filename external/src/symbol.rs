@@ -14,6 +14,12 @@ impl Symbol {
     }
 }
 
+impl PartialEq for Symbol {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
 impl std::convert::TryFrom<*mut pd_sys::t_symbol> for Symbol {
     type Error = &'static str;
     fn try_from(s: *mut pd_sys::t_symbol) -> Result<Self, Self::Error> {
