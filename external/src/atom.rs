@@ -143,6 +143,22 @@ impl std::convert::From<f32> for Atom {
     }
 }
 
+impl std::convert::TryInto<String> for Atom {
+    type Error = String;
+    fn try_into(self) -> Result<String, Self::Error> {
+        if let Some(s) = self.get_symbol() {
+            Ok(s.into())
+        } else if let Some(f) = self.get_float() {
+            Ok(f.to_string())
+        } else {
+            Err(format!(
+                "don't know how to convert {} to string",
+                self.0.a_type
+            ))
+        }
+    }
+}
+
 impl Default for Atom {
     fn default() -> Self {
         let a = pd_sys::_atom {
