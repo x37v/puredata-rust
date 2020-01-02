@@ -19,18 +19,22 @@ impl Post {
 
 impl PdPost for Post {
     fn post(&self, s: String) {
-        let c = std::ffi::CString::new(s);
-        if let Ok(c) = c {
-            unsafe {
-                pd_sys::post(c.as_ptr());
+        for l in s.lines() {
+            let c = std::ffi::CString::new(l);
+            if let Ok(c) = c {
+                unsafe {
+                    pd_sys::post(c.as_ptr());
+                }
             }
         }
     }
     fn post_error(&self, s: String) {
-        let c = std::ffi::CString::new(s);
-        if let Ok(c) = c {
-            unsafe {
-                pd_sys::pd_error(std::mem::transmute::<_, _>(self.x_obj), c.as_ptr());
+        for l in s.lines() {
+            let c = std::ffi::CString::new(l);
+            if let Ok(c) = c {
+                unsafe {
+                    pd_sys::pd_error(std::mem::transmute::<_, _>(self.x_obj), c.as_ptr());
+                }
             }
         }
     }
