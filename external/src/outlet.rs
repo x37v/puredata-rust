@@ -1,4 +1,5 @@
 use crate::obj::AsObject;
+use crate::pointer::Pointer;
 use crate::symbol::Symbol;
 
 pub trait OutletSend {
@@ -7,6 +8,7 @@ pub trait OutletSend {
     fn send_symbol(&self, v: Symbol);
     fn send_list(&self, v: &[crate::atom::Atom]);
     fn send_anything(&self, sel: Symbol, v: &[crate::atom::Atom]);
+    fn send_pointer(&self, p: &Pointer);
 }
 
 //marker traits
@@ -88,6 +90,12 @@ impl OutletSend for Outlet {
             //XXX pd doesn't indicate const or mut but shouldn't be modifying
             let argv = std::mem::transmute::<_, *mut pd_sys::t_atom>(argv);
             pd_sys::outlet_anything(self.ptr, sel.inner(), argc, argv);
+        }
+    }
+
+    fn send_pointer(&self, p: &Pointer) {
+        unsafe {
+            pd_sys::outlet_pointer(self.ptr, p.0);
         }
     }
 }
