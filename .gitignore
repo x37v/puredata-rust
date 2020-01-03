@@ -4,3 +4,4 @@ target/
 *.m_*
 *.o_*
 *.pd_*
+.gdb_history
