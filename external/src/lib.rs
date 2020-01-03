@@ -10,6 +10,7 @@ pub mod method;
 pub mod obj;
 pub mod outlet;
 pub mod pd;
+pub mod pointer;
 pub mod post;
 pub mod symbol;
 pub mod wrapper;
