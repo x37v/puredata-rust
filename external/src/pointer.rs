@@ -1,2 +1,2 @@
 #[repr(transparent)]
-pub struct Pointer(pub *mut pd_sys::_gpointer);
+pub struct Pointer(pub *mut pd_sys::t_gpointer);

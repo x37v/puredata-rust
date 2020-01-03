@@ -241,7 +241,7 @@ fn add_pointer(
     Ok((
         Some(quote! { pd_ext::method::Method::Pointer(#trampoline_name) }),
         quote! {
-            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, p: *mut pd_sys::_gpointer) {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, p: *mut pd_sys::t_gpointer) {
                 let x = &mut *x;
                 x.wrapped().#method_name(pd_ext::pointer::Pointer(p));
             }
