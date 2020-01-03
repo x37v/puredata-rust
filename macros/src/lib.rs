@@ -232,6 +232,23 @@ fn add_anything(
     ))
 }
 
+fn add_pointer(
+    trampoline_name: &Ident,
+    method_name: &Ident,
+    _method: &ImplItemMethod,
+    _attr: &Attribute,
+) -> syn::Result<(Option<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
+    Ok((
+        Some(quote! { pd_ext::method::Method::Pointer(#trampoline_name) }),
+        quote! {
+            pub unsafe extern "C" fn #trampoline_name(x: *mut Wrapped, p: *mut pd_sys::_gpointer) {
+                let x = &mut *x;
+                x.wrapped().#method_name(pd_ext::pointer::Pointer(p));
+            }
+        },
+    ))
+}
+
 fn type_path_final_eq(p: &TypePath, ident: &str) -> bool {
     p.path.segments.last().unwrap().value().ident == ident
 }
@@ -366,6 +383,7 @@ static METHOD_ATTRS: &'static [(&'static str, MethodRegisterFn)] = &[
     (&"sel", add_sel),
     (&"list", add_list),
     (&"anything", add_anything),
+    (&"pointer", add_pointer),
 ];
 
 //extract annotated methods and build trampolines
