@@ -7,6 +7,7 @@ pub type PdDspMethod<T> = unsafe extern "C" fn(*mut T, *mut *mut pd_sys::t_signa
 pub type PdDspPerform = unsafe extern "C" fn(*mut pd_sys::t_int) -> *mut pd_sys::t_int;
 
 pub type B<T> = unsafe extern "C" fn(*mut T);
+pub type P<T> = unsafe extern "C" fn(*mut T, *mut pd_sys::_gpointer);
 pub type SelList<T> =
     unsafe extern "C" fn(*mut T, *mut pd_sys::t_symbol, std::os::raw::c_int, *const pd_sys::t_atom);
 

@@ -119,6 +119,7 @@ fn gen_method(perms: &Vec<Vec<Arg>>) -> Result<(), Box<dyn std::error::Error>> {
             Bang(B<T>),
             Float(F<T>),
             Symbol(S<T>),
+            Pointer(P<T>),
             List(SelList<T>),
             AnyThing(SelList<T>),
             Sel(CString, B<T>),
@@ -186,6 +187,14 @@ fn gen_class(perms: &Vec<Vec<Arg>>) -> Result<(), Box<dyn std::error::Error>> {
                 pd_sys::class_addsymbol(
                     self.pd_class,
                     Some(std::mem::transmute::<method::S<T>, PdMethod>(f)),
+                    );
+            }
+        },
+        quote! {
+            Method::Pointer(p) => {
+                pd_sys::class_addpointer(
+                    self.pd_class,
+                    Some(std::mem::transmute::<method::P<T>, PdMethod>(p)),
                     );
             }
         },
