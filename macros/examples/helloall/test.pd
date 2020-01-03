@@ -8,8 +8,16 @@
 #X msg 179 281 list 1 2 3 4;
 #X msg 177 243 foo bar 1 2;
 #X msg 137 198 bar xxx;
+#X obj 324 186 pointer;
+#X msg 324 146 traverse pd-help-pointer-data \, bang;
+#N canvas 2 74 450 300 help-pointer-data 0;
+#X restore 687 98 pd help-pointer-data;
+#X msg 324 246 var 1 2 0.34 asdf;
 #X connect 1 0 3 0;
 #X connect 2 0 1 0;
 #X connect 4 0 1 0;
 #X connect 5 0 1 0;
 #X connect 6 0 1 0;
+#X connect 7 0 1 0;
+#X connect 8 0 7 0;
+#X connect 10 0 1 0;
