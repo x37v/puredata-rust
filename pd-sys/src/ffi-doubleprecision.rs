@@ -2,21 +2,20 @@
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct __BindgenBitfieldUnit<Storage, Align>
-where
-    Storage: AsRef<[u8]> + AsMut<[u8]>,
-{
+pub struct __BindgenBitfieldUnit<Storage, Align> {
     storage: Storage,
     align: [Align; 0],
+}
+impl<Storage, Align> __BindgenBitfieldUnit<Storage, Align> {
+    #[inline]
+    pub const fn new(storage: Storage) -> Self {
+        Self { storage, align: [] }
+    }
 }
 impl<Storage, Align> __BindgenBitfieldUnit<Storage, Align>
 where
     Storage: AsRef<[u8]> + AsMut<[u8]>,
 {
-    #[inline]
-    pub fn new(storage: Storage) -> Self {
-        Self { storage, align: [] }
-    }
     #[inline]
     pub fn get_bit(&self, index: usize) -> bool {
         debug_assert!(index / 8 < self.storage.as_ref().len());
@@ -82,6 +81,9 @@ where
         }
     }
 }
+pub const GP_NONE: u32 = 0;
+pub const GP_GLIST: u32 = 1;
+pub const GP_ARRAY: u32 = 2;
 pub const CLASS_DEFAULT: u32 = 0;
 pub const CLASS_PD: u32 = 1;
 pub const CLASS_GOBJ: u32 = 2;

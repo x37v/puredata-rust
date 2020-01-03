@@ -16,6 +16,7 @@ fn main() {
         "s_y",
         "s_",
         "CLASS.*",
+        "GP_.*",
     ];
     let funcs = [
         "gensym",
