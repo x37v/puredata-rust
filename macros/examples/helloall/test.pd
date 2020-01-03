@@ -1,3 +1,5 @@
+#N struct template2 float x float y;
+#N struct template1 float x float y float z;
 #N canvas 2 74 1916 1004 10;
 #X declare -path .;
 #X obj 336 70 declare -path .;
@@ -10,9 +12,20 @@
 #X msg 137 198 bar xxx;
 #X obj 324 186 pointer;
 #X msg 324 146 traverse pd-help-pointer-data \, bang;
-#N canvas 2 74 450 300 help-pointer-data 0;
-#X restore 687 98 pd help-pointer-data;
 #X msg 324 246 var 1 2 0.34 asdf;
+#N canvas 2 74 425 146 help-pointer-template1 0;
+#X obj 18 81 filledpolygon z 0 1 0 0 20 0 20 30 0 30;
+#X obj 60 21 struct template1 float x float y float z;
+#X restore 698 109 pd help-pointer-template1;
+#N canvas 26 456 510 145 help-pointer-template2 0;
+#X obj 52 78 filledcurve 909 0 0 0 0 30 30 60 0 30 -30 0 0;
+#X obj 60 21 struct template2 float x float y;
+#X restore 698 132 pd help-pointer-template2;
+#N canvas 2 104 312 185 help-pointer-data 0;
+#X scalar template2 20 97 \;;
+#X scalar template1 80 17 90 \;;
+#X scalar template1 120 117 9 \;;
+#X restore 698 87 pd help-pointer-data;
 #X connect 1 0 3 0;
 #X connect 2 0 1 0;
 #X connect 4 0 1 0;
@@ -20,4 +33,4 @@
 #X connect 6 0 1 0;
 #X connect 7 0 1 0;
 #X connect 8 0 7 0;
-#X connect 10 0 1 0;
+#X connect 9 0 1 0;

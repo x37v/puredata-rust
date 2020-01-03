@@ -59,6 +59,12 @@ external! {
         #[pointer]
         pub fn baz(&mut self, p: pd_ext::pointer::Pointer) {
             self.outlet.send_pointer(&p);
+            if p.check(true) {
+                println!("CHECKS");
+            }
+            if let Some(_) = p.get_glist() {
+                println!("GLIST");
+            }
         }
     }
 }
