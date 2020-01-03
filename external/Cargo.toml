@@ -11,7 +11,7 @@ categories = ["multimedia::audio", "multimedia::video", "multimedia::images"]
 description = "Rustified wrappers around and bindings for pd-sys for building Pure Data Externals"
 
 [dependencies]
-pd-sys = "0.1.0"
+pd-sys = "0.1.1"
 field-offset = "0.1.1"
 
 [build-dependencies]
