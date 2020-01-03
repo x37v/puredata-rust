@@ -59,6 +59,7 @@ external! {
         #[pointer]
         pub fn baz(&mut self, p: pd_ext::pointer::Pointer) {
             println!("got pointer");
+            self.outlet.send_pointer(&p);
             //XXX
         }
     }
