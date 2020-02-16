@@ -6,6 +6,7 @@ use pd_ext_macros::external;
 use std::ffi::CString;
 
 external! {
+    #[name="hello/all"] //allows us to change the default name from "helloall"
     pub struct HelloAll {
         outlet: Box<dyn OutletSend>
     }
