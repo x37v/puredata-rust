@@ -143,6 +143,14 @@ impl std::convert::From<f32> for Atom {
     }
 }
 
+impl std::convert::From<crate::symbol::Symbol> for Atom {
+    fn from(v: crate::symbol::Symbol) -> Self {
+        let mut s = Self::default();
+        s.set_symbol(v);
+        s
+    }
+}
+
 impl std::convert::TryInto<String> for Atom {
     type Error = String;
     fn try_into(self) -> Result<String, Self::Error> {
