@@ -1,6 +1,7 @@
 use std::fmt;
 
 use std::ffi::OsStr;
+use std::hash::{Hash, Hasher};
 
 #[cfg(unix)]
 use std::os::unix::ffi::OsStrExt;
@@ -98,6 +99,16 @@ impl fmt::Display for Symbol {
                 Err(std::fmt::Error {})
             }
         }
+    }
+}
+
+impl Hash for Symbol {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        std::ptr::hash(self.0, state);
+        state.finish();
     }
 }
 
