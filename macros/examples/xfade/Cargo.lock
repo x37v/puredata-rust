@@ -105,7 +105,7 @@ dependencies = [
 
 [[package]]
 name = "pd-ext-macros"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -155,7 +155,7 @@ dependencies = [
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pd-ext 0.1.0",
- "pd-ext-macros 0.1.0",
+ "pd-ext-macros 0.1.1",
  "pd-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
