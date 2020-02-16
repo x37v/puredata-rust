@@ -26,6 +26,12 @@ struct SelArgs {
     pub defaults: Option<Lit>,
 }
 
+//an attribute to specify the name of the pd class
+#[derive(Debug)]
+struct ClassNameArgs {
+    pub name: LitStr,
+}
+
 impl Parse for Parsed {
     fn parse(input: ParseStream) -> syn::parse::Result<Self> {
         let mut items = Vec::new();
@@ -68,6 +74,14 @@ impl Parse for SelArgs {
             let _: syn::Result<Token![,]> = content.parse();
         }
         Ok(Self { name, defaults })
+    }
+}
+
+impl Parse for ClassNameArgs {
+    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
+        let _: Token![=] = input.parse()?;
+        let name: LitStr = input.parse()?;
+        Ok(Self { name })
     }
 }
 
@@ -428,19 +442,24 @@ pub fn external(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
     let mut impls = Vec::new();
-    let mut structs = Vec::new();
+    let mut the_struct = None;
     let mut remain = Vec::new();
     let mut trampolines = Vec::new();
 
     for item in items.iter() {
         match item {
-            Item::Struct(x) => structs.push(x),
+            Item::Struct(x) => {
+                if the_struct.is_some() {
+                    panic!("external! cannot wrap more than one struct");
+                }
+                the_struct = Some(x);
+            }
             Item::Impl(x) => impls.push(x),
             _ => remain.push(item),
         }
     }
 
-    let the_struct = structs.first().expect("couldn't find the struct");
+    let the_struct = the_struct.expect("didn't find a struct");
     let (etype, extern_impl) = get_type(&the_struct, &impls).unwrap();
 
     let name_ident = the_struct.clone();
@@ -449,12 +468,11 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
     //build up names
     let lower_name = struct_name.to_string().to_lowercase();
     let upper_name = struct_name.to_string().to_uppercase();
-    let (flat_name, class_name) = match etype {
+    let (flat_name, mut class_name) = match etype {
         ExternalType::Signal => (format!("{:}_tilde", lower_name), format!("{}~", lower_name)),
         ExternalType::Control => (lower_name.clone(), lower_name.clone()),
     };
 
-    let class_name = LitStr::new(&(class_name), name_ident.span());
     let class_static = Ident::new(&(format!("{:}_CLASS", upper_name)), name_ident.span());
     let class_inst = Ident::new("c", name_ident.span());
     let new_method_name = Ident::new(&(format!("{:}_new", flat_name)), name_ident.span());
@@ -520,6 +538,21 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
         ),
         ExternalType::Control => add_control(&new_method_name, &free_method),
     };
+
+    //extract the name attribute for the struct, if it exists
+    //and apply the rename
+    let mut the_struct = the_struct.clone();
+    if let Some(pos) = the_struct
+        .attrs
+        .iter()
+        .position(|a| a.path.segments.last().unwrap().value().ident == "name")
+    {
+        let a = the_struct.attrs.remove(pos);
+        let n: ClassNameArgs = syn::parse2(a.tts.clone())?;
+        class_name = n.name.value();
+    }
+
+    let class_name = LitStr::new(&(class_name), name_ident.span());
 
     trampolines.push(quote! {
         #[no_mangle]
