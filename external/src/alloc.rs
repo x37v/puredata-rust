@@ -54,13 +54,17 @@ where
     }
 
     fn alloc(&mut self, len: usize) {
-        unsafe {
-            let bytes = pd_sys::getbytes(len * size_of::<T>());
-            let bytes = std::mem::transmute::<_, *mut T>(bytes);
-            self.0 = slice::from_raw_parts_mut(bytes, len);
-        }
-        for i in self.0.iter_mut() {
-            *i = Default::default();
+        if len == 0 {
+            self.0 = &mut [];
+        } else {
+            unsafe {
+                let bytes = pd_sys::getbytes(len * size_of::<T>());
+                let bytes = std::mem::transmute::<_, *mut T>(bytes);
+                self.0 = slice::from_raw_parts_mut(bytes, len);
+            }
+            for i in self.0.iter_mut() {
+                *i = Default::default();
+            }
         }
     }
 }
