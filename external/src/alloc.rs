@@ -13,7 +13,7 @@ where
     T: 'static + Sized + Copy,
 {
     fn default() -> Self {
-        unsafe { Self(slice::from_raw_parts_mut(std::ptr::null_mut(), 0)) }
+        Self(&mut [])
     }
 }
 
