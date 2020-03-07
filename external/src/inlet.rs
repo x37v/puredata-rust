@@ -16,6 +16,11 @@ pub mod passive {
         inlet: *mut pd_sys::_inlet,
     }
 
+    //to be able to use passive floats in DSP it must be Send
+    //PD must assume it is Sync too..
+    unsafe impl Sync for FloatInlet {}
+    unsafe impl Send for FloatInlet {}
+
     impl FloatInlet {
         pub fn new(owner: &mut dyn AsObject, initial_value: pd_sys::t_float) -> Self {
             let value = Box::new(initial_value);
