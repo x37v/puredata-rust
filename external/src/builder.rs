@@ -27,7 +27,7 @@ pub trait ControlExternalBuilder<T> {
     fn new_passive_float_inlet(
         &mut self,
         initial_value: pd_sys::t_float,
-    ) -> Box<dyn Deref<Target = pd_sys::t_float>>;
+    ) -> Box<dyn Deref<Target = pd_sys::t_float> + Send>;
     fn new_float_inlet(&mut self, func: Box<dyn Fn(&mut T, pd_sys::t_float)>);
     fn new_message_outlet(&mut self, t: OutletType) -> Box<dyn OutletSend>;
 }
@@ -108,7 +108,7 @@ impl<'a, T> ControlExternalBuilder<T> for Builder<'a, T> {
     fn new_passive_float_inlet(
         &mut self,
         initial_value: pd_sys::t_float,
-    ) -> Box<dyn Deref<Target = pd_sys::t_float>> {
+    ) -> Box<dyn Deref<Target = pd_sys::t_float> + Send> {
         Box::new(FloatInlet::new(self.obj, initial_value))
     }
 
