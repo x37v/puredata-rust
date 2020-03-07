@@ -48,6 +48,7 @@ where
     T: SignalGeneratorExternal,
 {
     wrapped: T,
+    generator: Box<dyn SignalGenerator>,
     signal_outlets: Vec<BoxOutletSignal>,
     outlet_buffer: Vec<&'static mut [pd_sys::t_float]>,
 }
@@ -57,6 +58,7 @@ where
     T: SignalProcessorExternal,
 {
     wrapped: T,
+    processor: Box<dyn SignalProcessor>,
     _signal_outlets: Vec<BoxOutletSignal>,
     _signal_inlets: Vec<BoxInletSignal>,
     outlet_buffer: Vec<&'static mut [pd_sys::t_float]>,
@@ -80,7 +82,7 @@ impl<T> SignalGeneratorExternalWrapperInternal<T>
 where
     T: SignalGeneratorExternal,
 {
-    pub fn new(wrapped: T, builder: Builder<T>) -> Self {
+    pub fn new(wrapped: T, generator: Box<dyn SignalGenerator>, builder: Builder<T>) -> Self {
         let temp: IntoBuiltGenerator<T> = builder.into();
         let outlets = temp.1.len();
         let mut outlet_buffer = Vec::new();
@@ -91,6 +93,7 @@ where
         }
         Self {
             wrapped,
+            generator,
             signal_outlets: temp.1,
             outlet_buffer,
         }
@@ -102,6 +105,11 @@ where
 
     pub fn signal_iolets(&self) -> usize {
         self.signal_outlets.len()
+    }
+
+    pub fn setup_generate(&mut self, frames: usize) {
+        self.generator
+            .setup_generate(frames, self.signal_outlets.len());
     }
 
     pub fn generate(&mut self, nframes: usize, buffer: *mut pd_sys::t_int) {
@@ -116,7 +124,7 @@ where
             }
         }
         let output_slice = self.outlet_buffer.as_mut();
-        self.wrapped.generate(nframes, output_slice);
+        self.generator.generate(nframes, output_slice);
     }
 }
 
@@ -124,7 +132,7 @@ impl<T> SignalProcessorExternalWrapperInternal<T>
 where
     T: SignalProcessorExternal,
 {
-    pub fn new(wrapped: T, builder: Builder<T>) -> Self {
+    pub fn new(wrapped: T, processor: Box<dyn SignalProcessor>, builder: Builder<T>) -> Self {
         let temp: IntoBuiltProcessor<T> = builder.into();
         let inlets = temp.2.len() + 1; //one default
         let outlets = temp.1.len();
@@ -142,6 +150,7 @@ where
         }
         Self {
             wrapped,
+            processor,
             _signal_outlets: temp.1,
             _signal_inlets: temp.2,
             inlet_buffer,
@@ -161,6 +170,11 @@ where
         for b in self.inlet_buffer.iter_mut() {
             b.resize(nframes);
         }
+    }
+
+    fn setup_process(&mut self, frames: usize) {
+        self.processor
+            .setup_process(frames, self.inlet_buffer.len(), self.outlet_buffer.len());
     }
 
     pub fn process(&mut self, nframes: usize, buffer: *mut pd_sys::t_int) {
@@ -189,7 +203,7 @@ where
             //the Slice newtype is transparent so we can just treat it as if it were the inner type
             let input_slice = std::mem::transmute::<_, _>(input_slice);
             //XXX can we cast input_slice to not be mut internally?
-            self.wrapped.process(nframes, input_slice, output_slice);
+            self.processor.process(nframes, input_slice, output_slice);
         }
     }
 }
@@ -247,14 +261,14 @@ where
         name: Option<Symbol>,
     ) -> *mut ::std::os::raw::c_void {
         let mut builder = Builder::new(self, args, name);
-        let e = SignalGeneratorExternal::new(&mut builder);
+        let (e, g) = SignalGeneratorExternal::new(&mut builder);
         //make sure we have some output
         let r = if builder.signal_outlets() == 0 {
             //XXX indicate error
             std::ptr::null_mut::<Self>()
         } else {
             self.wrapped =
-                MaybeUninit::new(SignalGeneratorExternalWrapperInternal::new(e, builder));
+                MaybeUninit::new(SignalGeneratorExternalWrapperInternal::new(e, g, builder));
             self as *mut Self
         };
         r as *mut ::std::os::raw::c_void
@@ -286,7 +300,8 @@ where
 
     pub fn dsp(&mut self, sv: *mut *mut pd_sys::t_signal, trampoline: PdDspPerform) {
         let iolets = self.signal_iolets();
-        let _ = setup_dsp(self, iolets, sv, trampoline);
+        let frames = setup_dsp(self, iolets, sv, trampoline);
+        self.inner_mut().setup_generate(frames);
     }
 
     pub fn perform(&mut self, w: *mut pd_sys::t_int) -> *mut pd_sys::t_int {
@@ -315,8 +330,8 @@ where
 
     fn init(&mut self, args: &[crate::atom::Atom], name: Option<Symbol>) {
         let mut builder = Builder::new(self, args, name);
-        let e = SignalProcessorExternal::new(&mut builder);
-        self.wrapped = MaybeUninit::new(SignalProcessorExternalWrapperInternal::new(e, builder));
+        let (e, p) = SignalProcessorExternal::new(&mut builder);
+        self.wrapped = MaybeUninit::new(SignalProcessorExternalWrapperInternal::new(e, p, builder));
     }
 
     pub fn free(&mut self) {
@@ -353,6 +368,7 @@ where
 
         //allocate buffers to copy input data so we don't trample it
         self.inner_mut().allocate_inlet_buffers(frames);
+        self.inner_mut().setup_process(frames);
     }
 
     pub fn perform(&mut self, w: *mut pd_sys::t_int) -> *mut pd_sys::t_int {
