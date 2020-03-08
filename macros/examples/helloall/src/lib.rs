@@ -12,9 +12,9 @@ external! {
     }
 
     impl ControlExternal for HelloAll {
-        fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
+        fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Result<Self, String> {
             let outlet = builder.new_message_outlet(OutletType::AnyThing);
-            Self { outlet }
+            Ok(Self { outlet })
         }
     }
 

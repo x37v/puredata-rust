@@ -12,14 +12,14 @@ external! {
     }
 
     impl ControlExternal for Counter {
-        fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
+        fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Result<Self, String> {
             let count = if let Some(atom) = builder.creation_args().iter().next() {
                 atom.get_int().unwrap_or(0) as isize
             } else {
                 0isize
             };
             let outlet = builder.new_message_outlet(OutletType::Float);
-            Self { count, outlet }
+            Ok(Self { count, outlet })
         }
     }
 

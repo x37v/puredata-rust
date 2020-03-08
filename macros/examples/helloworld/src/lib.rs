@@ -10,8 +10,8 @@ external! {
     pub struct HelloWorld;
 
     impl ControlExternal for HelloWorld {
-        fn new(_builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
-            Self { }
+        fn new(_builder: &mut dyn ControlExternalBuilder<Self>) -> Result<Self, String> {
+            Ok(Self { })
         }
     }
 

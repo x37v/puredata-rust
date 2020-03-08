@@ -54,13 +54,13 @@ external! {
     }
 
     impl SignalProcessorExternal for HelloDSP {
-        fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> (Self, Box<dyn SignalProcessor>) {
+        fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Result<(Self, Box<dyn SignalProcessor>), String> {
             builder.new_signal_outlet();
             builder.new_signal_outlet();
             builder.new_signal_outlet();
             builder.new_signal_inlet();
             builder.new_signal_inlet();
-            (Self { }, Box::new(Processor))
+            Ok((Self { }, Box::new(Processor)))
         }
     }
 }

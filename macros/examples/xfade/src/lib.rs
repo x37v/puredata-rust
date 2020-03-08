@@ -35,14 +35,14 @@ external! {
 
     impl SignalProcessorExternal for XFade {
         //build the object
-        fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> (Self, Box<dyn SignalProcessor>) {
+        fn new(builder: &mut dyn SignalProcessorExternalBuilder<Self>) -> Result<(Self, Box<dyn SignalProcessor>), String> {
             //2 signal inlets (1 default)
             //1 float inlet (position)
             //1 signal outlet
             builder.new_signal_inlet();
             let pos = builder.new_passive_float_inlet(0f32);
             builder.new_signal_outlet();
-            (Self, Box::new(XFadeProcessor { pos }))
+            Ok((Self, Box::new(XFadeProcessor { pos })))
         }
     }
 }

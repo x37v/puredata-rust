@@ -14,7 +14,7 @@ external! {
     }
 
     impl ControlExternal for Counter {
-        fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self {
+        fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Result<Self, String> {
 
             //parse the args
             let mut step = 1;
@@ -37,7 +37,7 @@ external! {
 
             let count_outlet = builder.new_message_outlet(OutletType::Float);
             let wrap_outlet = builder.new_message_outlet(OutletType::Bang);
-            Self { count: 0, step, range, count_outlet, wrap_outlet }
+            Ok(Self { count: 0, step, range, count_outlet, wrap_outlet })
         }
     }
 
