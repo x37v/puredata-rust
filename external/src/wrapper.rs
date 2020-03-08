@@ -218,15 +218,24 @@ where
         name: *mut pd_sys::t_symbol,
     ) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut pd_sys::t_pd, &mut Self>(pd_sys::pd_new(pd_class));
-        obj.init(args, name.try_into().ok());
-        obj as *mut Self as *mut ::std::os::raw::c_void
+        obj.init(args, name.try_into().ok())
     }
 
-    fn init(&mut self, args: &[crate::atom::Atom], name: Option<Symbol>) {
+    fn init(
+        &mut self,
+        args: &[crate::atom::Atom],
+        name: Option<Symbol>,
+    ) -> *mut ::std::os::raw::c_void {
         let mut builder = Builder::new(self, args, name);
-        let e = ControlExternal::new(&mut builder);
-        let c = ControlExternalWrapperInternal::new(e, builder);
-        self.wrapped = MaybeUninit::new(c);
+        let r = match ControlExternal::new(&mut builder) {
+            Ok(e) => {
+                let c = ControlExternalWrapperInternal::new(e, builder);
+                self.wrapped = MaybeUninit::new(c);
+                self as *mut Self
+            }
+            Err(reason) => null_with_reason(reason),
+        };
+        r as *mut ::std::os::raw::c_void
     }
 
     pub fn free(&mut self) {
@@ -261,15 +270,19 @@ where
         name: Option<Symbol>,
     ) -> *mut ::std::os::raw::c_void {
         let mut builder = Builder::new(self, args, name);
-        let (e, g) = SignalGeneratorExternal::new(&mut builder);
-        //make sure we have some output
-        let r = if builder.signal_outlets() == 0 {
-            //XXX indicate error
-            std::ptr::null_mut::<Self>()
-        } else {
-            self.wrapped =
-                MaybeUninit::new(SignalGeneratorExternalWrapperInternal::new(e, g, builder));
-            self as *mut Self
+        let r = match SignalGeneratorExternal::new(&mut builder) {
+            Ok((e, g)) => {
+                //make sure we have some output
+                if builder.signal_outlets() == 0 {
+                    null_with_reason("generator must have at least 1 signal outlet".into())
+                } else {
+                    self.wrapped = MaybeUninit::new(SignalGeneratorExternalWrapperInternal::new(
+                        e, g, builder,
+                    ));
+                    self as *mut Self
+                }
+            }
+            Err(reason) => null_with_reason(reason),
         };
         r as *mut ::std::os::raw::c_void
     }
@@ -324,14 +337,24 @@ where
         name: *mut pd_sys::t_symbol,
     ) -> *mut ::std::os::raw::c_void {
         let obj = std::mem::transmute::<*mut pd_sys::t_pd, &mut Self>(pd_sys::pd_new(pd_class));
-        obj.init(args, name.try_into().ok());
-        obj as *mut Self as *mut ::std::os::raw::c_void
+        obj.init(args, name.try_into().ok())
     }
 
-    fn init(&mut self, args: &[crate::atom::Atom], name: Option<Symbol>) {
+    fn init(
+        &mut self,
+        args: &[crate::atom::Atom],
+        name: Option<Symbol>,
+    ) -> *mut ::std::os::raw::c_void {
         let mut builder = Builder::new(self, args, name);
-        let (e, p) = SignalProcessorExternal::new(&mut builder);
-        self.wrapped = MaybeUninit::new(SignalProcessorExternalWrapperInternal::new(e, p, builder));
+        let r = match SignalProcessorExternal::new(&mut builder) {
+            Ok((e, p)) => {
+                self.wrapped =
+                    MaybeUninit::new(SignalProcessorExternalWrapperInternal::new(e, p, builder));
+                self as *mut Self
+            }
+            Err(reason) => null_with_reason(reason),
+        };
+        r as *mut ::std::os::raw::c_void
     }
 
     pub fn free(&mut self) {
@@ -450,4 +473,10 @@ where
     fn drop(&mut self) {
         //anything needed?
     }
+}
+
+// indicate error and then return null (object creation)
+fn null_with_reason<T>(reason: String) -> *mut T {
+    crate::post::Post::error(reason);
+    std::ptr::null_mut::<T>()
 }

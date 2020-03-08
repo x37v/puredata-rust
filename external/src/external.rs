@@ -1,7 +1,7 @@
 use crate::builder::*;
 
-pub trait ControlExternal {
-    fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Self;
+pub trait ControlExternal: Sized {
+    fn new(builder: &mut dyn ControlExternalBuilder<Self>) -> Result<Self, String>;
 }
 
 pub trait SignalGenerator: Send {
@@ -24,12 +24,12 @@ pub trait SignalProcessor: Send {
 pub trait SignalGeneratorExternal: Sized {
     fn new(
         builder: &mut dyn SignalGeneratorExternalBuilder<Self>,
-    ) -> (Self, Box<dyn SignalGenerator>);
+    ) -> Result<(Self, Box<dyn SignalGenerator>), String>;
 }
 
 //has 1 default signal inlet
 pub trait SignalProcessorExternal: Sized {
     fn new(
         builder: &mut dyn SignalProcessorExternalBuilder<Self>,
-    ) -> (Self, Box<dyn SignalProcessor>);
+    ) -> Result<(Self, Box<dyn SignalProcessor>), String>;
 }
