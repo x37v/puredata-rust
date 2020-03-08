@@ -15,6 +15,16 @@ impl Post {
             x_obj: owner.as_obj(),
         }
     }
+    pub fn error(s: String) {
+        for l in s.lines() {
+            let c = std::ffi::CString::new(l);
+            if let Ok(c) = c {
+                unsafe {
+                    pd_sys::error(c.as_ptr());
+                }
+            }
+        }
+    }
 }
 
 impl PdPost for Post {
