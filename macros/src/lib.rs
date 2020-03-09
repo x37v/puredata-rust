@@ -483,7 +483,7 @@ fn parse_and_build(items: Vec<Item>) -> syn::Result<proc_macro::TokenStream> {
     let wrapped_class = quote! {
         //generated
         type Wrapped = pd_ext::wrapper::#wrapper_type<#struct_name>;
-        static mut #class_static: Option<*mut pd_sys::_class> = None;
+        pub(crate) static mut #class_static: Option<*mut pd_sys::_class> = None;
     };
 
     //new trampoline
