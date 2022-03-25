@@ -1,6 +1,6 @@
 # Pure Data Rust Sys
 
-The `pd-sys` create provides Rust FFI bindings for [Pure Data](https://puredata.info/) aka *pd*, a graphical multi-media programming language.
+The `pd-sys` crate provides Rust FFI bindings for [Pure Data](https://puredata.info/) aka *pd*, a graphical multi-media programming language.
 The bindings are exclusively based on [m_pd.h](https://github.com/pure-data/pure-data/blob/master/src/m_pd.h) and most likely to be used
 for building plugins aka *externals*.
 
